@@ -1,0 +1,49 @@
+{
+  "app": {
+    "name": "GymManager",
+    "loading": "Caricamento...",
+    "error": "Errore"
+  },
+  "setup": {
+    "title": "Benvenuto in GymManager",
+    "subtitle": "Imposta la master password per proteggere i tuoi dati",
+    "password_label": "Master password",
+    "confirm_label": "Conferma password",
+    "submit": "Configura GymManager",
+    "password_hint": "Minimo 8 caratteri. Non dimenticarla: senza di essa i dati non sono recuperabili.",
+    "mismatch": "Le password non corrispondono",
+    "too_short": "La password deve essere di almeno 8 caratteri",
+    "error": "Errore durante la configurazione. Riprova."
+  },
+  "unlock": {
+    "title": "GymManager",
+    "subtitle": "Inserisci la master password per accedere",
+    "password_label": "Master password",
+    "submit": "Accedi",
+    "wrong_password": "Password errata. Riprova.",
+    "error": "Errore durante l'accesso. Riprova."
+  },
+  "shell": {
+    "nav": {
+      "dashboard": "Dashboard",
+      "clients": "Clienti",
+      "catalog": "Catalogo",
+      "receipts": "Ricevute",
+      "settings": "Impostazioni"
+    },
+    "placeholder": {
+      "title": "Fase F0 — struttura pronta",
+      "description": "L'applicazione è configurata e pronta. Le funzionalità saranno disponibili nelle fasi successive."
+    }
+  },
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "confirm": "Conferma",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "close": "Chiudi",
+    "loading": "Caricamento...",
+    "error_generic": "Si è verificato un errore. Riprova."
+  }
+}

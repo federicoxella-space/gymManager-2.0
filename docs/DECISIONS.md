@@ -12,3 +12,6 @@ Decisioni prese in fase di analisi (con motivazione). Le voci marcate "Da verifi
 - **D8 — Stack.** Electron + React + TypeScript + Tailwind; SQLite/SQLCipher; electron-updater; PDF via printToPDF; i18next; test Vitest+Playwright; Drive via googleapis.
 - **D9 — Pagamenti.** Tracciati stato (pagato/da incassare) e metodo (contanti/POS/bonifico); importi IVA inclusa.
 - **D10 — i18n da subito.** IT a runtime, struttura pronta per altre lingue.
+
+- **D11 — `verify` usa `build:electron`, non `build`.** Lo script `verify` esegue `electron-vite build` (compilazione sorgenti) ma non `electron-builder` (packaging installabile). Motivazione: il packaging richiede icone e risorse non ancora presenti (vedi BLOCKERS.md B4/B5) e impiega diversi minuti. La build Vite verifica la correttezza del codice; il packaging viene eseguito separatamente in fase di release.
+- **D12 — `sandbox: false` nel BrowserWindow.** Il processo preload usa `require()` di Node.js per importare `ipcRenderer` da `electron` e moduli di `@electron-toolkit/preload`. Con `sandbox: true` questi require non sono disponibili nel preload. Il trade-off è accettabile perché `contextIsolation: true` isola il renderer da Node.js; il preload è trusted code del main process.

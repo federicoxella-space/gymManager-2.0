@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Build output (electron-vite)
+out/
+dist/
+
+# TypeScript build cache
+*.tsbuildinfo
+tsconfig.*.tsbuildinfo
+
+# Compiled JS/JSX/DTS artifacts that may end up in src/ from tsc --build
+src/**/*.js
+src/**/*.jsx
+src/**/*.d.ts
+!src/**/*.d.ts.map
+
+# Root-level compiled artifacts (electron.vite.config.js, etc.)
+*.js
+!postcss.config.js
+*.d.ts
+
+# Electron log files
+*.log
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+
+# Temp
+*.tmp
+*.temp

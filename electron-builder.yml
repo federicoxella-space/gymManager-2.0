@@ -1,0 +1,44 @@
+appId: it.gymmanager.app
+productName: GymManager
+copyright: Copyright © 2024 GymManager
+
+directories:
+  output: dist
+  buildResources: resources
+
+files:
+  - out/**/*
+  - node_modules/**/*
+  - package.json
+
+extraResources:
+  - from: resources/
+    to: resources/
+    filter:
+      - '**/*'
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: resources/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  installerHeaderIcon: resources/icon.ico
+  language: '1040'
+
+publish:
+  provider: github
+  owner: GymManagerOwner
+  repo: gymmanager-2
+  releaseType: release
+
+npmRebuild: true
+asar: true

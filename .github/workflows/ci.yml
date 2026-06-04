@@ -1,19 +1,56 @@
 name: CI
+
 on:
   push:
+    branches: [main, develop]
   pull_request:
+    branches: [main]
+
 jobs:
   verify:
+    name: Typecheck + Lint + Test + Build
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
-      - run: npm ci
-      - run: npm run typecheck --if-present
-      - run: npm run lint --if-present
-      - run: npm run test --if-present
-      - run: npm run build --if-present
-      # Nota: gli e2e Electron in CI possono richiedere xvfb-run; aggiungere uno step dedicato quando i test e2e sono pronti.
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.0-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libsqlcipher-dev
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules for Electron
+        run: npx electron-rebuild -f -w better-sqlite3
+        env:
+          SQLCIPHER: 1
+        continue-on-error: true
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build (Electron)
+        run: npm run build:electron
+        env:
+          CI: true
