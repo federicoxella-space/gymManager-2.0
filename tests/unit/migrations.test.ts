@@ -126,7 +126,7 @@ describe('runMigrations', () => {
   it('eseguendo runMigrations due volte non duplica le righe in schema_migrations', () => {
     runMigrations(db)
     runMigrations(db)
-    expect(getAppliedVersions(db)).toEqual([1, 2])
+    expect(getAppliedVersions(db)).toEqual([1, 2, 3])
   })
 
   it('eseguendo runMigrations due volte non duplica le righe in app_settings', () => {
@@ -255,7 +255,7 @@ describe('migrazioni su file temporaneo (persistenza)', () => {
 
     db = new Database(dbPath)
     runMigrations(db) // Seconda esecuzione su file esistente
-    expect(getAppliedVersions(db)).toEqual([1, 2])
+    expect(getAppliedVersions(db)).toEqual([1, 2, 3])
   })
 })
 
@@ -335,5 +335,115 @@ describe('migrazione 002: clienti e certificati_medici', () => {
     expect(getTables(db)).toContain('clienti')
     expect(getTables(db)).toContain('certificati_medici')
     expect(getAppliedVersions(db)).toContain(2)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Suite: migrazione 003 — catalogo e associazioni
+// ---------------------------------------------------------------------------
+
+describe('migrazione 003: catalogo e associazioni', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+  })
+
+  afterEach(() => {
+    if (db.open) db.close()
+  })
+
+  it('crea le tabelle tipi_iscrizione e tipi_abbonamento', () => {
+    runMigrations(db)
+    const tables = getTables(db)
+    expect(tables).toContain('tipi_iscrizione')
+    expect(tables).toContain('tipi_abbonamento')
+  })
+
+  it('crea le tabelle iscrizioni_cliente e abbonamenti_cliente', () => {
+    runMigrations(db)
+    const tables = getTables(db)
+    expect(tables).toContain('iscrizioni_cliente')
+    expect(tables).toContain('abbonamenti_cliente')
+  })
+
+  it('registra la versione 3 nella tabella schema_migrations', () => {
+    runMigrations(db)
+    expect(getAppliedVersions(db)).toContain(3)
+  })
+
+  it('il rollback di v3 rimuove le 4 tabelle ma lascia clienti e app_settings', () => {
+    runMigrations(db)
+    rollbackMigration(db, 3)
+    const tables = getTables(db)
+    expect(tables).not.toContain('tipi_iscrizione')
+    expect(tables).not.toContain('tipi_abbonamento')
+    expect(tables).not.toContain('iscrizioni_cliente')
+    expect(tables).not.toContain('abbonamenti_cliente')
+    expect(tables).toContain('clienti')
+    expect(tables).toContain('app_settings')
+    expect(getAppliedVersions(db)).not.toContain(3)
+  })
+
+  it('inserisce e legge un tipo iscrizione con valori di default', () => {
+    runMigrations(db)
+    db.prepare(
+      `INSERT INTO tipi_iscrizione (nome, durata_mesi, prezzo_default) VALUES ('Tesseramento annuale', 12, 50.00)`
+    ).run()
+    const row = db
+      .prepare('SELECT * FROM tipi_iscrizione WHERE nome = ?')
+      .get('Tesseramento annuale') as { nome: string; durata_mesi: number; prezzo_default: number; stato: string }
+    expect(row.nome).toBe('Tesseramento annuale')
+    expect(row.durata_mesi).toBe(12)
+    expect(row.prezzo_default).toBe(50.0)
+    expect(row.stato).toBe('attivo')
+  })
+
+  it('inserisce e legge un tipo abbonamento con colore default', () => {
+    runMigrations(db)
+    db.prepare(
+      `INSERT INTO tipi_abbonamento (nome, durata_mesi, prezzo_default) VALUES ('Sala pesi', 1, 30.00)`
+    ).run()
+    const row = db
+      .prepare('SELECT * FROM tipi_abbonamento WHERE nome = ?')
+      .get('Sala pesi') as { nome: string; colore: string; stato: string }
+    expect(row.nome).toBe('Sala pesi')
+    expect(row.colore).toBe('#3B82F6')
+    expect(row.stato).toBe('attivo')
+  })
+
+  it('inserisce una iscrizione_cliente e verifica i vincoli FK su clienti e tipi_iscrizione', () => {
+    runMigrations(db)
+    db.prepare(
+      `INSERT INTO clienti (nome, cognome, codice_fiscale) VALUES ('Luca', 'Verdi', 'VRDLCU90A01H501Y')`
+    ).run()
+    const cliente = db
+      .prepare('SELECT id FROM clienti WHERE codice_fiscale = ?')
+      .get('VRDLCU90A01H501Y') as { id: number }
+    db.prepare(
+      `INSERT INTO tipi_iscrizione (nome, durata_mesi, prezzo_default) VALUES ('Annuale', 12, 50.00)`
+    ).run()
+    const tipo = db
+      .prepare('SELECT id FROM tipi_iscrizione WHERE nome = ?')
+      .get('Annuale') as { id: number }
+    db.prepare(
+      `INSERT INTO iscrizioni_cliente (cliente_id, tipo_iscrizione_id, data_inizio, data_scadenza, prezzo)
+       VALUES (?, ?, '2026-01-01', '2026-12-31', 50.00)`
+    ).run(cliente.id, tipo.id)
+    const isc = db
+      .prepare('SELECT * FROM iscrizioni_cliente WHERE cliente_id = ?')
+      .get(cliente.id) as { stato: string; stato_pagamento: string }
+    expect(isc.stato).toBe('attiva')
+    expect(isc.stato_pagamento).toBe('da_incassare')
+  })
+
+  it('ciclo up → down → up della migrazione 003 riporta le tabelle allo stato iniziale', () => {
+    runMigrations(db)
+    rollbackMigration(db, 3)
+    expect(getTables(db)).not.toContain('tipi_iscrizione')
+    runMigrations(db)
+    expect(getTables(db)).toContain('tipi_iscrizione')
+    expect(getTables(db)).toContain('abbonamenti_cliente')
+    expect(getAppliedVersions(db)).toContain(3)
   })
 })

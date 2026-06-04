@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { CertificatoRow, ClienteRow } from '../../../../types/shared'
+import type {
+  AbbonamentoClienteRow,
+  CertificatoRow,
+  ClienteRow,
+  IscrizioneClienteRow,
+  TipoAbbonamentoRow,
+  TipoIscrizioneRow,
+} from '../../../../types/shared'
 import { useSettings } from '../../context/SettingsContext'
 import { isMinorenne } from '../../utils/dominio'
 import Badge from '../ui/Badge'
@@ -9,6 +16,8 @@ import ConfirmDialog from '../ui/ConfirmDialog'
 import ClientBadge, { getStatoCert } from './ClientBadge'
 import ClientForm from './ClientForm'
 import CertificatoForm from '../certificati/CertificatoForm'
+import AssegnaIscrizioneForm from '../memberships/AssegnaIscrizioneForm'
+import AssegnaAbbonamentoForm from '../memberships/AssegnaAbbonamentoForm'
 
 interface ClientDetailProps {
   clienteId: number
@@ -90,6 +99,32 @@ export default function ClientDetail({
   const [showAnonDialog, setShowAnonDialog] = useState(false)
   const [isAnonimizzando, setIsAnonimizzando] = useState(false)
 
+  // ── Stato iscrizione ───────────────────────────────────────────────────────
+  const [iscrizioneAttiva, setIscrizioneAttiva] = useState<IscrizioneClienteRow | null>(null)
+  const [storicoIscrizioni, setStoricoIscrizioni] = useState<IscrizioneClienteRow[]>([])
+  const [tipiIscrizione, setTipiIscrizione] = useState<TipoIscrizioneRow[]>([])
+  const [isLoadingIscrizione, setIsLoadingIscrizione] = useState(true)
+  const [showAssegnaIscrizione, setShowAssegnaIscrizione] = useState(false)
+  const [showStoricoIscrizioni, setShowStoricoIscrizioni] = useState(false)
+  const [showModificaDateIscrizione, setShowModificaDateIscrizione] = useState(false)
+  const [invalidaIscrizioneTarget, setInvalidaIscrizioneTarget] =
+    useState<IscrizioneClienteRow | null>(null)
+  const [isInvalidandoIscrizione, setIsInvalidandoIscrizione] = useState(false)
+
+  // Date inline per modifica
+  const [editDataInizio, setEditDataInizio] = useState('')
+  const [editDataScadenza, setEditDataScadenza] = useState('')
+  const [isSavingDate, setIsSavingDate] = useState(false)
+
+  // ── Stato abbonamenti ──────────────────────────────────────────────────────
+  const [abbonamenti, setAbbonamenti] = useState<AbbonamentoClienteRow[]>([])
+  const [tipiAbbonamento, setTipiAbbonamento] = useState<TipoAbbonamentoRow[]>([])
+  const [isLoadingAbbonamenti, setIsLoadingAbbonamenti] = useState(true)
+  const [showAssegnaAbbonamento, setShowAssegnaAbbonamento] = useState(false)
+  const [invalidaAbbonamentoTarget, setInvalidaAbbonamentoTarget] =
+    useState<AbbonamentoClienteRow | null>(null)
+  const [isInvalidandoAbbonamento, setIsInvalidandoAbbonamento] = useState(false)
+
   const loadCliente = useCallback(async (): Promise<void> => {
     setIsLoadingCliente(true)
     setLoadError(false)
@@ -111,9 +146,94 @@ export default function ClientDetail({
     }
   }, [clienteId])
 
+  const loadIscrizione = useCallback(async (): Promise<void> => {
+    setIsLoadingIscrizione(true)
+    try {
+      const [attiva, storico, tipi] = await Promise.all([
+        window.api.iscrizioni.getAttiva(clienteId),
+        window.api.iscrizioni.list(clienteId),
+        window.api.catalogo.tipiIscrizione.list(true),
+      ])
+      setIscrizioneAttiva(attiva)
+      setStoricoIscrizioni(storico)
+      setTipiIscrizione(tipi)
+    } catch {
+      // Silenzioso: la sezione mostrerà uno stato vuoto
+    } finally {
+      setIsLoadingIscrizione(false)
+    }
+  }, [clienteId])
+
+  const loadAbbonamenti = useCallback(async (): Promise<void> => {
+    setIsLoadingAbbonamenti(true)
+    try {
+      const [abbs, tipi] = await Promise.all([
+        window.api.abbonamenti.list(clienteId),
+        window.api.catalogo.tipiAbbonamento.list(true),
+      ])
+      setAbbonamenti(abbs)
+      setTipiAbbonamento(tipi)
+    } catch {
+      // Silenzioso
+    } finally {
+      setIsLoadingAbbonamenti(false)
+    }
+  }, [clienteId])
+
   useEffect(() => {
     void loadCliente()
   }, [loadCliente])
+
+  useEffect(() => {
+    void loadIscrizione()
+  }, [loadIscrizione])
+
+  useEffect(() => {
+    void loadAbbonamenti()
+  }, [loadAbbonamenti])
+
+  async function handleInvalidaIscrizione(): Promise<void> {
+    if (!invalidaIscrizioneTarget) return
+    setIsInvalidandoIscrizione(true)
+    try {
+      await window.api.iscrizioni.invalida(invalidaIscrizioneTarget.id)
+      setInvalidaIscrizioneTarget(null)
+      await loadIscrizione()
+    } finally {
+      setIsInvalidandoIscrizione(false)
+    }
+  }
+
+  async function handleSalvaDateIscrizione(): Promise<void> {
+    if (!iscrizioneAttiva) return
+    setIsSavingDate(true)
+    try {
+      const updated = await window.api.iscrizioni.updateDate(
+        iscrizioneAttiva.id,
+        editDataInizio,
+        editDataScadenza,
+      )
+      setIscrizioneAttiva(updated)
+      setStoricoIscrizioni((prev) =>
+        prev.map((i) => (i.id === updated.id ? updated : i)),
+      )
+      setShowModificaDateIscrizione(false)
+    } finally {
+      setIsSavingDate(false)
+    }
+  }
+
+  async function handleInvalidaAbbonamento(): Promise<void> {
+    if (!invalidaAbbonamentoTarget) return
+    setIsInvalidandoAbbonamento(true)
+    try {
+      await window.api.abbonamenti.invalida(invalidaAbbonamentoTarget.id)
+      setInvalidaAbbonamentoTarget(null)
+      await loadAbbonamenti()
+    } finally {
+      setIsInvalidandoAbbonamento(false)
+    }
+  }
 
   async function handleAnonimizza(): Promise<void> {
     if (!cliente) return
@@ -363,18 +483,352 @@ export default function ClientDetail({
         )}
       </Section>
 
-      {/* Sezione Iscrizione attiva (placeholder F2) */}
+      {/* Sezione Iscrizione attiva */}
       <Section title={t('clienti.dettaglio.sezione_iscrizione')}>
-        <p className="text-sm text-gray-400 dark:text-gray-500 italic">
-          {t('common.coming_soon')} (F2)
-        </p>
+        {isLoadingIscrizione ? (
+          <div className="flex items-center gap-2 text-gray-400 text-sm">
+            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+            {t('common.loading')}
+          </div>
+        ) : iscrizioneAttiva ? (
+          <div className="space-y-4">
+            {/* Card iscrizione attiva */}
+            <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+              <div className="flex-1 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {tipiIscrizione.find((ti) => ti.id === iscrizioneAttiva.tipo_iscrizione_id)?.nome ??
+                      `#${iscrizioneAttiva.tipo_iscrizione_id}`}
+                  </p>
+                  <Badge
+                    variant={
+                      iscrizioneAttiva.stato === 'attiva'
+                        ? 'success'
+                        : iscrizioneAttiva.stato === 'scaduta'
+                          ? 'warning'
+                          : 'neutral'
+                    }
+                  >
+                    {t(`iscrizioni.stato.${iscrizioneAttiva.stato}`)}
+                  </Badge>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('iscrizioni.periodo')}: {formatData(iscrizioneAttiva.data_inizio)} →{' '}
+                  {formatData(iscrizioneAttiva.data_scadenza)}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('iscrizioni.prezzo')}:{' '}
+                  {new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(
+                    iscrizioneAttiva.prezzo,
+                  )}{' '}
+                  &mdash; {t(`iscrizioni.pagamento.${iscrizioneAttiva.stato_pagamento}`)}
+                </p>
+              </div>
+              {!anonimizzato && (
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAssegnaIscrizione(true)
+                    }}
+                    className="text-sm px-3 py-1.5 rounded-lg border border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                  >
+                    {t('iscrizioni.rinnova')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditDataInizio(iscrizioneAttiva.data_inizio)
+                      setEditDataScadenza(iscrizioneAttiva.data_scadenza)
+                      setShowModificaDateIscrizione(true)
+                    }}
+                    className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {t('iscrizioni.modifica_date')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setInvalidaIscrizioneTarget(iscrizioneAttiva)}
+                    className="text-sm px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    {t('iscrizioni.invalida')}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modifica date inline */}
+            {showModificaDateIscrizione && (
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 bg-gray-50 dark:bg-gray-800/40">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('iscrizioni.form.data_inizio')}
+                    </label>
+                    <input
+                      type="date"
+                      value={editDataInizio}
+                      onChange={(e) => setEditDataInizio(e.target.value)}
+                      disabled={isSavingDate}
+                      className="px-3 py-2 text-sm rounded-lg border w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('iscrizioni.form.data_scadenza')}
+                    </label>
+                    <input
+                      type="date"
+                      value={editDataScadenza}
+                      onChange={(e) => setEditDataScadenza(e.target.value)}
+                      disabled={isSavingDate}
+                      className="px-3 py-2 text-sm rounded-lg border w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowModificaDateIscrizione(false)}
+                    disabled={isSavingDate}
+                    className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSalvaDateIscrizione()}
+                    disabled={isSavingDate}
+                    className="px-3 py-1.5 text-sm rounded-lg bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50"
+                  >
+                    {isSavingDate ? t('common.loading') : t('common.save')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Storico espandibile */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowStoricoIscrizioni((v) => !v)}
+                className="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                {showStoricoIscrizioni
+                  ? t('iscrizioni.nascondi_storico')
+                  : t('iscrizioni.mostra_storico')}{' '}
+                ({storicoIscrizioni.length})
+              </button>
+              {showStoricoIscrizioni && (
+                <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="bg-gray-50 dark:bg-gray-800/60">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
+                          {t('iscrizioni.tipo')}
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
+                          {t('iscrizioni.periodo')}
+                        </th>
+                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
+                          {t('catalogo.colonne.stato')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                      {storicoIscrizioni.map((iscr) => (
+                        <tr
+                          key={iscr.id}
+                          className="bg-white dark:bg-gray-900"
+                        >
+                          <td className="px-3 py-2 text-gray-700 dark:text-gray-300">
+                            {tipiIscrizione.find((ti) => ti.id === iscr.tipo_iscrizione_id)?.nome ??
+                              `#${iscr.tipo_iscrizione_id}`}
+                          </td>
+                          <td className="px-3 py-2 text-gray-500 dark:text-gray-400">
+                            {formatData(iscr.data_inizio)} → {formatData(iscr.data_scadenza)}
+                          </td>
+                          <td className="px-3 py-2">
+                            <Badge
+                              variant={
+                                iscr.stato === 'attiva'
+                                  ? 'success'
+                                  : iscr.stato === 'scaduta'
+                                    ? 'warning'
+                                    : 'neutral'
+                              }
+                            >
+                              {t(`iscrizioni.stato.${iscr.stato}`)}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 flex-1">
+              {t('iscrizioni.nessuna')}
+            </p>
+            {!anonimizzato && (
+              <button
+                type="button"
+                onClick={() => setShowAssegnaIscrizione(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+              >
+                {t('iscrizioni.assegna')}
+              </button>
+            )}
+          </div>
+        )}
       </Section>
 
-      {/* Sezione Abbonamenti (placeholder F2) */}
+      {/* Sezione Abbonamenti */}
       <Section title={t('clienti.dettaglio.sezione_abbonamenti')}>
-        <p className="text-sm text-gray-400 dark:text-gray-500 italic">
-          {t('common.coming_soon')} (F2)
-        </p>
+        {isLoadingAbbonamenti ? (
+          <div className="flex items-center gap-2 text-gray-400 text-sm">
+            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+            {t('common.loading')}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Messaggio se nessuna iscrizione attiva */}
+            {!iscrizioneAttiva && !isLoadingIscrizione && (
+              <div className="px-4 py-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300">
+                {t('iscrizioni.assegna_prima')}
+              </div>
+            )}
+
+            {abbonamenti.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('abbonamenti.nessuno')}
+              </p>
+            ) : (
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 dark:bg-gray-800/60">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                        {t('abbonamenti.colonne.tipo')}
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                        {t('abbonamenti.colonne.periodo')}
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                        {t('abbonamenti.colonne.stato')}
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                        {t('abbonamenti.colonne.prezzo')}
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                        {t('common.actions')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {abbonamenti.map((abb) => {
+                      const superaIscrizione =
+                        iscrizioneAttiva !== null && abb.data_scadenza > iscrizioneAttiva.data_scadenza
+                      const tipoNome =
+                        tipiAbbonamento.find((ta) => ta.id === abb.tipo_abbonamento_id)?.nome ??
+                        `#${abb.tipo_abbonamento_id}`
+                      const tipoColore =
+                        tipiAbbonamento.find((ta) => ta.id === abb.tipo_abbonamento_id)?.colore
+
+                      return (
+                        <tr
+                          key={abb.id}
+                          className="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors"
+                        >
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              {tipoColore && (
+                                <span
+                                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                                  style={{ backgroundColor: tipoColore }}
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <span className="font-medium text-gray-900 dark:text-gray-100">
+                                {tipoNome}
+                              </span>
+                              {superaIscrizione && (
+                                <span
+                                  title={t('abbonamenti.warning_scadenza')}
+                                  className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs font-bold"
+                                  aria-label={t('abbonamenti.warning_scadenza')}
+                                >
+                                  !
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                            {formatData(abb.data_inizio)} → {formatData(abb.data_scadenza)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge
+                              variant={
+                                abb.stato === 'attivo'
+                                  ? 'success'
+                                  : abb.stato === 'scaduto'
+                                    ? 'warning'
+                                    : 'neutral'
+                              }
+                            >
+                              {t(`abbonamenti.stato.${abb.stato}`)}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                            {new Intl.NumberFormat('it-IT', {
+                              style: 'currency',
+                              currency: 'EUR',
+                            }).format(abb.prezzo)}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {abb.stato === 'attivo' && !anonimizzato && (
+                              <button
+                                type="button"
+                                onClick={() => setInvalidaAbbonamentoTarget(abb)}
+                                className="text-xs px-2 py-1 rounded border border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              >
+                                {t('abbonamenti.invalida')}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* CTA assegna abbonamento */}
+            {!anonimizzato && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowAssegnaAbbonamento(true)}
+                  disabled={!iscrizioneAttiva}
+                  title={!iscrizioneAttiva ? t('abbonamenti.no_iscrizione_attiva') : undefined}
+                  className={[
+                    'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+                    iscrizioneAttiva
+                      ? 'bg-primary-600 hover:bg-primary-700 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed',
+                  ].join(' ')}
+                >
+                  {t('abbonamenti.assegna')}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* Sezione Ricevute (placeholder F3) */}
@@ -423,6 +877,67 @@ export default function ClientDetail({
         cancelLabel={t('clienti.anonimizza.annulla')}
         variant="danger"
         isLoading={isAnonimizzando}
+      />
+
+      {/* Modal assegna / rinnova iscrizione */}
+      <Modal
+        isOpen={showAssegnaIscrizione}
+        onClose={() => setShowAssegnaIscrizione(false)}
+        title={iscrizioneAttiva ? t('iscrizioni.rinnova') : t('iscrizioni.assegna')}
+      >
+        <AssegnaIscrizioneForm
+          clienteId={clienteId}
+          tipiDisponibili={tipiIscrizione}
+          iscrizioneAttiva={iscrizioneAttiva}
+          onSuccess={(iscrizione) => {
+            setShowAssegnaIscrizione(false)
+            setIscrizioneAttiva(iscrizione)
+            void loadIscrizione()
+          }}
+          onCancel={() => setShowAssegnaIscrizione(false)}
+        />
+      </Modal>
+
+      {/* Modal assegna abbonamento */}
+      <Modal
+        isOpen={showAssegnaAbbonamento}
+        onClose={() => setShowAssegnaAbbonamento(false)}
+        title={t('abbonamenti.assegna')}
+      >
+        <AssegnaAbbonamentoForm
+          clienteId={clienteId}
+          tipiDisponibili={tipiAbbonamento}
+          iscrizioneAttiva={iscrizioneAttiva}
+          onSuccess={() => {
+            setShowAssegnaAbbonamento(false)
+            void loadAbbonamenti()
+          }}
+          onCancel={() => setShowAssegnaAbbonamento(false)}
+        />
+      </Modal>
+
+      {/* Dialog invalida iscrizione */}
+      <ConfirmDialog
+        isOpen={invalidaIscrizioneTarget !== null}
+        onClose={() => setInvalidaIscrizioneTarget(null)}
+        onConfirm={() => void handleInvalidaIscrizione()}
+        title={t('iscrizioni.invalida_conferma_titolo')}
+        message={t('iscrizioni.invalida_conferma_msg')}
+        confirmLabel={t('iscrizioni.invalida')}
+        variant="danger"
+        isLoading={isInvalidandoIscrizione}
+      />
+
+      {/* Dialog invalida abbonamento */}
+      <ConfirmDialog
+        isOpen={invalidaAbbonamentoTarget !== null}
+        onClose={() => setInvalidaAbbonamentoTarget(null)}
+        onConfirm={() => void handleInvalidaAbbonamento()}
+        title={t('abbonamenti.invalida_conferma_titolo')}
+        message={t('abbonamenti.invalida_conferma_msg')}
+        confirmLabel={t('abbonamenti.invalida')}
+        variant="danger"
+        isLoading={isInvalidandoAbbonamento}
       />
     </div>
   )

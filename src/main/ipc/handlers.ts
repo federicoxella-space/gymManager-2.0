@@ -10,6 +10,29 @@ import {
   anonimizzaCliente
 } from '../db/clients-repository'
 import { addCertificato, listCertificati } from '../db/certificates-repository'
+import {
+  createTipoIscrizione,
+  updateTipoIscrizione,
+  listTipiIscrizione,
+  deleteTipoIscrizione,
+  invalidaTipoIscrizione,
+  createTipoAbbonamento,
+  updateTipoAbbonamento,
+  listTipiAbbonamento,
+  deleteTipoAbbonamento,
+  invalidaTipoAbbonamento
+} from '../db/catalog-repository'
+import {
+  assegnaIscrizione,
+  getIscrizioneAttiva,
+  listIscrizioni,
+  updateIscrizioneDate,
+  invalidaIscrizione,
+  assegnaAbbonamento,
+  listAbbonamenti,
+  updateAbbonamentoDate,
+  invalidaAbbonamento
+} from '../db/memberships-repository'
 import { validaCliente, validaClienteUpdate } from '../domain/cliente'
 import type {
   AppSettings,
@@ -19,7 +42,17 @@ import type {
   UpdateClienteInput,
   ClientiFilters,
   CertificatoRow,
-  CreateCertificatoInput
+  CreateCertificatoInput,
+  TipoIscrizioneRow,
+  TipoAbbonamentoRow,
+  CreateTipoIscrizioneInput,
+  UpdateTipoIscrizioneInput,
+  CreateTipoAbbonamentoInput,
+  UpdateTipoAbbonamentoInput,
+  IscrizioneClienteRow,
+  AbbonamentoClienteRow,
+  AssegnaIscrizioneInput,
+  AssegnaAbbonamentoInput
 } from '../../types/shared'
 
 /**
@@ -232,6 +265,251 @@ export function registerIpcHandlers(): void {
       } catch (err) {
         log.error('[ipc] certificati:add errore:', err)
         throw err instanceof Error ? err : new Error('Errore durante l\'aggiunta del certificato')
+      }
+    }
+  )
+
+  // ── Catalogo: TipiIscrizione ──────────────────────────────────────────────
+
+  ipcMain.handle(
+    'catalogo:tipiIscrizione:list',
+    (_event, includeNonValidi?: boolean): TipoIscrizioneRow[] => {
+      try {
+        return listTipiIscrizione(includeNonValidi)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiIscrizione:list errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero tipi iscrizione')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'catalogo:tipiIscrizione:create',
+    (_event, data: CreateTipoIscrizioneInput): TipoIscrizioneRow => {
+      try {
+        return createTipoIscrizione(data)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiIscrizione:create errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante la creazione del tipo iscrizione')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'catalogo:tipiIscrizione:update',
+    (_event, { id, data }: { id: number; data: UpdateTipoIscrizioneInput }): TipoIscrizioneRow => {
+      try {
+        return updateTipoIscrizione(id, data)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiIscrizione:update errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'aggiornamento del tipo iscrizione")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'catalogo:tipiIscrizione:delete',
+    (_event, { id }: { id: number }): void => {
+      try {
+        deleteTipoIscrizione(id)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiIscrizione:delete errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'eliminazione del tipo iscrizione")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'catalogo:tipiIscrizione:invalida',
+    (_event, { id }: { id: number }): void => {
+      try {
+        invalidaTipoIscrizione(id)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiIscrizione:invalida errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'invalidazione del tipo iscrizione")
+      }
+    }
+  )
+
+  // ── Catalogo: TipiAbbonamento ─────────────────────────────────────────────
+
+  ipcMain.handle(
+    'catalogo:tipiAbbonamento:list',
+    (_event, includeNonValidi?: boolean): TipoAbbonamentoRow[] => {
+      try {
+        return listTipiAbbonamento(includeNonValidi)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiAbbonamento:list errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero tipi abbonamento')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'catalogo:tipiAbbonamento:create',
+    (_event, data: CreateTipoAbbonamentoInput): TipoAbbonamentoRow => {
+      try {
+        return createTipoAbbonamento(data)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiAbbonamento:create errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante la creazione del tipo abbonamento')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'catalogo:tipiAbbonamento:update',
+    (_event, { id, data }: { id: number; data: UpdateTipoAbbonamentoInput }): TipoAbbonamentoRow => {
+      try {
+        return updateTipoAbbonamento(id, data)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiAbbonamento:update errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'aggiornamento del tipo abbonamento")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'catalogo:tipiAbbonamento:delete',
+    (_event, { id }: { id: number }): void => {
+      try {
+        deleteTipoAbbonamento(id)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiAbbonamento:delete errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'eliminazione del tipo abbonamento")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'catalogo:tipiAbbonamento:invalida',
+    (_event, { id }: { id: number }): void => {
+      try {
+        invalidaTipoAbbonamento(id)
+      } catch (err) {
+        log.error('[ipc] catalogo:tipiAbbonamento:invalida errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'invalidazione del tipo abbonamento")
+      }
+    }
+  )
+
+  // ── Iscrizioni ────────────────────────────────────────────────────────────
+
+  ipcMain.handle(
+    'iscrizioni:assegna',
+    (_event, data: AssegnaIscrizioneInput): IscrizioneClienteRow => {
+      try {
+        return assegnaIscrizione(data)
+      } catch (err) {
+        log.error('[ipc] iscrizioni:assegna errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'assegnazione dell'iscrizione")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'iscrizioni:getAttiva',
+    (_event, { clienteId }: { clienteId: number }): IscrizioneClienteRow | null => {
+      try {
+        return getIscrizioneAttiva(clienteId)
+      } catch (err) {
+        log.error('[ipc] iscrizioni:getAttiva errore:', err)
+        throw err instanceof Error ? err : new Error("Errore nel recupero dell'iscrizione attiva")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'iscrizioni:list',
+    (_event, { clienteId }: { clienteId: number }): IscrizioneClienteRow[] => {
+      try {
+        return listIscrizioni(clienteId)
+      } catch (err) {
+        log.error('[ipc] iscrizioni:list errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero iscrizioni')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'iscrizioni:updateDate',
+    (
+      _event,
+      { id, dataInizio, dataScadenza }: { id: number; dataInizio: string; dataScadenza: string }
+    ): IscrizioneClienteRow => {
+      try {
+        return updateIscrizioneDate(id, dataInizio, dataScadenza)
+      } catch (err) {
+        log.error('[ipc] iscrizioni:updateDate errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'aggiornamento delle date iscrizione")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'iscrizioni:invalida',
+    (_event, { id }: { id: number }): IscrizioneClienteRow => {
+      try {
+        return invalidaIscrizione(id)
+      } catch (err) {
+        log.error('[ipc] iscrizioni:invalida errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'invalidazione dell'iscrizione")
+      }
+    }
+  )
+
+  // ── Abbonamenti ───────────────────────────────────────────────────────────
+
+  ipcMain.handle(
+    'abbonamenti:assegna',
+    (_event, data: AssegnaAbbonamentoInput): AbbonamentoClienteRow => {
+      try {
+        return assegnaAbbonamento(data)
+      } catch (err) {
+        log.error('[ipc] abbonamenti:assegna errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'assegnazione dell'abbonamento")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'abbonamenti:list',
+    (
+      _event,
+      { clienteId, soloAttivi }: { clienteId: number; soloAttivi?: boolean }
+    ): AbbonamentoClienteRow[] => {
+      try {
+        return listAbbonamenti(clienteId, soloAttivi)
+      } catch (err) {
+        log.error('[ipc] abbonamenti:list errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero abbonamenti')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'abbonamenti:updateDate',
+    (
+      _event,
+      { id, dataInizio, dataScadenza }: { id: number; dataInizio: string; dataScadenza: string }
+    ): AbbonamentoClienteRow => {
+      try {
+        return updateAbbonamentoDate(id, dataInizio, dataScadenza)
+      } catch (err) {
+        log.error('[ipc] abbonamenti:updateDate errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'aggiornamento delle date abbonamento")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'abbonamenti:invalida',
+    (_event, { id }: { id: number }): AbbonamentoClienteRow => {
+      try {
+        return invalidaAbbonamento(id)
+      } catch (err) {
+        log.error('[ipc] abbonamenti:invalida errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'invalidazione dell'abbonamento")
       }
     }
   )

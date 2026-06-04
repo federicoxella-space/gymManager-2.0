@@ -142,5 +142,127 @@
       "descrizione_in_scadenza": "Il certificato è in scadenza entro i prossimi giorni.",
       "descrizione_scaduto": "Il certificato è scaduto."
     }
+  },
+  "catalogo": {
+    "titolo": "Catalogo",
+    "tab_iscrizioni": "Iscrizioni",
+    "tab_abbonamenti": "Abbonamenti",
+    "nuovo_tipo_iscrizione": "Nuovo tipo iscrizione",
+    "nuovo_tipo_abbonamento": "Nuovo tipo abbonamento",
+    "mostra_non_validi": "Mostra anche non validi",
+    "nessun_tipo": "Nessun tipo presente",
+    "colonne": {
+      "nome": "Nome",
+      "durata": "Durata",
+      "prezzo": "Prezzo",
+      "stato": "Stato",
+      "categoria": "Categoria"
+    },
+    "azioni": {
+      "modifica": "Modifica",
+      "invalida": "Invalida",
+      "elimina": "Elimina"
+    },
+    "tipo_assegnato_tooltip": "Non eliminabile: tipo già assegnato a dei clienti",
+    "invalida_conferma_titolo": "Invalida tipo",
+    "invalida_conferma_msg": "Il tipo verrà reso non valido e non sarà più assegnabile. Confermi?",
+    "elimina_conferma_titolo": "Elimina tipo",
+    "elimina_conferma_msg": "Il tipo verrà eliminato definitivamente. Confermi?",
+    "stato": {
+      "attivo": "Attivo",
+      "non_valido": "Non valido"
+    },
+    "form": {
+      "titolo_nuovo_iscrizione": "Nuovo tipo iscrizione",
+      "titolo_modifica_iscrizione": "Modifica tipo iscrizione",
+      "titolo_nuovo_abbonamento": "Nuovo tipo abbonamento",
+      "titolo_modifica_abbonamento": "Modifica tipo abbonamento",
+      "nome": "Nome *",
+      "descrizione": "Descrizione",
+      "durata_mesi": "Durata (mesi) *",
+      "prezzo_default": "Prezzo default (€) *",
+      "categoria": "Categoria",
+      "colore": "Colore",
+      "salva": "Salva",
+      "annulla": "Annulla",
+      "errore_salvataggio": "Errore durante il salvataggio. Riprova."
+    }
+  },
+  "iscrizioni": {
+    "assegna": "Assegna iscrizione",
+    "rinnova": "Rinnova iscrizione",
+    "modifica_date": "Modifica date",
+    "invalida": "Invalida",
+    "nessuna": "Nessuna iscrizione attiva",
+    "assegna_prima": "Assegna prima un'iscrizione per poter aggiungere abbonamenti",
+    "storico": "Storico iscrizioni",
+    "mostra_storico": "Mostra storico",
+    "nascondi_storico": "Nascondi storico",
+    "periodo": "Periodo",
+    "prezzo": "Prezzo",
+    "stato_pagamento": "Stato pagamento",
+    "metodo_pagamento": "Metodo",
+    "tipo": "Tipo iscrizione",
+    "invalida_conferma_titolo": "Invalida iscrizione",
+    "invalida_conferma_msg": "L'iscrizione verrà invalidata. Confermi?",
+    "errore_caricamento": "Errore durante il caricamento dell'iscrizione.",
+    "errore_salvataggio": "Errore durante il salvataggio. Riprova.",
+    "stato": {
+      "attiva": "Attiva",
+      "scaduta": "Scaduta",
+      "invalidata": "Invalidata"
+    },
+    "pagamento": {
+      "pagato": "Pagato",
+      "da_incassare": "Da incassare"
+    },
+    "metodo": {
+      "contanti": "Contanti",
+      "pos": "POS",
+      "bonifico": "Bonifico"
+    },
+    "form": {
+      "tipo": "Tipo iscrizione *",
+      "tipo_seleziona": "Seleziona tipo...",
+      "data_inizio": "Data inizio",
+      "data_scadenza": "Data scadenza",
+      "prezzo": "Prezzo (€)",
+      "stato_pagamento": "Stato pagamento",
+      "metodo_pagamento": "Metodo di pagamento",
+      "nota_rinnovo": "Rinnovo: la nuova iscrizione sostituirà quella attiva al salvataggio",
+      "ricevuta_placeholder": "Emetti ricevuta (disponibile in F3)"
+    }
+  },
+  "abbonamenti": {
+    "assegna": "Assegna abbonamento",
+    "invalida": "Invalida",
+    "nessuno": "Nessun abbonamento",
+    "no_iscrizione_attiva": "Il cliente non ha un'iscrizione attiva. Assegna prima un'iscrizione.",
+    "oltre_scadenza_iscrizione": "Attenzione: la scadenza dell'abbonamento ({{dataAbb}}) supera quella dell'iscrizione attiva ({{dataIscr}}). Puoi procedere.",
+    "invalida_conferma_titolo": "Invalida abbonamento",
+    "invalida_conferma_msg": "L'abbonamento verrà invalidato. Confermi?",
+    "errore_caricamento": "Errore durante il caricamento degli abbonamenti.",
+    "errore_salvataggio": "Errore durante il salvataggio. Riprova.",
+    "warning_scadenza": "Scadenza oltre iscrizione",
+    "stato": {
+      "attivo": "Attivo",
+      "scaduto": "Scaduto",
+      "invalidato": "Invalidato"
+    },
+    "colonne": {
+      "tipo": "Tipo",
+      "periodo": "Periodo",
+      "stato": "Stato",
+      "prezzo": "Prezzo"
+    },
+    "form": {
+      "tipo": "Tipo abbonamento *",
+      "tipo_seleziona": "Seleziona tipo...",
+      "data_inizio": "Data inizio",
+      "data_scadenza": "Data scadenza",
+      "prezzo": "Prezzo (€)",
+      "stato_pagamento": "Stato pagamento",
+      "metodo_pagamento": "Metodo di pagamento"
+    }
   }
 }

@@ -9,7 +9,17 @@ import type {
   UpdateClienteInput,
   ClientiFilters,
   CertificatoRow,
-  CreateCertificatoInput
+  CreateCertificatoInput,
+  TipoIscrizioneRow,
+  TipoAbbonamentoRow,
+  CreateTipoIscrizioneInput,
+  UpdateTipoIscrizioneInput,
+  CreateTipoAbbonamentoInput,
+  UpdateTipoAbbonamentoInput,
+  IscrizioneClienteRow,
+  AbbonamentoClienteRow,
+  AssegnaIscrizioneInput,
+  AssegnaAbbonamentoInput
 } from '../types/shared'
 
 // Espone le API standard di electron-toolkit su window.electron
@@ -74,6 +84,76 @@ const api: ElectronAPI = {
     }
   },
 
+  catalogo: {
+    tipiIscrizione: {
+      list(includeNonValidi?: boolean): Promise<TipoIscrizioneRow[]> {
+        return ipcRenderer.invoke('catalogo:tipiIscrizione:list', includeNonValidi)
+      },
+      create(data: CreateTipoIscrizioneInput): Promise<TipoIscrizioneRow> {
+        return ipcRenderer.invoke('catalogo:tipiIscrizione:create', data)
+      },
+      update(id: number, data: UpdateTipoIscrizioneInput): Promise<TipoIscrizioneRow> {
+        return ipcRenderer.invoke('catalogo:tipiIscrizione:update', { id, data })
+      },
+      delete(id: number): Promise<void> {
+        return ipcRenderer.invoke('catalogo:tipiIscrizione:delete', { id })
+      },
+      invalida(id: number): Promise<void> {
+        return ipcRenderer.invoke('catalogo:tipiIscrizione:invalida', { id })
+      }
+    },
+    tipiAbbonamento: {
+      list(includeNonValidi?: boolean): Promise<TipoAbbonamentoRow[]> {
+        return ipcRenderer.invoke('catalogo:tipiAbbonamento:list', includeNonValidi)
+      },
+      create(data: CreateTipoAbbonamentoInput): Promise<TipoAbbonamentoRow> {
+        return ipcRenderer.invoke('catalogo:tipiAbbonamento:create', data)
+      },
+      update(id: number, data: UpdateTipoAbbonamentoInput): Promise<TipoAbbonamentoRow> {
+        return ipcRenderer.invoke('catalogo:tipiAbbonamento:update', { id, data })
+      },
+      delete(id: number): Promise<void> {
+        return ipcRenderer.invoke('catalogo:tipiAbbonamento:delete', { id })
+      },
+      invalida(id: number): Promise<void> {
+        return ipcRenderer.invoke('catalogo:tipiAbbonamento:invalida', { id })
+      }
+    }
+  },
+
+  iscrizioni: {
+    assegna(data: AssegnaIscrizioneInput): Promise<IscrizioneClienteRow> {
+      return ipcRenderer.invoke('iscrizioni:assegna', data)
+    },
+    getAttiva(clienteId: number): Promise<IscrizioneClienteRow | null> {
+      return ipcRenderer.invoke('iscrizioni:getAttiva', { clienteId })
+    },
+    list(clienteId: number): Promise<IscrizioneClienteRow[]> {
+      return ipcRenderer.invoke('iscrizioni:list', { clienteId })
+    },
+    updateDate(id: number, dataInizio: string, dataScadenza: string): Promise<IscrizioneClienteRow> {
+      return ipcRenderer.invoke('iscrizioni:updateDate', { id, dataInizio, dataScadenza })
+    },
+    invalida(id: number): Promise<IscrizioneClienteRow> {
+      return ipcRenderer.invoke('iscrizioni:invalida', { id })
+    }
+  },
+
+  abbonamenti: {
+    assegna(data: AssegnaAbbonamentoInput): Promise<AbbonamentoClienteRow> {
+      return ipcRenderer.invoke('abbonamenti:assegna', data)
+    },
+    list(clienteId: number, soloAttivi?: boolean): Promise<AbbonamentoClienteRow[]> {
+      return ipcRenderer.invoke('abbonamenti:list', { clienteId, soloAttivi })
+    },
+    updateDate(id: number, dataInizio: string, dataScadenza: string): Promise<AbbonamentoClienteRow> {
+      return ipcRenderer.invoke('abbonamenti:updateDate', { id, dataInizio, dataScadenza })
+    },
+    invalida(id: number): Promise<AbbonamentoClienteRow> {
+      return ipcRenderer.invoke('abbonamenti:invalida', { id })
+    }
+  },
+
   on(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void =>
       callback(...args)
@@ -101,5 +181,15 @@ export type {
   UpdateClienteInput,
   ClientiFilters,
   CertificatoRow,
-  CreateCertificatoInput
+  CreateCertificatoInput,
+  TipoIscrizioneRow,
+  TipoAbbonamentoRow,
+  CreateTipoIscrizioneInput,
+  UpdateTipoIscrizioneInput,
+  CreateTipoAbbonamentoInput,
+  UpdateTipoAbbonamentoInput,
+  IscrizioneClienteRow,
+  AbbonamentoClienteRow,
+  AssegnaIscrizioneInput,
+  AssegnaAbbonamentoInput
 }

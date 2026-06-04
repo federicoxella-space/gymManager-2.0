@@ -112,6 +112,110 @@ export interface CreateCertificatoInput {
   data_scadenza: string
 }
 
+// ── Catalogo tipi ─────────────────────────────────────────────────────────────
+
+export interface TipoIscrizioneRow {
+  id: number
+  nome: string
+  descrizione: string | null
+  durata_mesi: number
+  prezzo_default: number
+  stato: 'attivo' | 'non_valido'
+  data_inserimento: string
+  data_modifica: string
+}
+
+export interface TipoAbbonamentoRow {
+  id: number
+  nome: string
+  descrizione: string | null
+  durata_mesi: number
+  prezzo_default: number
+  categoria: string | null
+  colore: string
+  stato: 'attivo' | 'non_valido'
+  data_inserimento: string
+  data_modifica: string
+}
+
+export interface CreateTipoIscrizioneInput {
+  nome: string
+  descrizione?: string
+  durata_mesi: number
+  prezzo_default: number
+}
+
+export type UpdateTipoIscrizioneInput = Partial<CreateTipoIscrizioneInput> & {
+  stato?: 'attivo' | 'non_valido'
+}
+
+export interface CreateTipoAbbonamentoInput {
+  nome: string
+  descrizione?: string
+  durata_mesi: number
+  prezzo_default: number
+  categoria?: string
+  colore?: string
+}
+
+export type UpdateTipoAbbonamentoInput = Partial<CreateTipoAbbonamentoInput> & {
+  stato?: 'attivo' | 'non_valido'
+}
+
+// ── Associazioni cliente ──────────────────────────────────────────────────────
+
+export interface IscrizioneClienteRow {
+  id: number
+  cliente_id: number
+  tipo_iscrizione_id: number
+  data_inizio: string
+  data_scadenza: string
+  prezzo: number
+  stato_pagamento: 'pagato' | 'da_incassare'
+  metodo_pagamento: string | null
+  stato: 'attiva' | 'scaduta' | 'invalidata'
+  note: string | null
+  data_inserimento: string
+  data_modifica: string
+}
+
+export interface AbbonamentoClienteRow {
+  id: number
+  cliente_id: number
+  tipo_abbonamento_id: number
+  data_inizio: string
+  data_scadenza: string
+  prezzo: number
+  stato_pagamento: 'pagato' | 'da_incassare'
+  metodo_pagamento: string | null
+  stato: 'attivo' | 'scaduto' | 'invalidato'
+  note: string | null
+  data_inserimento: string
+  data_modifica: string
+}
+
+export interface AssegnaIscrizioneInput {
+  cliente_id: number
+  tipo_iscrizione_id: number
+  data_inizio: string
+  data_scadenza: string
+  prezzo: number
+  stato_pagamento: 'pagato' | 'da_incassare'
+  metodo_pagamento?: string
+  note?: string
+}
+
+export interface AssegnaAbbonamentoInput {
+  cliente_id: number
+  tipo_abbonamento_id: number
+  data_inizio: string
+  data_scadenza: string
+  prezzo: number
+  stato_pagamento: 'pagato' | 'da_incassare'
+  metodo_pagamento?: string
+  note?: string
+}
+
 // ── ElectronAPI ───────────────────────────────────────────────────────────────
 
 export interface ElectronAPI {
@@ -138,6 +242,35 @@ export interface ElectronAPI {
   certificati: {
     list: (clienteId: number) => Promise<CertificatoRow[]>
     add: (data: CreateCertificatoInput) => Promise<CertificatoRow>
+  }
+  catalogo: {
+    tipiIscrizione: {
+      list: (includeNonValidi?: boolean) => Promise<TipoIscrizioneRow[]>
+      create: (data: CreateTipoIscrizioneInput) => Promise<TipoIscrizioneRow>
+      update: (id: number, data: UpdateTipoIscrizioneInput) => Promise<TipoIscrizioneRow>
+      delete: (id: number) => Promise<void>
+      invalida: (id: number) => Promise<void>
+    }
+    tipiAbbonamento: {
+      list: (includeNonValidi?: boolean) => Promise<TipoAbbonamentoRow[]>
+      create: (data: CreateTipoAbbonamentoInput) => Promise<TipoAbbonamentoRow>
+      update: (id: number, data: UpdateTipoAbbonamentoInput) => Promise<TipoAbbonamentoRow>
+      delete: (id: number) => Promise<void>
+      invalida: (id: number) => Promise<void>
+    }
+  }
+  iscrizioni: {
+    assegna: (data: AssegnaIscrizioneInput) => Promise<IscrizioneClienteRow>
+    getAttiva: (clienteId: number) => Promise<IscrizioneClienteRow | null>
+    list: (clienteId: number) => Promise<IscrizioneClienteRow[]>
+    updateDate: (id: number, dataInizio: string, dataScadenza: string) => Promise<IscrizioneClienteRow>
+    invalida: (id: number) => Promise<IscrizioneClienteRow>
+  }
+  abbonamenti: {
+    assegna: (data: AssegnaAbbonamentoInput) => Promise<AbbonamentoClienteRow>
+    list: (clienteId: number, soloAttivi?: boolean) => Promise<AbbonamentoClienteRow[]>
+    updateDate: (id: number, dataInizio: string, dataScadenza: string) => Promise<AbbonamentoClienteRow>
+    invalida: (id: number) => Promise<AbbonamentoClienteRow>
   }
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void
   off: (channel: string, callback: (...args: unknown[]) => void) => void
