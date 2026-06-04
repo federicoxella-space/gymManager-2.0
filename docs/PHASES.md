@@ -1,6 +1,6 @@
 # GymManager 2.0 — Fasi, Gate e Definition of Done
 
-Per ogni fase: **DoD** = criteri verificabili di completamento; **Gate** = revisione `critic-reviewer` + test che devono passare. Non si passa alla fase successiva senza gate PASSATO. Eseguire il gate con `/gate <fase>`.
+Per ogni fase: **DoD** = criteri verificabili di completamento; **Gate** = revisione `critic-reviewer` + test che devono passare. Non si passa alla fase successiva senza gate PASSATO. Eseguire il gate con `/gate <fase>`. Il dettaglio funzionale per sezione è in `docs/FUNZIONALITA.md`. «Verde» = `npm run verify` (typecheck + lint + test + build) che passa.
 
 ## F0 — Fondamenta
 **Obiettivo**: scaffolding Electron+React+TS+Tailwind eseguibile su Windows; DB cifrato; migrazioni; i18n; tema; impostazioni.
@@ -9,7 +9,9 @@ Per ogni fase: **DoD** = criteri verificabili di completamento; **Gate** = revis
 - DB cifrato con master password (KDF) impostata al primo avvio; reset password documentato.
 - Framework di migrazioni attivo, con una migrazione di esempio applicata e reversibile.
 - Scaffolding i18n (solo IT a runtime, stringhe esternalizzate); shell con tema/colori; store impostazioni.
-**Gate**: build pulita; test su apertura/chiusura DB cifrato e su migrazione avanti/indietro; cifratura e migrazioni verificate prima di scrivere dati di dominio.
+- Tooling qualità: TypeScript strict, ESLint + Prettier; script npm `typecheck`, `lint`, `test`, `build` e `verify` (che li esegue in sequenza); lockfile committato e versioni pinnate.
+- CI attiva (`.github/workflows/ci.yml`) che esegue le verifiche a ogni push.
+**Gate**: `npm run verify` verde; test su apertura/chiusura DB cifrato e su migrazione avanti/indietro; cifratura e migrazioni verificate prima di scrivere dati di dominio.
 
 ## F1 — Clienti + certificato medico
 **Obiettivo**: anagrafica clienti e tracciamento certificato medico.
@@ -31,14 +33,14 @@ Per ogni fase: **DoD** = criteri verificabili di completamento; **Gate** = revis
 **Obiettivo**: pagamenti e generazione ricevute.
 **DoD**
 - Stato pagamento (pagato/da incassare) e metodo (contanti/POS/bonifico).
-- Ricevuta PDF con numerazione progressiva annuale, numero iniziale configurabile, assegnazione al salvataggio e immutabilità sui re-download; annullamento che mantiene il numero.
+- Ricevuta PDF con numerazione progressiva per anno della data di emissione (scelta dall'utente), numero iniziale configurabile, assegnazione al salvataggio e immutabilità sui re-download; **due copie per pagina**; ricevuta **multi-riga** da voci pagabili e **riga libera**; annullamento che mantiene il numero e riporta le voci coperte a «da incassare».
 - Template con logo e dati attività; importi in € IVA inclusa.
 **Gate**: unit sulla numerazione (reset annuale, numero iniziale, immutabilità, annullamento senza buchi); e2e "transazione → ricevuta salvata → re-download stesso numero"; il reviewer confronta il template con il riferimento.
 
 ## F4 — Dashboard
 **Obiettivo**: pagina principale con i widget.
 **DoD**
-- I due widget richiesti + quelli concordati; finestre temporali configurabili; drill-down al click.
+- I widget di `docs/FUNZIONALITA.md` (i due richiesti + concordati, incl. compleanni attivabile); selettore di periodo globale; finestre di scadenza dai parametri di configurazione; drill-down al click; widget mostra/nascondi dalla configurazione.
 **Gate**: unit sui calcoli dei widget; il reviewer verifica la coerenza dei dati mostrati con lo stato del DB.
 
 ## F5 — Backup/Restore + Google Drive + sicurezza dati

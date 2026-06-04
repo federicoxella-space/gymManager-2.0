@@ -2,6 +2,8 @@
 
 Remake di un gestionale desktop per palestre: gestione di clienti, iscrizioni, abbonamenti e ricevute.
 
+> Dettaglio funzionale per sezione: vedi `docs/FUNZIONALITA.md`.
+
 ## Caratteristiche
 - **Facile e intuitiva**: usabile da un utente non tecnico con poco sforzo.
 - **Moderna e professionale**: interfaccia gradevole ma sobria.

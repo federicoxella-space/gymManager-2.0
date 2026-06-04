@@ -16,5 +16,15 @@
       "Bash(rm -rf:*)",
       "Bash(sudo:*)"
     ]
+  },
+  "hooks": {
+    "SubagentStop": [
+      {
+        "matcher": "ux-frontend|domain-logic|data-persistence",
+        "hooks": [
+          { "type": "command", "command": "npm run verify --if-present" }
+        ]
+      }
+    ]
   }
 }
