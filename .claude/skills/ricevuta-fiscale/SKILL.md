@@ -7,19 +7,18 @@ description: Regole per generare, numerare, annullare e impaginare le ricevute d
 L'app emette **ricevute** (non fatture, niente SDI). I pagamenti elettronici sono gestiti altrove dall'utente; questa app copre le ricevute (tipicamente per pagamenti in contanti).
 
 ## Numerazione
-- Serie **progressiva per anno solare** della data di emissione; riparte da 1 a inizio anno.
+- Serie **progressiva per anno della data di emissione** (la data è scelta dall'utente alla generazione): emessa nel 2025 → `2025-N`, nel 2026 → `2026-N`. Riparte ogni anno.
 - L'utente può impostare il **numero iniziale** per l'anno (caso: ricevute già emesse prima di adottare l'app).
-- Il numero è assegnato **al momento del salvataggio**, non alla sola generazione/anteprima.
+- Il numero è assegnato **al salvataggio**, non in anteprima.
 - Una volta assegnato è **immutabile**: ri-scaricare lo stesso documento NON cambia il numero.
-- Una ricevuta non si modifica né si cancella. L'**annullamento** crea uno stato "annullata" mantenendo il numero: niente buchi nella serie.
+- Una ricevuta non si modifica né si cancella. L'**annullamento** crea lo stato "annullata" mantenendo il numero (niente buchi nella serie); le voci coperte tornano "da incassare".
 
-## Contenuto / layout
-Riferimento: la ricevuta esistente dell'attività. Campi:
+## Contenuto / righe
+- Righe dalle voci pagabili selezionate del cliente; è ammessa anche una **riga libera** (addebito una tantum: descrizione + prezzo).
 - Intestazione attività (ragione sociale, indirizzo, Cod.Fis./P.IVA, logo) dalle impostazioni.
-- Destinatario: cliente (nome, cod. fiscale, indirizzo); se minore, eventuale tutore.
-- Righe: attività/voce, durata (periodo `gg/mm/aaaa - gg/mm/aaaa`), prezzo.
-- Totale.
-- Numero ricevuta e data di emissione; eventuale codice univoco.
+- Destinatario: cliente (nome, cod. fiscale, indirizzo); se minore, ricevuta intestata al tutore con dicitura "Tutore di [CF del minore]".
+- Per riga: attività/voce, durata (periodo `gg/mm/aaaa - gg/mm/aaaa`), prezzo. Totale.
+- Data di emissione; eventuale dicitura a piè configurabile. Nessun "codice univoco" stampato.
 
 ## Formati
 - Importi in **euro con IVA inclusa**, simbolo **€** (es. `20,00 €`). Separatore decimale virgola, migliaia punto.
@@ -27,4 +26,5 @@ Riferimento: la ricevuta esistente dell'attività. Campi:
 
 ## Generazione PDF
 - Renderizza un template HTML e produci il PDF con `webContents.printToPDF` di Electron.
+- **Due copie per pagina**: copia cliente + copia matrice.
 - Il PDF deve essere **rigenerabile in modo deterministico** dallo stesso record salvato (stesso numero, stessi dati).
