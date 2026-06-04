@@ -126,7 +126,7 @@ describe('runMigrations', () => {
   it('eseguendo runMigrations due volte non duplica le righe in schema_migrations', () => {
     runMigrations(db)
     runMigrations(db)
-    expect(getAppliedVersions(db)).toEqual([1])
+    expect(getAppliedVersions(db)).toEqual([1, 2])
   })
 
   it('eseguendo runMigrations due volte non duplica le righe in app_settings', () => {
@@ -255,6 +255,85 @@ describe('migrazioni su file temporaneo (persistenza)', () => {
 
     db = new Database(dbPath)
     runMigrations(db) // Seconda esecuzione su file esistente
-    expect(getAppliedVersions(db)).toEqual([1])
+    expect(getAppliedVersions(db)).toEqual([1, 2])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Suite: migrazione 002 — tabelle clienti e certificati_medici
+// ---------------------------------------------------------------------------
+
+describe('migrazione 002: clienti e certificati_medici', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+  })
+
+  afterEach(() => {
+    if (db.open) db.close()
+  })
+
+  it('crea la tabella clienti dopo runMigrations', () => {
+    runMigrations(db)
+    expect(getTables(db)).toContain('clienti')
+  })
+
+  it('crea la tabella certificati_medici dopo runMigrations', () => {
+    runMigrations(db)
+    expect(getTables(db)).toContain('certificati_medici')
+  })
+
+  it('registra la versione 2 nella tabella schema_migrations', () => {
+    runMigrations(db)
+    expect(getAppliedVersions(db)).toContain(2)
+  })
+
+  it('il rollback di v2 rimuove clienti e certificati_medici ma lascia app_settings', () => {
+    runMigrations(db)
+    rollbackMigration(db, 2)
+    const tables = getTables(db)
+    expect(tables).not.toContain('clienti')
+    expect(tables).not.toContain('certificati_medici')
+    expect(tables).toContain('app_settings')
+    expect(getAppliedVersions(db)).not.toContain(2)
+  })
+
+  it('inserisce e legge una riga in clienti con i campi obbligatori', () => {
+    runMigrations(db)
+    db.prepare(
+      `INSERT INTO clienti (nome, cognome, codice_fiscale) VALUES ('Mario', 'Rossi', 'RSSMRA85T10H501Z')`
+    ).run()
+    const row = db.prepare('SELECT * FROM clienti WHERE codice_fiscale = ?')
+      .get('RSSMRA85T10H501Z') as { nome: string; cognome: string; stato: string }
+    expect(row.nome).toBe('Mario')
+    expect(row.cognome).toBe('Rossi')
+    expect(row.stato).toBe('attivo')
+  })
+
+  it('inserisce e legge una riga in certificati_medici', () => {
+    runMigrations(db)
+    db.prepare(
+      `INSERT INTO clienti (nome, cognome, codice_fiscale) VALUES ('Anna', 'Bianchi', 'BNCNNA90A41H501X')`
+    ).run()
+    const cliente = db.prepare('SELECT id FROM clienti WHERE codice_fiscale = ?')
+      .get('BNCNNA90A41H501X') as { id: number }
+    db.prepare(
+      `INSERT INTO certificati_medici (cliente_id, tipo, data_scadenza) VALUES (?, 'non_agonistico', '2027-06-01')`
+    ).run(cliente.id)
+    const cert = db.prepare('SELECT * FROM certificati_medici WHERE cliente_id = ?')
+      .get(cliente.id) as { tipo: string; data_scadenza: string }
+    expect(cert.tipo).toBe('non_agonistico')
+    expect(cert.data_scadenza).toBe('2027-06-01')
+  })
+
+  it('ciclo up → down → up della migrazione 002 riporta le tabelle allo stato iniziale', () => {
+    runMigrations(db)
+    rollbackMigration(db, 2)
+    expect(getTables(db)).not.toContain('clienti')
+    runMigrations(db)
+    expect(getTables(db)).toContain('clienti')
+    expect(getTables(db)).toContain('certificati_medici')
+    expect(getAppliedVersions(db)).toContain(2)
   })
 })

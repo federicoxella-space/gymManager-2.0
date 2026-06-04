@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { SettingsProvider } from '../context/SettingsContext'
+import ClientsPage from './ClientsPage'
 
 type NavItem = 'dashboard' | 'clients' | 'catalog' | 'receipts' | 'settings'
 
@@ -110,7 +112,42 @@ export default function ShellPage(): React.JSX.Element {
     { id: 'settings', icon: <SettingsIcon />, label: t('shell.nav.settings') }
   ]
 
+  function renderContent(): React.ReactNode {
+    switch (activeNav) {
+      case 'clients':
+        return <ClientsPage />
+      default:
+        return (
+          <div className="max-w-lg mx-auto mt-16 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/30 mb-6">
+              <svg
+                className="w-8 h-8 text-primary-600 dark:text-primary-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+              {t('shell.placeholder.title')}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t('shell.placeholder.description')}
+            </p>
+          </div>
+        )
+    }
+  }
+
   return (
+    <SettingsProvider>
     <div className="flex h-screen bg-surface overflow-hidden">
       {/* Sidebar */}
       <aside className="w-60 shrink-0 flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800">
@@ -149,33 +186,9 @@ export default function ShellPage(): React.JSX.Element {
         </header>
 
         {/* Corpo */}
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-lg mx-auto mt-16 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/30 mb-6">
-              <svg
-                className="w-8 h-8 text-primary-600 dark:text-primary-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-              {t('shell.placeholder.title')}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t('shell.placeholder.description')}
-            </p>
-          </div>
-        </div>
+        <div className="flex-1 overflow-y-auto p-8">{renderContent()}</div>
       </main>
     </div>
+    </SettingsProvider>
   )
 }

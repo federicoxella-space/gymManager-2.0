@@ -1,6 +1,16 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { exposeElectronAPI } from '@electron-toolkit/preload'
-import type { AppSettings, ElectronAPI, DbState } from '../types/shared'
+import type {
+  AppSettings,
+  ElectronAPI,
+  DbState,
+  ClienteRow,
+  CreateClienteInput,
+  UpdateClienteInput,
+  ClientiFilters,
+  CertificatoRow,
+  CreateCertificatoInput
+} from '../types/shared'
 
 // Espone le API standard di electron-toolkit su window.electron
 exposeElectronAPI()
@@ -37,6 +47,33 @@ const api: ElectronAPI = {
     }
   },
 
+  clienti: {
+    list(filters?: ClientiFilters): Promise<ClienteRow[]> {
+      return ipcRenderer.invoke('clienti:list', filters)
+    },
+    get(id: number): Promise<ClienteRow | null> {
+      return ipcRenderer.invoke('clienti:get', id)
+    },
+    create(data: CreateClienteInput): Promise<ClienteRow> {
+      return ipcRenderer.invoke('clienti:create', data)
+    },
+    update(id: number, data: UpdateClienteInput): Promise<ClienteRow> {
+      return ipcRenderer.invoke('clienti:update', id, data)
+    },
+    anonimizza(id: number): Promise<void> {
+      return ipcRenderer.invoke('clienti:anonimizza', id)
+    }
+  },
+
+  certificati: {
+    list(clienteId: number): Promise<CertificatoRow[]> {
+      return ipcRenderer.invoke('certificati:list', clienteId)
+    },
+    add(data: CreateCertificatoInput): Promise<CertificatoRow> {
+      return ipcRenderer.invoke('certificati:add', data)
+    }
+  },
+
   on(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void =>
       callback(...args)
@@ -55,4 +92,14 @@ const api: ElectronAPI = {
 contextBridge.exposeInMainWorld('api', api)
 
 // Re-esporta i tipi per l'uso nel renderer (tree-shaken in produzione)
-export type { AppSettings, ElectronAPI, DbState }
+export type {
+  AppSettings,
+  ElectronAPI,
+  DbState,
+  ClienteRow,
+  CreateClienteInput,
+  UpdateClienteInput,
+  ClientiFilters,
+  CertificatoRow,
+  CreateCertificatoInput
+}

@@ -7,7 +7,8 @@ import type { AppSettings } from '../../types/shared'
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
   language: 'it',
-  primaryColor: '59,130,246'
+  primaryColor: '59,130,246',
+  expiry_warning_days_certificates: 30
 }
 
 export function getSettingsPath(): string {
@@ -33,7 +34,10 @@ export function loadSettings(): AppSettings {
     return {
       theme: parsed.theme ?? DEFAULT_SETTINGS.theme,
       language: parsed.language ?? DEFAULT_SETTINGS.language,
-      primaryColor: parsed.primaryColor ?? DEFAULT_SETTINGS.primaryColor
+      primaryColor: parsed.primaryColor ?? DEFAULT_SETTINGS.primaryColor,
+      expiry_warning_days_certificates:
+        parsed.expiry_warning_days_certificates ??
+        DEFAULT_SETTINGS.expiry_warning_days_certificates
     }
   } catch (err) {
     log.error('[settings] Errore lettura impostazioni, uso defaults:', err)
