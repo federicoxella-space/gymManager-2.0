@@ -20,6 +20,23 @@ const PRESET_COLORS: PresetColor[] = [
   { label: 'Teal', rgb: '13,148,136' },
 ]
 
+// ── Widget disponibili ────────────────────────────────────────────────────────
+
+interface WidgetDef {
+  id: string
+  labelKey: string
+  defaultOn: boolean
+}
+
+const WIDGET_DEFS: WidgetDef[] = [
+  { id: 'indicatori', labelKey: 'impostazioni.widget_indicatori', defaultOn: true },
+  { id: 'scadenze', labelKey: 'impostazioni.widget_scadenze', defaultOn: true },
+  { id: 'incassi', labelKey: 'impostazioni.widget_incassi', defaultOn: true },
+  { id: 'abbonamenti', labelKey: 'impostazioni.widget_abbonamenti', defaultOn: true },
+  { id: 'tesseramenti', labelKey: 'impostazioni.widget_tesseramenti', defaultOn: true },
+  { id: 'compleanni', labelKey: 'impostazioni.widget_compleanni', defaultOn: false },
+]
+
 /**
  * Converte una stringa "R,G,B" in un colore esadecimale "#rrggbb"
  * usato dall'input type="color".
@@ -55,12 +72,17 @@ interface FormState {
   primaryColor: string // "R,G,B"
   dicitura_pie: string
   receipt_start_number: string // stringa per il controllo dell'input
-  expiry_warning_days_certificates: string // stringa per il controllo dell'input
+  expiry_warning_days_certificates: string
+  expiry_warning_days_memberships: string
+  expiry_warning_days_subscriptions: string
+  dashboard_widgets: string[]
 }
 
 interface FormErrors {
   receipt_start_number?: string
   expiry_warning_days_certificates?: string
+  expiry_warning_days_memberships?: string
+  expiry_warning_days_subscriptions?: string
 }
 
 // ── Icone ─────────────────────────────────────────────────────────────────────
@@ -91,6 +113,9 @@ export default function SettingsPage(): React.JSX.Element {
     dicitura_pie: '',
     receipt_start_number: '1',
     expiry_warning_days_certificates: '30',
+    expiry_warning_days_memberships: '30',
+    expiry_warning_days_subscriptions: '30',
+    dashboard_widgets: ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti'],
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -113,6 +138,15 @@ export default function SettingsPage(): React.JSX.Element {
           expiry_warning_days_certificates: String(
             s.expiry_warning_days_certificates ?? 30
           ),
+          expiry_warning_days_memberships: String(
+            s.expiry_warning_days_memberships ?? 30
+          ),
+          expiry_warning_days_subscriptions: String(
+            s.expiry_warning_days_subscriptions ?? 30
+          ),
+          dashboard_widgets: Array.isArray(s.dashboard_widgets)
+            ? s.dashboard_widgets
+            : ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti'],
         })
       })
       .catch(() => {
@@ -131,6 +165,11 @@ export default function SettingsPage(): React.JSX.Element {
 
   // ── Validazione ─────────────────────────────────────────────────────────────
 
+  function validateWarningDays(value: string): boolean {
+    const n = parseInt(value, 10)
+    return Number.isInteger(n) && n >= 1 && n <= 365 && value.trim() !== ''
+  }
+
   const validate = useCallback(
     (data: FormState): FormErrors => {
       const errs: FormErrors = {}
@@ -140,14 +179,16 @@ export default function SettingsPage(): React.JSX.Element {
         errs.receipt_start_number = t('impostazioni.errore_numero_minimo_uno')
       }
 
-      const warnDays = parseInt(data.expiry_warning_days_certificates, 10)
-      if (
-        !Number.isInteger(warnDays) ||
-        warnDays < 1 ||
-        warnDays > 365 ||
-        data.expiry_warning_days_certificates.trim() === ''
-      ) {
+      if (!validateWarningDays(data.expiry_warning_days_certificates)) {
         errs.expiry_warning_days_certificates = t('impostazioni.errore_giorni_range')
+      }
+
+      if (!validateWarningDays(data.expiry_warning_days_memberships)) {
+        errs.expiry_warning_days_memberships = t('impostazioni.errore_giorni_range')
+      }
+
+      if (!validateWarningDays(data.expiry_warning_days_subscriptions)) {
+        errs.expiry_warning_days_subscriptions = t('impostazioni.errore_giorni_range')
       }
 
       return errs
@@ -181,9 +222,22 @@ export default function SettingsPage(): React.JSX.Element {
     setErrors((prev) => ({ ...prev, receipt_start_number: undefined }))
   }
 
-  function handleWarningDaysChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    setForm((prev) => ({ ...prev, expiry_warning_days_certificates: e.target.value }))
-    setErrors((prev) => ({ ...prev, expiry_warning_days_certificates: undefined }))
+  function handleWarningDaysChange(field: keyof Pick<FormState, 'expiry_warning_days_certificates' | 'expiry_warning_days_memberships' | 'expiry_warning_days_subscriptions'>) {
+    return (e: React.ChangeEvent<HTMLInputElement>): void => {
+      setForm((prev) => ({ ...prev, [field]: e.target.value }))
+      setErrors((prev) => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  function handleWidgetToggle(widgetId: string): void {
+    setForm((prev) => {
+      const current = prev.dashboard_widgets
+      const isActive = current.includes(widgetId)
+      const updated = isActive
+        ? current.filter((w) => w !== widgetId)
+        : [...current, widgetId]
+      return { ...prev, dashboard_widgets: updated }
+    })
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
@@ -207,6 +261,15 @@ export default function SettingsPage(): React.JSX.Element {
           form.expiry_warning_days_certificates,
           10
         ),
+        expiry_warning_days_memberships: parseInt(
+          form.expiry_warning_days_memberships,
+          10
+        ),
+        expiry_warning_days_subscriptions: parseInt(
+          form.expiry_warning_days_subscriptions,
+          10
+        ),
+        dashboard_widgets: form.dashboard_widgets,
       }
       await window.api.settings.set(payload)
 
@@ -403,22 +466,23 @@ export default function SettingsPage(): React.JSX.Element {
             {t('impostazioni.sezione_scadenze')}
           </h3>
 
-          <div>
+          {/* Preavviso certificati */}
+          <div className="mb-5">
             <label
-              htmlFor="settings-warning-days"
+              htmlFor="settings-warning-days-cert"
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
             >
               {t('impostazioni.preavviso_certificati')}
             </label>
             <div className="flex items-center gap-2">
               <input
-                id="settings-warning-days"
+                id="settings-warning-days-cert"
                 type="number"
                 min={1}
                 max={365}
                 step={1}
                 value={form.expiry_warning_days_certificates}
-                onChange={handleWarningDaysChange}
+                onChange={handleWarningDaysChange('expiry_warning_days_certificates')}
                 className={[
                   'block w-32 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
                   errors.expiry_warning_days_certificates
@@ -427,7 +491,7 @@ export default function SettingsPage(): React.JSX.Element {
                 ].join(' ')}
                 aria-describedby={
                   errors.expiry_warning_days_certificates
-                    ? 'settings-warning-days-error'
+                    ? 'settings-warning-days-cert-error'
                     : undefined
                 }
                 aria-invalid={errors.expiry_warning_days_certificates !== undefined}
@@ -438,7 +502,7 @@ export default function SettingsPage(): React.JSX.Element {
             </div>
             {errors.expiry_warning_days_certificates && (
               <p
-                id="settings-warning-days-error"
+                id="settings-warning-days-cert-error"
                 role="alert"
                 className="mt-1.5 text-sm text-red-600 dark:text-red-400"
               >
@@ -446,6 +510,128 @@ export default function SettingsPage(): React.JSX.Element {
               </p>
             )}
           </div>
+
+          {/* Preavviso iscrizioni */}
+          <div className="mb-5">
+            <label
+              htmlFor="settings-warning-days-isc"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+            >
+              {t('impostazioni.preavviso_iscrizioni')}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="settings-warning-days-isc"
+                type="number"
+                min={1}
+                max={365}
+                step={1}
+                value={form.expiry_warning_days_memberships}
+                onChange={handleWarningDaysChange('expiry_warning_days_memberships')}
+                className={[
+                  'block w-32 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+                  errors.expiry_warning_days_memberships
+                    ? 'border-red-400 dark:border-red-500'
+                    : 'border-gray-300 dark:border-gray-700',
+                ].join(' ')}
+                aria-describedby={
+                  errors.expiry_warning_days_memberships
+                    ? 'settings-warning-days-isc-error'
+                    : undefined
+                }
+                aria-invalid={errors.expiry_warning_days_memberships !== undefined}
+              />
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {t('impostazioni.giorni')}
+              </span>
+            </div>
+            {errors.expiry_warning_days_memberships && (
+              <p
+                id="settings-warning-days-isc-error"
+                role="alert"
+                className="mt-1.5 text-sm text-red-600 dark:text-red-400"
+              >
+                {errors.expiry_warning_days_memberships}
+              </p>
+            )}
+          </div>
+
+          {/* Preavviso abbonamenti */}
+          <div>
+            <label
+              htmlFor="settings-warning-days-abb"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+            >
+              {t('impostazioni.preavviso_abbonamenti')}
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="settings-warning-days-abb"
+                type="number"
+                min={1}
+                max={365}
+                step={1}
+                value={form.expiry_warning_days_subscriptions}
+                onChange={handleWarningDaysChange('expiry_warning_days_subscriptions')}
+                className={[
+                  'block w-32 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent',
+                  errors.expiry_warning_days_subscriptions
+                    ? 'border-red-400 dark:border-red-500'
+                    : 'border-gray-300 dark:border-gray-700',
+                ].join(' ')}
+                aria-describedby={
+                  errors.expiry_warning_days_subscriptions
+                    ? 'settings-warning-days-abb-error'
+                    : undefined
+                }
+                aria-invalid={errors.expiry_warning_days_subscriptions !== undefined}
+              />
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {t('impostazioni.giorni')}
+              </span>
+            </div>
+            {errors.expiry_warning_days_subscriptions && (
+              <p
+                id="settings-warning-days-abb-error"
+                role="alert"
+                className="mt-1.5 text-sm text-red-600 dark:text-red-400"
+              >
+                {errors.expiry_warning_days_subscriptions}
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* ── Sezione Dashboard ─────────────────────────────────────────────── */}
+        <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-5">
+            {t('impostazioni.sezione_dashboard')}
+          </h3>
+
+          <fieldset>
+            <legend className="sr-only">{t('impostazioni.sezione_dashboard')}</legend>
+            <div className="space-y-3">
+              {WIDGET_DEFS.map((widget) => {
+                const isChecked = form.dashboard_widgets.includes(widget.id)
+                return (
+                  <label
+                    key={widget.id}
+                    className="flex items-center gap-3 cursor-pointer group"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleWidgetToggle(widget.id)}
+                      className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 focus:ring-2 cursor-pointer"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors select-none">
+                      {t(widget.labelKey)}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </fieldset>
         </section>
 
         {/* ── Feedback globale e submit ─────────────────────────────────────── */}

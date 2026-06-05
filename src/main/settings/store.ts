@@ -9,8 +9,11 @@ const DEFAULT_SETTINGS: AppSettings = {
   language: 'it',
   primaryColor: '59,130,246',
   expiry_warning_days_certificates: 30,
+  expiry_warning_days_memberships: 30,
+  expiry_warning_days_subscriptions: 30,
   dicitura_pie: '',
-  receipt_start_number: 1
+  receipt_start_number: 1,
+  dashboard_widgets: ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti']
 }
 
 export function getSettingsPath(): string {
@@ -40,8 +43,18 @@ export function loadSettings(): AppSettings {
       expiry_warning_days_certificates:
         parsed.expiry_warning_days_certificates ??
         DEFAULT_SETTINGS.expiry_warning_days_certificates,
+      expiry_warning_days_memberships:
+        parsed.expiry_warning_days_memberships ??
+        DEFAULT_SETTINGS.expiry_warning_days_memberships,
+      expiry_warning_days_subscriptions:
+        parsed.expiry_warning_days_subscriptions ??
+        DEFAULT_SETTINGS.expiry_warning_days_subscriptions,
       dicitura_pie: parsed.dicitura_pie ?? DEFAULT_SETTINGS.dicitura_pie,
-      receipt_start_number: parsed.receipt_start_number ?? DEFAULT_SETTINGS.receipt_start_number
+      receipt_start_number: parsed.receipt_start_number ?? DEFAULT_SETTINGS.receipt_start_number,
+      dashboard_widgets:
+        Array.isArray(parsed.dashboard_widgets)
+          ? parsed.dashboard_widgets
+          : DEFAULT_SETTINGS.dashboard_widgets
     }
   } catch (err) {
     log.error('[settings] Errore lettura impostazioni, uso defaults:', err)

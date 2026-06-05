@@ -24,7 +24,14 @@ import type {
   RicevutaConRighe,
   RicevutaFilters,
   VocePagabile,
-  CreaRicevutaInput
+  CreaRicevutaInput,
+  WidgetIndicatori,
+  ClienteInScadenza,
+  AbbonamentoPerTipo,
+  IncassiPeriodo,
+  NuoviTesseramenti,
+  CompleannoDellaSett,
+  DashboardPeriodo
 } from '../types/shared'
 
 // Espone le API standard di electron-toolkit su window.electron
@@ -183,6 +190,37 @@ const api: ElectronAPI = {
     }
   },
 
+  dashboard: {
+    indicatori(params: {
+      oggi: string
+      giorniCert: number
+      giorniIsc: number
+      giorniAbb: number
+    }): Promise<WidgetIndicatori> {
+      return ipcRenderer.invoke('dashboard:indicatori', params)
+    },
+    scadenze(params: {
+      oggi: string
+      giorniCert: number
+      giorniIsc: number
+      giorniAbb: number
+    }): Promise<ClienteInScadenza[]> {
+      return ipcRenderer.invoke('dashboard:scadenze', params)
+    },
+    abbonamenti(params: { soloAttivi?: boolean }): Promise<AbbonamentoPerTipo[]> {
+      return ipcRenderer.invoke('dashboard:abbonamenti', params)
+    },
+    incassi(params: { periodo: DashboardPeriodo }): Promise<IncassiPeriodo> {
+      return ipcRenderer.invoke('dashboard:incassi', params)
+    },
+    tesseramenti(params: { periodo: DashboardPeriodo }): Promise<NuoviTesseramenti> {
+      return ipcRenderer.invoke('dashboard:tesseramenti', params)
+    },
+    compleanni(params: { dalGiorno: string; alGiorno: string }): Promise<CompleannoDellaSett[]> {
+      return ipcRenderer.invoke('dashboard:compleanni', params)
+    }
+  },
+
   on(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void =>
       callback(...args)
@@ -225,5 +263,12 @@ export type {
   RicevutaConRighe,
   RicevutaFilters,
   VocePagabile,
-  CreaRicevutaInput
+  CreaRicevutaInput,
+  WidgetIndicatori,
+  ClienteInScadenza,
+  AbbonamentoPerTipo,
+  IncassiPeriodo,
+  NuoviTesseramenti,
+  CompleannoDellaSett,
+  DashboardPeriodo
 }

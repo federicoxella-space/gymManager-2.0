@@ -9,10 +9,16 @@ export interface AppSettings {
   primaryColor: string
   /** Giorni di anticipo per la segnalazione "in scadenza" dei certificati medici. */
   expiry_warning_days_certificates: number
+  /** Giorni di anticipo per la segnalazione "in scadenza" delle iscrizioni. */
+  expiry_warning_days_memberships: number
+  /** Giorni di anticipo per la segnalazione "in scadenza" degli abbonamenti. */
+  expiry_warning_days_subscriptions: number
   /** Testo default a piè di ricevuta (modificabile per singola ricevuta). */
   dicitura_pie: string
   /** Numero da cui parte la numerazione ricevute per l'anno corrente (configurabile dall'utente). */
   receipt_start_number: number
+  /** Widget visibili nella dashboard (es. ['indicatori','scadenze','incassi','abbonamenti','tesseramenti']). */
+  dashboard_widgets: string[]
 }
 
 export type DbState = 'firstRun' | 'locked' | 'ready'
@@ -307,6 +313,58 @@ export interface CreaRicevutaInput {
   righe: CreaRigaInput[]
 }
 
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+
+export interface DashboardPeriodo {
+  dal: string // YYYY-MM-DD
+  al: string  // YYYY-MM-DD
+}
+
+export interface WidgetIndicatori {
+  soci_attivi: number
+  da_rinnovare: number
+  certificati_in_scadenza: number
+  certificati_scaduti: number
+  incassi_pagati: number
+  incassi_da_incassare: number
+}
+
+export interface ClienteInScadenza {
+  cliente_id: number
+  nome: string
+  cognome: string
+  tipo: 'certificato' | 'iscrizione' | 'abbonamento'
+  nome_tipo: string
+  data_scadenza: string
+  giorni_alla_scadenza: number
+}
+
+export interface AbbonamentoPerTipo {
+  tipo_abbonamento_id: number
+  nome: string
+  colore: string
+  totale: number
+}
+
+export interface IncassiPeriodo {
+  totale_pagato: number
+  totale_da_incassare: number
+  ricevute_emesse: number
+  totale_ricevute: number
+}
+
+export interface NuoviTesseramenti {
+  totale: number
+}
+
+export interface CompleannoDellaSett {
+  cliente_id: number
+  nome: string
+  cognome: string
+  data_nascita: string
+  giorno_mese: string // gg/mm
+}
+
 // ── ElectronAPI ───────────────────────────────────────────────────────────────
 
 export interface ElectronAPI {
@@ -372,6 +430,24 @@ export interface ElectronAPI {
   }
   pdf: {
     genera: (args: { ricevutaId: number }) => Promise<string>
+  }
+  dashboard: {
+    indicatori: (params: {
+      oggi: string
+      giorniCert: number
+      giorniIsc: number
+      giorniAbb: number
+    }) => Promise<WidgetIndicatori>
+    scadenze: (params: {
+      oggi: string
+      giorniCert: number
+      giorniIsc: number
+      giorniAbb: number
+    }) => Promise<ClienteInScadenza[]>
+    abbonamenti: (params: { soloAttivi?: boolean }) => Promise<AbbonamentoPerTipo[]>
+    incassi: (params: { periodo: DashboardPeriodo }) => Promise<IncassiPeriodo>
+    tesseramenti: (params: { periodo: DashboardPeriodo }) => Promise<NuoviTesseramenti>
+    compleanni: (params: { dalGiorno: string; alGiorno: string }) => Promise<CompleannoDellaSett[]>
   }
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void
   off: (channel: string, callback: (...args: unknown[]) => void) => void

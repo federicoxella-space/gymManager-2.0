@@ -303,9 +303,62 @@
     "numero_iniziale_ricevute": "Numero iniziale ricevute (anno corrente)",
     "numero_iniziale_avviso": "Attenzione: modificare questo valore cambierà la numerazione delle ricevute future.",
     "preavviso_certificati": "Giorni di preavviso per certificati medici in scadenza",
+    "preavviso_iscrizioni": "Giorni di preavviso per iscrizioni in scadenza",
+    "preavviso_abbonamenti": "Giorni di preavviso per abbonamenti in scadenza",
     "giorni": "giorni",
     "errore_numero_minimo_uno": "Il numero deve essere un intero maggiore o uguale a 1.",
-    "errore_giorni_range": "Il valore deve essere un intero compreso tra 1 e 365."
+    "errore_giorni_range": "Il valore deve essere un intero compreso tra 1 e 365.",
+    "sezione_dashboard": "Dashboard — Widget visibili",
+    "widget_indicatori": "Indicatori sintetici",
+    "widget_scadenze": "Scadenze imminenti",
+    "widget_incassi": "Incassi del periodo",
+    "widget_abbonamenti": "Distribuzione abbonamenti",
+    "widget_tesseramenti": "Nuovi tesseramenti",
+    "widget_compleanni": "Compleanni della settimana"
+  },
+  "dashboard": {
+    "titolo": "Dashboard",
+    "periodo": {
+      "questo_mese": "Questo mese",
+      "ultimi_30": "Ultimi 30 giorni",
+      "quest_anno": "Quest'anno",
+      "personalizzato": "Personalizzato",
+      "dal": "Dal",
+      "al": "Al"
+    },
+    "indicatori": {
+      "soci_attivi": "Soci attivi",
+      "da_rinnovare": "Da rinnovare",
+      "certificati": "Certificati in scadenza",
+      "incassi": "Incassi del periodo"
+    },
+    "scadenze": {
+      "titolo": "Scadenze imminenti",
+      "vuoto": "Nessuna scadenza imminente",
+      "vedi_tutti": "Vedi tutti",
+      "giorni": "giorni",
+      "oggi": "Scade oggi",
+      "scaduto": "Scaduto"
+    },
+    "incassi": {
+      "titolo": "Incassi del periodo",
+      "pagato": "Incassato",
+      "da_incassare": "Da incassare",
+      "ricevute": "Ricevute emesse",
+      "totale": "Totale ricevute"
+    },
+    "abbonamenti": {
+      "titolo": "Abbonamenti attivi per tipo",
+      "vuoto": "Nessun abbonamento attivo"
+    },
+    "tesseramenti": {
+      "titolo": "Nuovi tesseramenti nel periodo",
+      "nessuno": "Nessun tesseramento nel periodo"
+    },
+    "compleanni": {
+      "titolo": "Compleanni questa settimana",
+      "vuoto": "Nessun compleanno questa settimana"
+    }
   },
   "abbonamenti": {
     "assegna": "Assegna abbonamento",

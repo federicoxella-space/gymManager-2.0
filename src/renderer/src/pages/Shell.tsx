@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { SettingsProvider } from '../context/SettingsContext'
+import DashboardPage from './DashboardPage'
 import ClientsPage from './ClientsPage'
 import CatalogoPage from './CatalogoPage'
 import ReceiptsPage from './ReceiptsPage'
@@ -107,6 +108,16 @@ export default function ShellPage(): React.JSX.Element {
   const { t } = useTranslation()
   const [activeNav, setActiveNav] = useState<NavItem>('dashboard')
 
+  /** Gestisce la navigazione proveniente dalla Dashboard (drill-down). */
+  function handleDashboardNavigate(section: string, params?: Record<string, unknown>): void {
+    // params sarà usato quando ClientsPage supporterà filtri via props.
+    void params
+    const validSections: NavItem[] = ['dashboard', 'clients', 'catalog', 'receipts', 'settings']
+    if (validSections.includes(section as NavItem)) {
+      setActiveNav(section as NavItem)
+    }
+  }
+
   const navItems: { id: NavItem; icon: React.ReactNode; label: string }[] = [
     { id: 'dashboard', icon: <DashboardIcon />, label: t('shell.nav.dashboard') },
     { id: 'clients', icon: <ClientsIcon />, label: t('shell.nav.clients') },
@@ -117,6 +128,8 @@ export default function ShellPage(): React.JSX.Element {
 
   function renderContent(): React.ReactNode {
     switch (activeNav) {
+      case 'dashboard':
+        return <DashboardPage onNavigate={handleDashboardNavigate} />
       case 'clients':
         return <ClientsPage />
       case 'catalog':
@@ -126,32 +139,7 @@ export default function ShellPage(): React.JSX.Element {
       case 'settings':
         return <SettingsPage />
       default:
-        return (
-          <div className="max-w-lg mx-auto mt-16 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-50 dark:bg-primary-900/30 mb-6">
-              <svg
-                className="w-8 h-8 text-primary-600 dark:text-primary-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
-              {t('shell.placeholder.title')}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t('shell.placeholder.description')}
-            </p>
-          </div>
-        )
+        return <DashboardPage onNavigate={handleDashboardNavigate} />
     }
   }
 

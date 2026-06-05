@@ -44,6 +44,14 @@ import {
   annullaRicevuta,
   getVociPagabili
 } from '../db/receipts-repository'
+import {
+  getIndicatori,
+  getClientiInScadenza,
+  getDistribuzioneAbbonamenti,
+  getIncassiPeriodo,
+  getNuoviTesseramenti,
+  getCompleanni
+} from '../db/dashboard-repository'
 import { validaCliente, validaClienteUpdate } from '../domain/cliente'
 import type {
   AppSettings,
@@ -68,7 +76,14 @@ import type {
   RicevutaConRighe,
   RicevutaFilters,
   CreaRicevutaInput,
-  VocePagabile
+  VocePagabile,
+  WidgetIndicatori,
+  ClienteInScadenza,
+  AbbonamentoPerTipo,
+  IncassiPeriodo,
+  NuoviTesseramenti,
+  CompleannoDellaSett,
+  DashboardPeriodo
 } from '../../types/shared'
 
 /**
@@ -653,6 +668,99 @@ export function registerIpcHandlers(): void {
       } catch (err) {
         log.error('[ipc] pdf:genera errore:', err)
         throw err instanceof Error ? err : new Error('Errore durante la generazione del PDF')
+      }
+    }
+  )
+
+  // ── Dashboard ─────────────────────────────────────────────────────────────
+
+  ipcMain.handle(
+    'dashboard:indicatori',
+    (
+      _event,
+      {
+        oggi,
+        giorniCert,
+        giorniIsc,
+        giorniAbb
+      }: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number }
+    ): WidgetIndicatori => {
+      try {
+        return getIndicatori(oggi, giorniCert, giorniIsc, giorniAbb)
+      } catch (err) {
+        log.error('[ipc] dashboard:indicatori errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero indicatori dashboard')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'dashboard:scadenze',
+    (
+      _event,
+      {
+        oggi,
+        giorniCert,
+        giorniIsc,
+        giorniAbb
+      }: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number }
+    ): ClienteInScadenza[] => {
+      try {
+        return getClientiInScadenza(oggi, giorniCert, giorniIsc, giorniAbb)
+      } catch (err) {
+        log.error('[ipc] dashboard:scadenze errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero scadenze dashboard')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'dashboard:abbonamenti',
+    (_event, { soloAttivi }: { soloAttivi?: boolean }): AbbonamentoPerTipo[] => {
+      try {
+        return getDistribuzioneAbbonamenti(soloAttivi)
+      } catch (err) {
+        log.error('[ipc] dashboard:abbonamenti errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero distribuzione abbonamenti')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'dashboard:incassi',
+    (_event, { periodo }: { periodo: DashboardPeriodo }): IncassiPeriodo => {
+      try {
+        return getIncassiPeriodo(periodo)
+      } catch (err) {
+        log.error('[ipc] dashboard:incassi errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero incassi periodo')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'dashboard:tesseramenti',
+    (_event, { periodo }: { periodo: DashboardPeriodo }): NuoviTesseramenti => {
+      try {
+        return getNuoviTesseramenti(periodo)
+      } catch (err) {
+        log.error('[ipc] dashboard:tesseramenti errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero nuovi tesseramenti')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'dashboard:compleanni',
+    (
+      _event,
+      { dalGiorno, alGiorno }: { dalGiorno: string; alGiorno: string }
+    ): CompleannoDellaSett[] => {
+      try {
+        return getCompleanni(dalGiorno, alGiorno)
+      } catch (err) {
+        log.error('[ipc] dashboard:compleanni errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero compleanni')
       }
     }
   )
