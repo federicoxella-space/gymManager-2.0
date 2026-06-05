@@ -6,6 +6,7 @@ import { closeDatabase, isDatabaseOpen } from './db/database'
 import { registerIpcHandlers } from './ipc/handlers'
 import { loadSettings } from './settings/store'
 import { backupAutomatico } from './backup/backup-service'
+import { initAutoUpdater } from './updater/auto-updater'
 
 function createWindow(): BrowserWindow {
   const preloadPath = join(__dirname, '../preload/index.js')
@@ -30,6 +31,8 @@ function createWindow(): BrowserWindow {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    // Inizializza l'auto-updater dopo che la finestra è visibile
+    initAutoUpdater(mainWindow)
   })
 
   // Apri i link esterni nel browser di sistema invece che in Electron

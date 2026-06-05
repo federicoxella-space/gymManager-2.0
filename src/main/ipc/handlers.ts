@@ -1,4 +1,5 @@
 import { ipcMain, app } from 'electron'
+import { checkForUpdates, installUpdate } from '../updater/auto-updater'
 import { backupLocale, backupAutomatico } from '../backup/backup-service'
 import { verificaBackup, ripristinaBackup, resetDatabase } from '../backup/restore-service'
 import {
@@ -158,6 +159,11 @@ export function registerIpcHandlers(): void {
         log.error('[ipc] db:unlock errore:', err)
         if (err instanceof Error && err.message === 'PASSWORD_WRONG') {
           throw new Error('Password errata. Riprova.')
+        }
+        if (err instanceof Error && err.message.startsWith('MIGRATION_FAILED')) {
+          // Migrazione fallita post-aggiornamento: DB aperto ma schema non aggiornato.
+          // L'utente deve ripristinare da un backup o contattare il supporto.
+          throw new Error('MIGRATION_FAILED')
         }
         throw err instanceof Error ? err : new Error('Errore durante lo sblocco del database')
       }
@@ -896,6 +902,35 @@ export function registerIpcHandlers(): void {
     } catch (err) {
       log.error('[ipc] backup:drive:list errore:', err)
       throw err instanceof Error ? err : new Error('Errore durante il recupero lista backup Drive')
+    }
+  })
+
+  // ── Auto-updater ─────────────────────────────────────────────────────────
+
+  /**
+   * Avvia manualmente il controllo degli aggiornamenti disponibili.
+   */
+  ipcMain.handle('updater:check', (): void => {
+    try {
+      checkForUpdates()
+      log.info('[ipc] updater:check avviato')
+    } catch (err) {
+      log.error('[ipc] updater:check errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante il controllo aggiornamenti')
+    }
+  })
+
+  /**
+   * Installa l'aggiornamento già scaricato e riavvia l'applicazione.
+   * Deve essere chiamato solo dopo aver ricevuto l'evento 'update:downloaded'.
+   */
+  ipcMain.handle('updater:install', (): void => {
+    try {
+      log.info('[ipc] updater:install avviato')
+      installUpdate()
+    } catch (err) {
+      log.error('[ipc] updater:install errore:', err)
+      throw err instanceof Error ? err : new Error("Errore durante l'installazione dell'aggiornamento")
     }
   })
 

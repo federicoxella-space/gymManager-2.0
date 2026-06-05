@@ -33,7 +33,9 @@ import type {
   CompleannoDellaSett,
   DashboardPeriodo,
   BackupManifest,
-  DriveBackupItem
+  DriveBackupItem,
+  UpdateInfo,
+  UpdateProgress
 } from '../types/shared'
 
 // Espone le API standard di electron-toolkit su window.electron
@@ -255,6 +257,15 @@ const api: ElectronAPI = {
     }
   },
 
+  updater: {
+    check(): Promise<void> {
+      return ipcRenderer.invoke('updater:check')
+    },
+    install(): Promise<void> {
+      return ipcRenderer.invoke('updater:install')
+    }
+  },
+
   on(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void =>
       callback(...args)
@@ -306,5 +317,7 @@ export type {
   CompleannoDellaSett,
   DashboardPeriodo,
   BackupManifest,
-  DriveBackupItem
+  DriveBackupItem,
+  UpdateInfo,
+  UpdateProgress
 }

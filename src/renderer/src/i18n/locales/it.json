@@ -21,7 +21,8 @@
     "password_label": "Master password",
     "submit": "Accedi",
     "wrong_password": "Password errata. Riprova.",
-    "error": "Errore durante l'accesso. Riprova."
+    "error": "Errore durante l'accesso. Riprova.",
+    "migration_failed": "Errore nell'aggiornamento del database dopo l'aggiornamento dell'app. Ripristina un backup recente dalle Impostazioni → Backup. Se il problema persiste, contatta il supporto."
   },
   "shell": {
     "nav": {
@@ -359,6 +360,15 @@
       "titolo": "Compleanni questa settimana",
       "vuoto": "Nessun compleanno questa settimana"
     }
+  },
+  "aggiornamento": {
+    "disponibile": "Aggiornamento {{version}} disponibile. Download in corso...",
+    "scaricamento": "Download aggiornamento: {{percent}}%",
+    "pronto": "Aggiornamento {{version}} pronto. Riavvia per installare.",
+    "installa": "Riavvia e installa",
+    "errore": "Errore aggiornamento (non bloccante)",
+    "controllo": "Controllo aggiornamenti...",
+    "nessuno": "App aggiornata"
   },
   "backup": {
     "titolo": "Backup e sicurezza",

@@ -6,6 +6,7 @@ import ClientsPage from './ClientsPage'
 import CatalogoPage from './CatalogoPage'
 import ReceiptsPage from './ReceiptsPage'
 import SettingsPage from './SettingsPage'
+import UpdateNotification from '../components/updater/UpdateNotification'
 
 type NavItem = 'dashboard' | 'clients' | 'catalog' | 'receipts' | 'settings'
 
@@ -185,6 +186,9 @@ export default function ShellPage(): React.JSX.Element {
         {/* Corpo */}
         <div className="flex-1 overflow-y-auto p-8">{renderContent()}</div>
       </main>
+
+      {/* Notifica aggiornamento — overlay non invasivo posizionato in fondo */}
+      <UpdateNotification />
     </div>
     </SettingsProvider>
   )

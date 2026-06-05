@@ -4,6 +4,7 @@ import migration001 from './migrations/001_initial'
 import migration002 from './migrations/002_clients'
 import migration003 from './migrations/003_memberships'
 import migration004 from './migrations/004_receipts'
+import migration005 from './migrations/005_update_test'
 
 export interface Migration {
   version: number
@@ -13,7 +14,7 @@ export interface Migration {
 }
 
 /** Elenco ordinato di tutte le migrazioni registrate. */
-const migrations: Migration[] = [migration001, migration002, migration003, migration004]
+const migrations: Migration[] = [migration001, migration002, migration003, migration004, migration005]
 
 /**
  * Applica tutte le migrazioni non ancora applicate al DB.
@@ -64,6 +65,29 @@ export function runMigrations(db: Database.Database): void {
       )
     }
   }
+}
+
+/**
+ * Restituisce un array dei numeri di versione delle migrazioni non ancora applicate al DB.
+ * Utile per i test e per verificare lo stato del DB dopo un aggiornamento.
+ */
+export function getPendingMigrations(db: Database.Database): number[] {
+  // Crea la tabella di tracking se non esiste (DB appena creato o non ancora migrato)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+      version     INTEGER PRIMARY KEY,
+      description TEXT NOT NULL,
+      applied_at  TEXT NOT NULL
+    )
+  `)
+
+  const applied = new Set<number>(
+    (db.prepare('SELECT version FROM schema_migrations').all() as { version: number }[]).map(
+      (r) => r.version
+    )
+  )
+
+  return migrations.filter((m) => !applied.has(m.version)).map((m) => m.version)
 }
 
 /**

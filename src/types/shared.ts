@@ -482,6 +482,24 @@ export interface ElectronAPI {
       list: () => Promise<DriveBackupItem[]>
     }
   }
+  updater: {
+    check: () => Promise<void>
+    install: () => Promise<void>
+  }
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void
   off: (channel: string, callback: (...args: unknown[]) => void) => void
+}
+
+// ── Auto-update ───────────────────────────────────────────────────────────────
+
+export interface UpdateInfo {
+  version: string
+  releaseNotes?: string
+}
+
+export interface UpdateProgress {
+  percent: number
+  bytesPerSecond: number
+  total: number
+  transferred: number
 }

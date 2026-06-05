@@ -24,9 +24,10 @@ export default function UnlockPage({ onReady }: UnlockPageProps): React.JSX.Elem
     } catch (err) {
       setStatus('error')
       const message = err instanceof Error ? err.message : ''
-      // Il layer IPC lancia "Password errata. Riprova." per PASSWORD_WRONG
       if (message.toLowerCase().includes('errata') || message.toLowerCase().includes('wrong')) {
         setErrorMessage(t('unlock.wrong_password'))
+      } else if (message.includes('MIGRATION_FAILED')) {
+        setErrorMessage(t('unlock.migration_failed'))
       } else {
         setErrorMessage(t('unlock.error'))
       }

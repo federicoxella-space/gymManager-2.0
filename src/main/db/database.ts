@@ -52,37 +52,36 @@ export function openDatabase(password: string): void {
   log.info(`[database] Apertura DB: ${dbPath}`)
 
   let db: Database.Database | null = null
+
+  // Fase 1: apertura e verifica chiave (errori qui → PASSWORD_WRONG)
   try {
     db = new Database(dbPath)
-
-    // Applica la chiave SQLCipher
     db.pragma(`key='${key}'`)
-
-    // Verifica che la chiave sia corretta leggendo user_version.
-    // Se la chiave è sbagliata, SQLCipher restituisce un errore o dati corrotti.
+    // Verifica che la chiave sia corretta — SQLCipher lancia se la chiave è sbagliata
     db.pragma('user_version')
-
-    // Abilita WAL per performance migliori
     db.pragma('journal_mode = WAL')
     db.pragma('foreign_keys = ON')
-
-    dbInstance = db
-    log.info('[database] DB aperto con successo')
-
-    runMigrations(dbInstance)
   } catch (err) {
-    // Chiudi il file se l'apertura ha fallito
-    if (db && db.open) {
-      db.close()
-    }
+    if (db && db.open) db.close()
     dbInstance = null
-
     const message = err instanceof Error ? err.message : String(err)
-    log.error('[database] Errore apertura DB:', message)
-
-    // SQLCipher / better-sqlite3 lancia errori di file o di decifrazione;
-    // li normalizziamo in PASSWORD_WRONG per il chiamante
+    log.error('[database] Errore apertura/verifica DB:', message)
     throw new Error('PASSWORD_WRONG')
+  }
+
+  // Fase 2: migrazioni (errori qui → MIGRATION_FAILED, non PASSWORD_WRONG)
+  dbInstance = db
+  try {
+    runMigrations(dbInstance)
+    log.info('[database] DB aperto e migrazioni applicate')
+  } catch (err) {
+    // Le migrazioni hanno fallito: il DB è comunque aperto (dati pre-esistenti intatti).
+    // Segnala l'errore senza chiudere il DB — l'utente vede un messaggio dedicato.
+    const message = err instanceof Error ? err.message : String(err)
+    log.error('[database] Errore migrazioni al primo avvio post-aggiornamento:', message)
+    // Non chiudiamo il DB: i dati pre-migrazione sono ancora accessibili.
+    // L'IPC handler trasmetterà MIGRATION_FAILED al renderer per mostrare istruzioni di recovery.
+    throw new Error(`MIGRATION_FAILED: ${message}`)
   }
 }
 
