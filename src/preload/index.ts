@@ -19,7 +19,12 @@ import type {
   IscrizioneClienteRow,
   AbbonamentoClienteRow,
   AssegnaIscrizioneInput,
-  AssegnaAbbonamentoInput
+  AssegnaAbbonamentoInput,
+  RicevutaRow,
+  RicevutaConRighe,
+  RicevutaFilters,
+  VocePagabile,
+  CreaRicevutaInput
 } from '../types/shared'
 
 // Espone le API standard di electron-toolkit su window.electron
@@ -154,6 +159,30 @@ const api: ElectronAPI = {
     }
   },
 
+  ricevute: {
+    crea(data: CreaRicevutaInput): Promise<RicevutaConRighe> {
+      return ipcRenderer.invoke('ricevute:crea', data)
+    },
+    get(id: number): Promise<RicevutaConRighe | null> {
+      return ipcRenderer.invoke('ricevute:get', { id })
+    },
+    list(filters?: RicevutaFilters): Promise<RicevutaRow[]> {
+      return ipcRenderer.invoke('ricevute:list', filters)
+    },
+    annulla(id: number): Promise<RicevutaRow> {
+      return ipcRenderer.invoke('ricevute:annulla', { id })
+    },
+    vociPagabili(clienteId: number): Promise<VocePagabile[]> {
+      return ipcRenderer.invoke('ricevute:vociPagabili', { clienteId })
+    }
+  },
+
+  pdf: {
+    genera(args: { ricevutaId: number }): Promise<string> {
+      return ipcRenderer.invoke('pdf:genera', args)
+    }
+  },
+
   on(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void =>
       callback(...args)
@@ -191,5 +220,10 @@ export type {
   IscrizioneClienteRow,
   AbbonamentoClienteRow,
   AssegnaIscrizioneInput,
-  AssegnaAbbonamentoInput
+  AssegnaAbbonamentoInput,
+  RicevutaRow,
+  RicevutaConRighe,
+  RicevutaFilters,
+  VocePagabile,
+  CreaRicevutaInput
 }

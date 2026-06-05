@@ -1,4 +1,8 @@
 import { ipcMain, app } from 'electron'
+import { generaHTMLRicevuta } from '../domain/ricevuta'
+import { generaPDFInElectron } from '../pdf/generator'
+import { getDatabase } from '../db/database'
+import type { ImpostazioniAttivitaSnapshot } from '../domain/ricevuta'
 import log from 'electron-log'
 import { checkFirstRun, openDatabase, isDatabaseOpen } from '../db/database'
 import { loadSettings, saveSettings } from '../settings/store'
@@ -33,6 +37,13 @@ import {
   updateAbbonamentoDate,
   invalidaAbbonamento
 } from '../db/memberships-repository'
+import {
+  getRicevuta,
+  creaRicevuta,
+  listRicevute,
+  annullaRicevuta,
+  getVociPagabili
+} from '../db/receipts-repository'
 import { validaCliente, validaClienteUpdate } from '../domain/cliente'
 import type {
   AppSettings,
@@ -52,7 +63,12 @@ import type {
   IscrizioneClienteRow,
   AbbonamentoClienteRow,
   AssegnaIscrizioneInput,
-  AssegnaAbbonamentoInput
+  AssegnaAbbonamentoInput,
+  RicevutaRow,
+  RicevutaConRighe,
+  RicevutaFilters,
+  CreaRicevutaInput,
+  VocePagabile
 } from '../../types/shared'
 
 /**
@@ -155,6 +171,22 @@ export function registerIpcHandlers(): void {
         const current = loadSettings()
         const updated: AppSettings = { ...current, ...settings }
         saveSettings(updated)
+
+        // Sincronizza i campi che vivono anche nella tabella SQLite app_settings
+        if (isDatabaseOpen()) {
+          const db = getDatabase()
+          const upsert = db.prepare(
+            `INSERT INTO app_settings (key, value, updated_at)
+             VALUES (?, ?, datetime('now'))
+             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+          )
+          if (settings.receipt_start_number !== undefined) {
+            upsert.run('receipt_start_number', String(settings.receipt_start_number))
+          }
+          if (settings.dicitura_pie !== undefined) {
+            upsert.run('dicitura_pie', settings.dicitura_pie)
+          }
+        }
       } catch (err) {
         log.error('[ipc] settings:set errore:', err)
         throw new Error('Impossibile salvare le impostazioni')
@@ -510,6 +542,117 @@ export function registerIpcHandlers(): void {
       } catch (err) {
         log.error('[ipc] abbonamenti:invalida errore:', err)
         throw err instanceof Error ? err : new Error("Errore durante l'invalidazione dell'abbonamento")
+      }
+    }
+  )
+
+  // ── Ricevute ──────────────────────────────────────────────────────────────
+
+  ipcMain.handle(
+    'ricevute:crea',
+    (_event, data: CreaRicevutaInput): RicevutaConRighe => {
+      try {
+        return creaRicevuta(data)
+      } catch (err) {
+        log.error('[ipc] ricevute:crea errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante la creazione della ricevuta')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'ricevute:get',
+    (_event, { id }: { id: number }): RicevutaConRighe | null => {
+      try {
+        return getRicevuta(id)
+      } catch (err) {
+        log.error('[ipc] ricevute:get errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero della ricevuta')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'ricevute:list',
+    (_event, filters?: RicevutaFilters): RicevutaRow[] => {
+      try {
+        return listRicevute(filters)
+      } catch (err) {
+        log.error('[ipc] ricevute:list errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero ricevute')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'ricevute:annulla',
+    (_event, { id }: { id: number }): RicevutaRow => {
+      try {
+        return annullaRicevuta(id)
+      } catch (err) {
+        log.error('[ipc] ricevute:annulla errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'annullamento della ricevuta")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'ricevute:vociPagabili',
+    (_event, { clienteId }: { clienteId: number }): VocePagabile[] => {
+      try {
+        return getVociPagabili(clienteId)
+      } catch (err) {
+        log.error('[ipc] ricevute:vociPagabili errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel recupero voci pagabili')
+      }
+    }
+  )
+
+  // ── PDF ───────────────────────────────────────────────────────────────────
+
+  /**
+   * Genera il PDF di una ricevuta.
+   * Flusso:
+   *   1. Carica la ricevuta (con righe) dal DB.
+   *   2. Legge i dati attività da app_settings.
+   *   3. Genera l'HTML tramite generaHTMLRicevuta.
+   *   4. Produce il PDF con generaPDFInElectron.
+   *   5. Restituisce il Buffer come stringa base64 (IPC serializza solo dati primitivi).
+   */
+  ipcMain.handle(
+    'pdf:genera',
+    async (_event, { ricevutaId }: { ricevutaId: number }): Promise<string> => {
+      try {
+        const ricevuta = getRicevuta(ricevutaId)
+        if (!ricevuta) {
+          throw new Error(`Ricevuta con id ${ricevutaId} non trovata`)
+        }
+
+        // Legge le impostazioni attività da app_settings
+        const db = getDatabase()
+        const getSetting = (key: string, def = ''): string => {
+          const row = db
+            .prepare('SELECT value FROM app_settings WHERE key = ?')
+            .get(key) as { value: string } | undefined
+          return row?.value ?? def
+        }
+
+        const impostazioni: ImpostazioniAttivitaSnapshot = {
+          ragione_sociale: getSetting('ragione_sociale', 'Palestra'),
+          indirizzo: getSetting('indirizzo', ''),
+          codice_fiscale_piva: getSetting('codice_fiscale_piva', ''),
+          logo_base64: getSetting('logo_base64') || undefined,
+          dicitura_pie_default: getSetting('dicitura_pie', ''),
+        }
+
+        const html = generaHTMLRicevuta(ricevuta, impostazioni)
+        const pdfBuffer = await generaPDFInElectron(html)
+
+        log.info(`[ipc] pdf:genera completato per ricevuta ${ricevutaId}`)
+        return pdfBuffer.toString('base64')
+      } catch (err) {
+        log.error('[ipc] pdf:genera errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante la generazione del PDF')
       }
     }
   )

@@ -8,7 +8,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
   language: 'it',
   primaryColor: '59,130,246',
-  expiry_warning_days_certificates: 30
+  expiry_warning_days_certificates: 30,
+  dicitura_pie: '',
+  receipt_start_number: 1
 }
 
 export function getSettingsPath(): string {
@@ -37,7 +39,9 @@ export function loadSettings(): AppSettings {
       primaryColor: parsed.primaryColor ?? DEFAULT_SETTINGS.primaryColor,
       expiry_warning_days_certificates:
         parsed.expiry_warning_days_certificates ??
-        DEFAULT_SETTINGS.expiry_warning_days_certificates
+        DEFAULT_SETTINGS.expiry_warning_days_certificates,
+      dicitura_pie: parsed.dicitura_pie ?? DEFAULT_SETTINGS.dicitura_pie,
+      receipt_start_number: parsed.receipt_start_number ?? DEFAULT_SETTINGS.receipt_start_number
     }
   } catch (err) {
     log.error('[settings] Errore lettura impostazioni, uso defaults:', err)

@@ -9,6 +9,10 @@ export interface AppSettings {
   primaryColor: string
   /** Giorni di anticipo per la segnalazione "in scadenza" dei certificati medici. */
   expiry_warning_days_certificates: number
+  /** Testo default a piè di ricevuta (modificabile per singola ricevuta). */
+  dicitura_pie: string
+  /** Numero da cui parte la numerazione ricevute per l'anno corrente (configurabile dall'utente). */
+  receipt_start_number: number
 }
 
 export type DbState = 'firstRun' | 'locked' | 'ready'
@@ -216,6 +220,93 @@ export interface AssegnaAbbonamentoInput {
   note?: string
 }
 
+// ── Ricevute ──────────────────────────────────────────────────────────────────
+
+/** Riflette la riga della tabella `ricevute`. */
+export interface RicevutaRow {
+  id: number
+  numero: number
+  anno: number
+  data_emissione: string
+  cliente_id: number
+  intestatario_nome: string
+  intestatario_cognome: string
+  intestatario_cf: string
+  intestatario_via: string | null
+  intestatario_civico: string | null
+  intestatario_citta: string | null
+  intestatario_provincia: string | null
+  intestatario_cap: string | null
+  tutore_nome: string | null
+  tutore_cognome: string | null
+  tutore_cf: string | null
+  totale: number
+  metodo_pagamento: string
+  stato_pagamento: 'pagato' | 'da_incassare'
+  dicitura_pie: string | null
+  stato: 'emessa' | 'annullata'
+  data_annullamento: string | null
+  data_emissione_sistema: string
+}
+
+/** Riflette la riga della tabella `righe_ricevuta`. */
+export interface RigaRicevutaRow {
+  id: number
+  ricevuta_id: number
+  /** 'iscrizione' | 'abbonamento' | 'libera' */
+  tipo: string
+  riferimento_id: number | null
+  descrizione: string
+  data_inizio: string | null
+  data_fine: string | null
+  prezzo: number
+  ordine: number
+}
+
+/** Ricevuta con le proprie righe, usata per la generazione PDF. */
+export interface RicevutaConRighe extends RicevutaRow {
+  righe: RigaRicevutaRow[]
+}
+
+/** Voce pagabile (iscrizione o abbonamento da incassare) esposta nella schermata di emissione. */
+export interface VocePagabile {
+  tipo: 'iscrizione' | 'abbonamento'
+  riferimentoId: number
+  descrizione: string
+  dataInizio: string
+  dataFine: string
+  prezzo: number
+  stato_pagamento: 'pagato' | 'da_incassare'
+}
+
+/** Filtri per la lista ricevute. */
+export interface RicevutaFilters {
+  anno?: number
+  stato?: string
+  clienteId?: number
+  search?: string
+}
+
+/** Singola riga nella creazione di una ricevuta. */
+export interface CreaRigaInput {
+  tipo: 'iscrizione' | 'abbonamento' | 'libera'
+  riferimentoId?: number
+  descrizione: string
+  dataInizio?: string
+  dataFine?: string
+  prezzo: number
+}
+
+/** Dati in ingresso per la creazione di una ricevuta. */
+export interface CreaRicevutaInput {
+  clienteId: number
+  dataEmissione: string
+  metodo_pagamento: 'contanti' | 'pos' | 'bonifico'
+  stato_pagamento: 'pagato' | 'da_incassare'
+  dictPie?: string
+  righe: CreaRigaInput[]
+}
+
 // ── ElectronAPI ───────────────────────────────────────────────────────────────
 
 export interface ElectronAPI {
@@ -271,6 +362,16 @@ export interface ElectronAPI {
     list: (clienteId: number, soloAttivi?: boolean) => Promise<AbbonamentoClienteRow[]>
     updateDate: (id: number, dataInizio: string, dataScadenza: string) => Promise<AbbonamentoClienteRow>
     invalida: (id: number) => Promise<AbbonamentoClienteRow>
+  }
+  ricevute: {
+    crea: (data: CreaRicevutaInput) => Promise<RicevutaConRighe>
+    get: (id: number) => Promise<RicevutaConRighe | null>
+    list: (filters?: RicevutaFilters) => Promise<RicevutaRow[]>
+    annulla: (id: number) => Promise<RicevutaRow>
+    vociPagabili: (clienteId: number) => Promise<VocePagabile[]>
+  }
+  pdf: {
+    genera: (args: { ricevutaId: number }) => Promise<string>
   }
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void
   off: (channel: string, callback: (...args: unknown[]) => void) => void

@@ -233,6 +233,80 @@
       "ricevuta_placeholder": "Emetti ricevuta (disponibile in F3)"
     }
   },
+  "ricevute": {
+    "titolo": "Ricevute",
+    "nuova": "Emetti ricevuta",
+    "nessuna": "Nessuna ricevuta",
+    "colonne": {
+      "numero": "N°",
+      "data": "Data",
+      "cliente": "Cliente",
+      "importo": "Importo",
+      "metodo": "Metodo",
+      "stato_pagamento": "Pagamento",
+      "stato": "Stato"
+    },
+    "azioni": {
+      "visualizza": "Visualizza PDF",
+      "scarica": "Scarica PDF",
+      "annulla": "Annulla ricevuta"
+    },
+    "stato": {
+      "emessa": "Emessa",
+      "annullata": "Annullata"
+    },
+    "annulla_dialog": {
+      "titolo": "Annulla ricevuta",
+      "messaggio": "La ricevuta sarà marcata come annullata. Il numero resterà invariato (nessun buco nella serie). Le voci coperte torneranno «da incassare».",
+      "conferma": "Annulla ricevuta",
+      "annulla": "Torna indietro"
+    },
+    "form": {
+      "titolo": "Emetti ricevuta",
+      "voci_pagabili": "Voci da includere",
+      "nessuna_voce": "Nessuna voce da incassare",
+      "riga_libera": "Aggiungi riga libera",
+      "descrizione_libera": "Descrizione",
+      "prezzo_libero": "Importo (€)",
+      "data_emissione": "Data di emissione",
+      "metodo_pagamento": "Metodo di pagamento",
+      "stato_pagamento": "Stato pagamento",
+      "dicitura_pie": "Dicitura a piè di ricevuta",
+      "totale": "Totale",
+      "emetti": "Emetti ricevuta",
+      "errore_nessuna_voce": "Seleziona almeno una voce o aggiungi una riga libera.",
+      "errore_riga_libera": "Ogni riga libera deve avere una descrizione e un importo valido (≥ 0).",
+      "errore_salvataggio": "Errore durante l'emissione della ricevuta. Riprova."
+    },
+    "filtri": {
+      "anno": "Anno",
+      "stato": "Stato",
+      "cerca": "Cerca per numero o cliente",
+      "tutti_stati": "Tutti gli stati"
+    },
+    "errore_caricamento": "Errore durante il caricamento delle ricevute.",
+    "errore_pdf": "Errore durante la generazione del PDF."
+  },
+  "impostazioni": {
+    "titolo": "Impostazioni",
+    "salva": "Salva impostazioni",
+    "salvato": "Impostazioni salvate",
+    "sezione_aspetto": "Aspetto",
+    "sezione_ricevute": "Ricevute",
+    "sezione_scadenze": "Scadenze",
+    "tema": "Tema",
+    "tema_sistema": "Sistema",
+    "tema_chiaro": "Chiaro",
+    "tema_scuro": "Scuro",
+    "colore_primario": "Colore primario",
+    "dicitura_pie": "Dicitura a piè di ricevuta",
+    "numero_iniziale_ricevute": "Numero iniziale ricevute (anno corrente)",
+    "numero_iniziale_avviso": "Attenzione: modificare questo valore cambierà la numerazione delle ricevute future.",
+    "preavviso_certificati": "Giorni di preavviso per certificati medici in scadenza",
+    "giorni": "giorni",
+    "errore_numero_minimo_uno": "Il numero deve essere un intero maggiore o uguale a 1.",
+    "errore_giorni_range": "Il valore deve essere un intero compreso tra 1 e 365."
+  },
   "abbonamenti": {
     "assegna": "Assegna abbonamento",
     "invalida": "Invalida",

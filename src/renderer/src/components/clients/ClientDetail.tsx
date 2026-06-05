@@ -5,6 +5,8 @@ import type {
   CertificatoRow,
   ClienteRow,
   IscrizioneClienteRow,
+  RicevutaConRighe,
+  RicevutaRow,
   TipoAbbonamentoRow,
   TipoIscrizioneRow,
 } from '../../../../types/shared'
@@ -18,6 +20,7 @@ import ClientForm from './ClientForm'
 import CertificatoForm from '../certificati/CertificatoForm'
 import AssegnaIscrizioneForm from '../memberships/AssegnaIscrizioneForm'
 import AssegnaAbbonamentoForm from '../memberships/AssegnaAbbonamentoForm'
+import EmittiRicevutaForm from '../receipts/EmittiRicevutaForm'
 
 interface ClientDetailProps {
   clienteId: number
@@ -45,6 +48,11 @@ function formatData(ymd: string | null | undefined): string {
   if (!ymd) return '—'
   const [y, m, d] = ymd.split('-')
   return `${d}/${m}/${y}`
+}
+
+/** Formatta un numero come valuta italiana */
+function formatValuta(n: number): string {
+  return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n)
 }
 
 interface SectionProps {
@@ -125,6 +133,15 @@ export default function ClientDetail({
     useState<AbbonamentoClienteRow | null>(null)
   const [isInvalidandoAbbonamento, setIsInvalidandoAbbonamento] = useState(false)
 
+  // ── Stato ricevute ─────────────────────────────────────────────────────────
+  const [ricevute, setRicevute] = useState<RicevutaRow[]>([])
+  const [isLoadingRicevute, setIsLoadingRicevute] = useState(true)
+  const [showEmittiRicevuta, setShowEmittiRicevuta] = useState(false)
+  const [annullaRicevutaTarget, setAnnullaRicevutaTarget] = useState<RicevutaRow | null>(null)
+  const [isAnnullandoRicevuta, setIsAnnullandoRicevuta] = useState(false)
+  const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null)
+  const [pdfErrorId, setPdfErrorId] = useState<number | null>(null)
+
   const loadCliente = useCallback(async (): Promise<void> => {
     setIsLoadingCliente(true)
     setLoadError(false)
@@ -180,6 +197,18 @@ export default function ClientDetail({
     }
   }, [clienteId])
 
+  const loadRicevute = useCallback(async (): Promise<void> => {
+    setIsLoadingRicevute(true)
+    try {
+      const data = await window.api.ricevute.list({ clienteId })
+      setRicevute(data)
+    } catch {
+      // Silenzioso: la sezione mostrerà uno stato vuoto
+    } finally {
+      setIsLoadingRicevute(false)
+    }
+  }, [clienteId])
+
   useEffect(() => {
     void loadCliente()
   }, [loadCliente])
@@ -191,6 +220,10 @@ export default function ClientDetail({
   useEffect(() => {
     void loadAbbonamenti()
   }, [loadAbbonamenti])
+
+  useEffect(() => {
+    void loadRicevute()
+  }, [loadRicevute])
 
   async function handleInvalidaIscrizione(): Promise<void> {
     if (!invalidaIscrizioneTarget) return
@@ -233,6 +266,45 @@ export default function ClientDetail({
     } finally {
       setIsInvalidandoAbbonamento(false)
     }
+  }
+
+  /** Apre un PDF (stringa base64) in una nuova finestra */
+  function apriPdf(base64: string): void {
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0))
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+  }
+
+  async function handleVisualizzaPdf(ricevuta: RicevutaRow): Promise<void> {
+    setPdfLoadingId(ricevuta.id)
+    setPdfErrorId(null)
+    try {
+      const base64 = await window.api.pdf.genera({ ricevutaId: ricevuta.id })
+      apriPdf(base64)
+    } catch {
+      setPdfErrorId(ricevuta.id)
+    } finally {
+      setPdfLoadingId(null)
+    }
+  }
+
+  async function handleAnnullaRicevuta(): Promise<void> {
+    if (!annullaRicevutaTarget) return
+    setIsAnnullandoRicevuta(true)
+    try {
+      const aggiornata = await window.api.ricevute.annulla(annullaRicevutaTarget.id)
+      setRicevute((prev) => prev.map((r) => (r.id === aggiornata.id ? aggiornata : r)))
+      setAnnullaRicevutaTarget(null)
+    } finally {
+      setIsAnnullandoRicevuta(false)
+    }
+  }
+
+  function handleRicevutaCreata(ricevuta: RicevutaConRighe): void {
+    setShowEmittiRicevuta(false)
+    // Aggiunge la nuova ricevuta in cima alla lista
+    setRicevute((prev) => [ricevuta, ...prev])
   }
 
   async function handleAnonimizza(): Promise<void> {
@@ -831,11 +903,130 @@ export default function ClientDetail({
         )}
       </Section>
 
-      {/* Sezione Ricevute (placeholder F3) */}
+      {/* Sezione Ricevute */}
       <Section title={t('clienti.dettaglio.sezione_ricevute')}>
-        <p className="text-sm text-gray-400 dark:text-gray-500 italic">
-          {t('common.coming_soon')} (F3)
-        </p>
+        {isLoadingRicevute ? (
+          <div className="flex items-center gap-2 text-gray-400 text-sm">
+            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+            {t('common.loading')}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {ricevute.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('ricevute.nessuna')}</p>
+            ) : (
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 dark:bg-gray-800/60">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                        {t('ricevute.colonne.numero')}
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                        {t('ricevute.colonne.data')}
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                        {t('ricevute.colonne.importo')}
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                        {t('ricevute.colonne.metodo')}
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                        {t('ricevute.colonne.stato')}
+                      </th>
+                      <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                        {t('common.actions')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {ricevute.map((r) => (
+                      <tr
+                        key={r.id}
+                        className={[
+                          'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors',
+                          r.stato === 'annullata' ? 'opacity-60' : '',
+                        ].join(' ')}
+                      >
+                        <td className="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">
+                          {r.anno}-{r.numero}
+                        </td>
+                        <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                          {formatData(r.data_emissione)}
+                        </td>
+                        <td className="px-4 py-3 text-right font-medium text-gray-900 dark:text-gray-100">
+                          {formatValuta(r.totale)}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500 dark:text-gray-400 capitalize">
+                          {r.metodo_pagamento}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={r.stato === 'emessa' ? 'neutral' : 'danger'}>
+                            {t(`ricevute.stato.${r.stato}`)}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {pdfErrorId === r.id && (
+                              <span className="text-xs text-red-500 dark:text-red-400 mr-1">
+                                {t('ricevute.errore_pdf')}
+                              </span>
+                            )}
+                            {/* Visualizza PDF */}
+                            <button
+                              type="button"
+                              onClick={() => void handleVisualizzaPdf(r)}
+                              disabled={pdfLoadingId === r.id}
+                              title={t('ricevute.azioni.visualizza')}
+                              aria-label={t('ricevute.azioni.visualizza')}
+                              className="p-1.5 rounded-md text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors disabled:opacity-50"
+                            >
+                              {pdfLoadingId === r.id ? (
+                                <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+                              ) : (
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                              )}
+                            </button>
+                            {/* Annulla — solo se emessa */}
+                            {r.stato === 'emessa' && !anonimizzato && (
+                              <button
+                                type="button"
+                                onClick={() => setAnnullaRicevutaTarget(r)}
+                                title={t('ricevute.azioni.annulla')}
+                                aria-label={t('ricevute.azioni.annulla')}
+                                className="p-1.5 rounded-md text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* CTA emetti ricevuta */}
+            {!anonimizzato && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowEmittiRicevuta(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                >
+                  {t('ricevute.nuova')}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* Modal modifica cliente */}
@@ -938,6 +1129,33 @@ export default function ClientDetail({
         confirmLabel={t('abbonamenti.invalida')}
         variant="danger"
         isLoading={isInvalidandoAbbonamento}
+      />
+
+      {/* Modal emetti ricevuta */}
+      <Modal
+        isOpen={showEmittiRicevuta}
+        onClose={() => setShowEmittiRicevuta(false)}
+        title={t('ricevute.form.titolo')}
+        maxWidth="max-w-2xl"
+      >
+        <EmittiRicevutaForm
+          clienteId={clienteId}
+          onSuccess={handleRicevutaCreata}
+          onCancel={() => setShowEmittiRicevuta(false)}
+        />
+      </Modal>
+
+      {/* Dialog annulla ricevuta — invariante 5 */}
+      <ConfirmDialog
+        isOpen={annullaRicevutaTarget !== null}
+        onClose={() => setAnnullaRicevutaTarget(null)}
+        onConfirm={() => void handleAnnullaRicevuta()}
+        title={t('ricevute.annulla_dialog.titolo')}
+        message={t('ricevute.annulla_dialog.messaggio')}
+        confirmLabel={t('ricevute.annulla_dialog.conferma')}
+        cancelLabel={t('ricevute.annulla_dialog.annulla')}
+        variant="danger"
+        isLoading={isAnnullandoRicevuta}
       />
     </div>
   )

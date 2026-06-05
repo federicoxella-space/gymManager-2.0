@@ -3,6 +3,7 @@ import log from 'electron-log'
 import migration001 from './migrations/001_initial'
 import migration002 from './migrations/002_clients'
 import migration003 from './migrations/003_memberships'
+import migration004 from './migrations/004_receipts'
 
 export interface Migration {
   version: number
@@ -12,7 +13,7 @@ export interface Migration {
 }
 
 /** Elenco ordinato di tutte le migrazioni registrate. */
-const migrations: Migration[] = [migration001, migration002, migration003]
+const migrations: Migration[] = [migration001, migration002, migration003, migration004]
 
 /**
  * Applica tutte le migrazioni non ancora applicate al DB.

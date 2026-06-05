@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { SettingsProvider } from '../context/SettingsContext'
 import ClientsPage from './ClientsPage'
 import CatalogoPage from './CatalogoPage'
+import ReceiptsPage from './ReceiptsPage'
+import SettingsPage from './SettingsPage'
 
 type NavItem = 'dashboard' | 'clients' | 'catalog' | 'receipts' | 'settings'
 
@@ -119,6 +121,10 @@ export default function ShellPage(): React.JSX.Element {
         return <ClientsPage />
       case 'catalog':
         return <CatalogoPage />
+      case 'receipts':
+        return <ReceiptsPage />
+      case 'settings':
+        return <SettingsPage />
       default:
         return (
           <div className="max-w-lg mx-auto mt-16 text-center">
