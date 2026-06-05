@@ -13,7 +13,12 @@ const DEFAULT_SETTINGS: AppSettings = {
   expiry_warning_days_subscriptions: 30,
   dicitura_pie: '',
   receipt_start_number: 1,
-  dashboard_widgets: ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti']
+  dashboard_widgets: ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti'],
+  ragione_sociale: '',
+  indirizzo_attivita: '',
+  codice_fiscale_piva: '',
+  logo_base64: '',
+  backup_on_close: true
 }
 
 export function getSettingsPath(): string {
@@ -54,7 +59,12 @@ export function loadSettings(): AppSettings {
       dashboard_widgets:
         Array.isArray(parsed.dashboard_widgets)
           ? parsed.dashboard_widgets
-          : DEFAULT_SETTINGS.dashboard_widgets
+          : DEFAULT_SETTINGS.dashboard_widgets,
+      ragione_sociale: parsed.ragione_sociale ?? DEFAULT_SETTINGS.ragione_sociale,
+      indirizzo_attivita: parsed.indirizzo_attivita ?? DEFAULT_SETTINGS.indirizzo_attivita,
+      codice_fiscale_piva: parsed.codice_fiscale_piva ?? DEFAULT_SETTINGS.codice_fiscale_piva,
+      logo_base64: parsed.logo_base64 ?? DEFAULT_SETTINGS.logo_base64,
+      backup_on_close: parsed.backup_on_close ?? DEFAULT_SETTINGS.backup_on_close
     }
   } catch (err) {
     log.error('[settings] Errore lettura impostazioni, uso defaults:', err)

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 import type { AppSettings } from '../../../types/shared'
 import RestoreDialog from '../components/backup/RestoreDialog'
 import ResetPasswordDialog from '../components/backup/ResetPasswordDialog'
@@ -7,19 +8,19 @@ import ResetPasswordDialog from '../components/backup/ResetPasswordDialog'
 // ── Colori preset ─────────────────────────────────────────────────────────────
 
 interface PresetColor {
-  label: string
+  labelKey: string
   rgb: string
 }
 
 const PRESET_COLORS: PresetColor[] = [
-  { label: 'Blu', rgb: '37,99,235' },
-  { label: 'Indaco', rgb: '79,70,229' },
-  { label: 'Viola', rgb: '124,58,237' },
-  { label: 'Rosa', rgb: '219,39,119' },
-  { label: 'Rosso', rgb: '220,38,38' },
-  { label: 'Arancione', rgb: '234,88,12' },
-  { label: 'Verde', rgb: '22,163,74' },
-  { label: 'Teal', rgb: '13,148,136' },
+  { labelKey: 'impostazioni.colore_blu', rgb: '37,99,235' },
+  { labelKey: 'impostazioni.colore_indaco', rgb: '79,70,229' },
+  { labelKey: 'impostazioni.colore_viola', rgb: '124,58,237' },
+  { labelKey: 'impostazioni.colore_rosa', rgb: '219,39,119' },
+  { labelKey: 'impostazioni.colore_rosso', rgb: '220,38,38' },
+  { labelKey: 'impostazioni.colore_arancione', rgb: '234,88,12' },
+  { labelKey: 'impostazioni.colore_verde', rgb: '22,163,74' },
+  { labelKey: 'impostazioni.colore_teal', rgb: '13,148,136' },
 ]
 
 // ── Widget disponibili ────────────────────────────────────────────────────────
@@ -71,6 +72,7 @@ function hexToRgbString(hex: string): string {
 
 interface FormState {
   theme: 'light' | 'dark' | 'system'
+  language: string
   primaryColor: string // "R,G,B"
   dicitura_pie: string
   receipt_start_number: string // stringa per il controllo dell'input
@@ -78,6 +80,11 @@ interface FormState {
   expiry_warning_days_memberships: string
   expiry_warning_days_subscriptions: string
   dashboard_widgets: string[]
+  ragione_sociale: string
+  indirizzo_attivita: string
+  codice_fiscale_piva: string
+  logo_base64: string
+  backup_on_close: boolean
 }
 
 interface FormErrors {
@@ -117,6 +124,7 @@ export default function SettingsPage(): React.JSX.Element {
 
   const [form, setForm] = useState<FormState>({
     theme: 'system',
+    language: 'it',
     primaryColor: '37,99,235',
     dicitura_pie: '',
     receipt_start_number: '1',
@@ -124,6 +132,11 @@ export default function SettingsPage(): React.JSX.Element {
     expiry_warning_days_memberships: '30',
     expiry_warning_days_subscriptions: '30',
     dashboard_widgets: ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti'],
+    ragione_sociale: '',
+    indirizzo_attivita: '',
+    codice_fiscale_piva: '',
+    logo_base64: '',
+    backup_on_close: true,
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -140,6 +153,7 @@ export default function SettingsPage(): React.JSX.Element {
       .then((s: AppSettings) => {
         setForm({
           theme: s.theme,
+          language: s.language ?? 'it',
           primaryColor: s.primaryColor ?? '37,99,235',
           dicitura_pie: s.dicitura_pie ?? '',
           receipt_start_number: String(s.receipt_start_number ?? 1),
@@ -155,6 +169,11 @@ export default function SettingsPage(): React.JSX.Element {
           dashboard_widgets: Array.isArray(s.dashboard_widgets)
             ? s.dashboard_widgets
             : ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti'],
+          ragione_sociale: s.ragione_sociale ?? '',
+          indirizzo_attivita: s.indirizzo_attivita ?? '',
+          codice_fiscale_piva: s.codice_fiscale_piva ?? '',
+          logo_base64: s.logo_base64 ?? '',
+          backup_on_close: s.backup_on_close ?? true,
         })
       })
       .catch(() => {
@@ -214,6 +233,11 @@ export default function SettingsPage(): React.JSX.Element {
     setForm((prev) => ({ ...prev, theme: value }))
   }
 
+  function handleLanguageChange(e: React.ChangeEvent<HTMLSelectElement>): void {
+    const value = e.target.value
+    setForm((prev) => ({ ...prev, language: value }))
+  }
+
   function handleColorPickerChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const rgb = hexToRgbString(e.target.value)
     setForm((prev) => ({ ...prev, primaryColor: rgb }))
@@ -251,6 +275,41 @@ export default function SettingsPage(): React.JSX.Element {
     })
   }
 
+  function handleRagioneSocialeChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setForm((prev) => ({ ...prev, ragione_sociale: e.target.value }))
+  }
+
+  function handleIndirizzoChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setForm((prev) => ({ ...prev, indirizzo_attivita: e.target.value }))
+  }
+
+  function handleCodFiscalePivaChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setForm((prev) => ({ ...prev, codice_fiscale_piva: e.target.value }))
+  }
+
+  function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (): void => {
+      const result = reader.result
+      if (typeof result === 'string') {
+        setForm((prev) => ({ ...prev, logo_base64: result }))
+      }
+    }
+    reader.readAsDataURL(file)
+    // Reset il valore dell'input per permettere di ricaricare lo stesso file
+    e.target.value = ''
+  }
+
+  function handleLogoRimuovi(): void {
+    setForm((prev) => ({ ...prev, logo_base64: '' }))
+  }
+
+  function handleBackupOnCloseChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    setForm((prev) => ({ ...prev, backup_on_close: e.target.checked }))
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault()
     setSaveError(null)
@@ -265,6 +324,7 @@ export default function SettingsPage(): React.JSX.Element {
     try {
       const payload: Partial<AppSettings> = {
         theme: form.theme,
+        language: form.language,
         primaryColor: form.primaryColor,
         dicitura_pie: form.dicitura_pie,
         receipt_start_number: parseInt(form.receipt_start_number, 10),
@@ -281,8 +341,17 @@ export default function SettingsPage(): React.JSX.Element {
           10
         ),
         dashboard_widgets: form.dashboard_widgets,
+        ragione_sociale: form.ragione_sociale,
+        indirizzo_attivita: form.indirizzo_attivita,
+        codice_fiscale_piva: form.codice_fiscale_piva,
+        logo_base64: form.logo_base64,
+        backup_on_close: form.backup_on_close,
       }
       await window.api.settings.set(payload)
+      // Applica immediatamente il cambio lingua senza riavvio
+      if (form.language !== i18n.language) {
+        await i18n.changeLanguage(form.language)
+      }
 
       setSuccessMessage(true)
       if (successTimerRef.current !== null) {
@@ -329,6 +398,105 @@ export default function SettingsPage(): React.JSX.Element {
     <div className="max-w-2xl mx-auto">
       <form onSubmit={(e) => { void handleSubmit(e) }} noValidate>
 
+        {/* ── Sezione Dati attività ────────────────────────────────────────── */}
+        <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-5">
+            {t('impostazioni.sezione_dati_attivita')}
+          </h3>
+
+          {/* Ragione sociale */}
+          <div className="mb-5">
+            <label
+              htmlFor="settings-ragione-sociale"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+            >
+              {t('impostazioni.ragione_sociale')}
+            </label>
+            <input
+              id="settings-ragione-sociale"
+              type="text"
+              value={form.ragione_sociale}
+              onChange={handleRagioneSocialeChange}
+              className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Indirizzo attività */}
+          <div className="mb-5">
+            <label
+              htmlFor="settings-indirizzo"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+            >
+              {t('impostazioni.indirizzo_attivita')}
+            </label>
+            <input
+              id="settings-indirizzo"
+              type="text"
+              value={form.indirizzo_attivita}
+              onChange={handleIndirizzoChange}
+              className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Codice fiscale / P.IVA */}
+          <div className="mb-5">
+            <label
+              htmlFor="settings-cf-piva"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+            >
+              {t('impostazioni.codice_fiscale_piva')}
+            </label>
+            <input
+              id="settings-cf-piva"
+              type="text"
+              value={form.codice_fiscale_piva}
+              onChange={handleCodFiscalePivaChange}
+              className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Logo */}
+          <div>
+            <p className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              {t('impostazioni.logo')}
+            </p>
+            {form.logo_base64 ? (
+              <div className="mb-3 flex items-start gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
+                    {t('impostazioni.logo_anteprima')}
+                  </p>
+                  <img
+                    src={form.logo_base64}
+                    alt={t('impostazioni.logo_anteprima')}
+                    className="h-16 max-w-[200px] object-contain rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogoRimuovi}
+                  className="mt-6 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 text-xs font-medium hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  {t('impostazioni.logo_rimuovi')}
+                </button>
+              </div>
+            ) : null}
+            <label
+              htmlFor="settings-logo-upload"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium cursor-pointer transition-colors focus-within:ring-2 focus-within:ring-primary-500"
+            >
+              {t('impostazioni.logo_carica')}
+              <input
+                id="settings-logo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleLogoFileChange}
+                className="sr-only"
+              />
+            </label>
+          </div>
+        </section>
+
         {/* ── Sezione Aspetto ──────────────────────────────────────────────── */}
         <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
           <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-5">
@@ -355,6 +523,25 @@ export default function SettingsPage(): React.JSX.Element {
             </select>
           </div>
 
+          {/* Lingua */}
+          <div className="mb-5">
+            <label
+              htmlFor="settings-language"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+            >
+              {t('impostazioni.lingua')}
+            </label>
+            <select
+              id="settings-language"
+              value={form.language}
+              onChange={handleLanguageChange}
+              className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="it">{t('impostazioni.lingua_it')}</option>
+              <option value="en">{t('impostazioni.lingua_en')}</option>
+            </select>
+          </div>
+
           {/* Colore primario */}
           <div>
             <label
@@ -369,11 +556,12 @@ export default function SettingsPage(): React.JSX.Element {
               {PRESET_COLORS.map((preset) => {
                 const isSelected = form.primaryColor === preset.rgb
                 const presetHex = rgbStringToHex(preset.rgb)
+                const presetLabel = t(preset.labelKey)
                 return (
                   <button
                     key={preset.rgb}
                     type="button"
-                    title={preset.label}
+                    title={presetLabel}
                     aria-pressed={isSelected}
                     onClick={() => handlePresetColor(preset.rgb)}
                     className={[
@@ -389,7 +577,7 @@ export default function SettingsPage(): React.JSX.Element {
                         <CheckIcon />
                       </span>
                     )}
-                    <span className="sr-only">{preset.label}</span>
+                    <span className="sr-only">{presetLabel}</span>
                   </button>
                 )
               })}
@@ -661,7 +849,7 @@ export default function SettingsPage(): React.JSX.Element {
         </section>
 
         {/* ── Sezione Backup e sicurezza ───────────────────────────────────── */}
-        <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+        <section data-testid="tab-backup" className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
           <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-5">
             {t('backup.titolo')}
           </h3>
@@ -675,9 +863,23 @@ export default function SettingsPage(): React.JSX.Element {
               {t('backup.locale_descrizione')}
             </p>
 
+            {/* Backup automatico alla chiusura */}
+            <label className="flex items-center gap-3 mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.backup_on_close}
+                onChange={handleBackupOnCloseChange}
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 focus:ring-2 cursor-pointer"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300 select-none">
+                {t('impostazioni.backup_on_close')}
+              </span>
+            </label>
+
             {/* Feedback backup */}
             {backupStatus !== null && (
               <div
+                data-testid={backupStatus.type === 'success' ? 'backup-success' : undefined}
                 role="status"
                 aria-live="polite"
                 className={[
@@ -693,6 +895,7 @@ export default function SettingsPage(): React.JSX.Element {
 
             <div className="flex flex-wrap gap-3">
               <button
+                data-testid="btn-backup-locale"
                 type="button"
                 onClick={() => { void handleBackupNow() }}
                 disabled={isBackingUp}

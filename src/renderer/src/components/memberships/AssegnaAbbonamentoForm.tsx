@@ -191,6 +191,7 @@ export default function AssegnaAbbonamentoForm({
       {/* Errore generico */}
       {submitState === 'error' && (
         <div
+          data-testid="errore-salvataggio"
           role="alert"
           className="px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm text-red-700 dark:text-red-300 border border-red-200 dark:border-red-700"
         >
@@ -205,6 +206,7 @@ export default function AssegnaAbbonamentoForm({
         </label>
         <select
           id="assegna-abb-tipo"
+          data-testid="select-tipo-abbonamento"
           value={tipoId}
           onChange={(e) => setTipoId(e.target.value)}
           disabled={isSubmitting}
@@ -234,6 +236,7 @@ export default function AssegnaAbbonamentoForm({
           </label>
           <input
             id="assegna-abb-inizio"
+            data-testid="campo-data-inizio-abb"
             type="date"
             value={dataInizio}
             onChange={(e) => setDataInizio(e.target.value)}
@@ -252,6 +255,7 @@ export default function AssegnaAbbonamentoForm({
           </label>
           <input
             id="assegna-abb-scadenza"
+            data-testid="campo-data-scadenza-abb"
             type="date"
             value={dataScadenza}
             onChange={(e) => setDataScadenza(e.target.value)}
@@ -341,6 +345,7 @@ export default function AssegnaAbbonamentoForm({
           {t('common.cancel')}
         </button>
         <button
+          data-testid="btn-salva-abbonamento"
           type="submit"
           disabled={isSubmitting}
           className={[

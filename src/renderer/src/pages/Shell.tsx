@@ -7,6 +7,7 @@ import CatalogoPage from './CatalogoPage'
 import ReceiptsPage from './ReceiptsPage'
 import SettingsPage from './SettingsPage'
 import UpdateNotification from '../components/updater/UpdateNotification'
+import type { ClientiFilters } from '../../../types/shared'
 
 type NavItem = 'dashboard' | 'clients' | 'catalog' | 'receipts' | 'settings'
 
@@ -15,13 +16,15 @@ interface NavLinkProps {
   active: boolean
   icon: React.ReactNode
   label: string
+  testId?: string
   onClick: (id: NavItem) => void
 }
 
-function NavLink({ id, active, icon, label, onClick }: NavLinkProps): React.JSX.Element {
+function NavLink({ id, active, icon, label, testId, onClick }: NavLinkProps): React.JSX.Element {
   return (
     <button
       type="button"
+      data-testid={testId}
       onClick={() => onClick(id)}
       aria-current={active ? 'page' : undefined}
       className={[
@@ -105,26 +108,60 @@ const AppLogoIcon = (): React.JSX.Element => (
   </svg>
 )
 
+interface ReceiptsFilter {
+  stato_pagamento?: 'pagato' | 'da_incassare'
+}
+
 export default function ShellPage(): React.JSX.Element {
   const { t } = useTranslation()
   const [activeNav, setActiveNav] = useState<NavItem>('dashboard')
+  const [clientFilter, setClientFilter] = useState<ClientiFilters | undefined>(undefined)
+  const [receiptsFilter, setReceiptsFilter] = useState<ReceiptsFilter | undefined>(undefined)
 
   /** Gestisce la navigazione proveniente dalla Dashboard (drill-down). */
   function handleDashboardNavigate(section: string, params?: Record<string, unknown>): void {
-    // params sarà usato quando ClientsPage supporterà filtri via props.
-    void params
-    const validSections: NavItem[] = ['dashboard', 'clients', 'catalog', 'receipts', 'settings']
-    if (validSections.includes(section as NavItem)) {
-      setActiveNav(section as NavItem)
+    if (section === 'clients' && params) {
+      const filtro = params.filtro as string | undefined
+      if (filtro === 'iscrizione_attiva') {
+        setClientFilter({ stato_iscrizione: 'attiva' })
+        setActiveNav('clients')
+      } else if (filtro === 'iscrizione_scaduta') {
+        setClientFilter({ stato_iscrizione: 'scaduta' })
+        setActiveNav('clients')
+      } else if (filtro === 'certificato') {
+        setClientFilter({ stato_certificato: 'scaduto' })
+        setActiveNav('clients')
+      } else if (filtro === 'abbonamento' && params.tipoAbbonamentoId !== undefined) {
+        setClientFilter({ tipo_abbonamento_id: params.tipoAbbonamentoId as number })
+        setActiveNav('clients')
+      } else if (params.clienteId !== undefined) {
+        setClientFilter(undefined)
+        setActiveNav('clients')
+      } else {
+        setClientFilter(undefined)
+        setActiveNav('clients')
+      }
+    } else if (section === 'receipts') {
+      if (params?.filtro === 'da_incassare') {
+        setReceiptsFilter({ stato_pagamento: 'da_incassare' })
+      } else {
+        setReceiptsFilter(undefined)
+      }
+      setActiveNav('receipts')
+    } else {
+      const validSections: NavItem[] = ['dashboard', 'clients', 'catalog', 'receipts', 'settings']
+      if (validSections.includes(section as NavItem)) {
+        setActiveNav(section as NavItem)
+      }
     }
   }
 
-  const navItems: { id: NavItem; icon: React.ReactNode; label: string }[] = [
-    { id: 'dashboard', icon: <DashboardIcon />, label: t('shell.nav.dashboard') },
-    { id: 'clients', icon: <ClientsIcon />, label: t('shell.nav.clients') },
-    { id: 'catalog', icon: <CatalogIcon />, label: t('shell.nav.catalog') },
-    { id: 'receipts', icon: <ReceiptsIcon />, label: t('shell.nav.receipts') },
-    { id: 'settings', icon: <SettingsIcon />, label: t('shell.nav.settings') }
+  const navItems: { id: NavItem; icon: React.ReactNode; label: string; testId: string }[] = [
+    { id: 'dashboard', icon: <DashboardIcon />, label: t('shell.nav.dashboard'), testId: 'nav-dashboard' },
+    { id: 'clients', icon: <ClientsIcon />, label: t('shell.nav.clients'), testId: 'nav-clienti' },
+    { id: 'catalog', icon: <CatalogIcon />, label: t('shell.nav.catalog'), testId: 'nav-catalog' },
+    { id: 'receipts', icon: <ReceiptsIcon />, label: t('shell.nav.receipts'), testId: 'nav-receipts' },
+    { id: 'settings', icon: <SettingsIcon />, label: t('shell.nav.settings'), testId: 'nav-impostazioni' },
   ]
 
   function renderContent(): React.ReactNode {
@@ -132,11 +169,16 @@ export default function ShellPage(): React.JSX.Element {
       case 'dashboard':
         return <DashboardPage onNavigate={handleDashboardNavigate} />
       case 'clients':
-        return <ClientsPage />
+        return (
+          <ClientsPage
+            initialFilter={clientFilter}
+            onFilterConsumed={() => setClientFilter(undefined)}
+          />
+        )
       case 'catalog':
         return <CatalogoPage />
       case 'receipts':
-        return <ReceiptsPage />
+        return <ReceiptsPage initialFilter={receiptsFilter} />
       case 'settings':
         return <SettingsPage />
       default:
@@ -160,7 +202,7 @@ export default function ShellPage(): React.JSX.Element {
         </div>
 
         {/* Navigazione */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label="Navigazione principale">
+        <nav data-testid="shell-nav" className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" aria-label={t('shell.nav.aria_label')}>
           {navItems.map((item) => (
             <NavLink
               key={item.id}
@@ -168,7 +210,11 @@ export default function ShellPage(): React.JSX.Element {
               active={activeNav === item.id}
               icon={item.icon}
               label={item.label}
-              onClick={setActiveNav}
+              testId={item.testId}
+              onClick={(id) => {
+                if (id === 'clients') setClientFilter(undefined)
+                setActiveNav(id)
+              }}
             />
           ))}
         </nav>

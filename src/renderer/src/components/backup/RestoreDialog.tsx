@@ -78,7 +78,7 @@ export default function RestoreDialog({ isOpen, onClose }: RestoreDialogProps): 
               type="text"
               value={backupPath}
               onChange={(e) => { setBackupPath(e.target.value); setError(null) }}
-              placeholder="C:\backup\gymmanager-backup-2026.db"
+              placeholder={t('backup.ripristina_percorso_placeholder')}
               disabled={isLoading}
               className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed"
             />

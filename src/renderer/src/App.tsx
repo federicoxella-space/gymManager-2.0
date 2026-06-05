@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import i18n from './i18n'
 import SetupPage from './pages/Setup'
 import UnlockPage from './pages/Unlock'
 import ShellPage from './pages/Shell'
@@ -43,6 +44,10 @@ export default function App(): React.JSX.Element {
         applyTheme(settings.theme)
         if (settings.primaryColor) {
           applyPrimaryColor(settings.primaryColor)
+        }
+        // Sincronizza la lingua con le impostazioni salvate
+        if (settings.language && settings.language !== i18n.language) {
+          await i18n.changeLanguage(settings.language)
         }
 
         // Determina lo stato iniziale del DB

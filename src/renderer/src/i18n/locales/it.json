@@ -26,6 +26,7 @@
   },
   "shell": {
     "nav": {
+      "aria_label": "Navigazione principale",
       "dashboard": "Dashboard",
       "clients": "Clienti",
       "catalog": "Catalogo",
@@ -119,6 +120,18 @@
       "annulla": "Annulla",
       "errore_invio": "Errore durante il salvataggio. Riprova."
     },
+    "filtri": {
+      "stato_iscrizione": "Stato iscrizione",
+      "tutti": "Tutti",
+      "iscrizione_attiva": "Attiva",
+      "iscrizione_scaduta": "Scaduta",
+      "iscrizione_assente": "Assente",
+      "certificato": "Certificato",
+      "cert_valido": "Valido",
+      "cert_in_scadenza": "In scadenza",
+      "cert_scaduto": "Scaduto",
+      "tipo_abbonamento": "Tipo abbonamento"
+    },
     "anonimizza": {
       "titolo": "Anonimizza cliente",
       "messaggio": "I dati personali saranno cancellati in modo irreversibile. Ricevute, iscrizioni e abbonamenti resteranno intatti.",
@@ -211,8 +224,10 @@
     "stato": {
       "attiva": "Attiva",
       "scaduta": "Scaduta",
-      "invalidata": "Invalidata"
+      "invalidata": "Invalidata",
+      "assente": "Assente"
     },
+    "scadenza_breve": "Scade {{data}}",
     "pagamento": {
       "pagato": "Pagato",
       "da_incassare": "Da incassare"
@@ -282,6 +297,7 @@
     "filtri": {
       "anno": "Anno",
       "stato": "Stato",
+      "stato_pagamento": "Pagamento",
       "cerca": "Cerca per numero o cliente",
       "tutti_stati": "Tutti gli stati"
     },
@@ -292,9 +308,22 @@
     "titolo": "Impostazioni",
     "salva": "Salva impostazioni",
     "salvato": "Impostazioni salvate",
+    "sezione_dati_attivita": "Dati attività",
+    "ragione_sociale": "Ragione sociale",
+    "indirizzo_attivita": "Indirizzo",
+    "codice_fiscale_piva": "Codice fiscale / P.IVA",
+    "logo": "Logo attività",
+    "logo_anteprima": "Anteprima logo",
+    "logo_carica": "Carica logo",
+    "logo_rimuovi": "Rimuovi logo",
+    "backup_on_close": "Backup automatico alla chiusura",
     "sezione_aspetto": "Aspetto",
     "sezione_ricevute": "Ricevute",
     "sezione_scadenze": "Scadenze",
+    "sezione_lingua": "Lingua",
+    "lingua": "Lingua",
+    "lingua_it": "Italiano",
+    "lingua_en": "English",
     "tema": "Tema",
     "tema_sistema": "Sistema",
     "tema_chiaro": "Chiaro",
@@ -309,6 +338,14 @@
     "giorni": "giorni",
     "errore_numero_minimo_uno": "Il numero deve essere un intero maggiore o uguale a 1.",
     "errore_giorni_range": "Il valore deve essere un intero compreso tra 1 e 365.",
+    "colore_blu": "Blu",
+    "colore_indaco": "Indaco",
+    "colore_viola": "Viola",
+    "colore_rosa": "Rosa",
+    "colore_rosso": "Rosso",
+    "colore_arancione": "Arancione",
+    "colore_verde": "Verde",
+    "colore_teal": "Teal",
     "sezione_dashboard": "Dashboard — Widget visibili",
     "widget_indicatori": "Indicatori sintetici",
     "widget_scadenze": "Scadenze imminenti",
@@ -385,6 +422,7 @@
     "drive_non_configurato": "Google Drive non è configurato. Consulta BLOCKERS.md per le istruzioni di configurazione OAuth.",
     "ripristina_titolo": "Ripristino da backup",
     "ripristina_percorso": "Percorso file backup",
+    "ripristina_percorso_placeholder": "es. C:\\Utenti\\nome\\backup\\backup.db",
     "ripristina_percorso_obbligatorio": "Inserisci il percorso del file di backup.",
     "ripristina_password": "Master password del backup",
     "ripristina_password_obbligatoria": "Inserisci la master password del backup.",

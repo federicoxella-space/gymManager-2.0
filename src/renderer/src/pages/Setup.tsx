@@ -75,7 +75,7 @@ export default function SetupPage({ onReady }: SetupPageProps): React.JSX.Elemen
 
         {/* Card */}
         <div className="bg-surface-raised dark:bg-surface-raised rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 p-8">
-          <form onSubmit={handleSubmit} noValidate>
+          <form data-testid="setup-form" onSubmit={handleSubmit} noValidate>
             {/* Campo password */}
             <div className="mb-5">
               <label
@@ -86,6 +86,7 @@ export default function SetupPage({ onReady }: SetupPageProps): React.JSX.Elemen
               </label>
               <input
                 id="password"
+                data-testid="password-input"
                 type="password"
                 autoComplete="new-password"
                 value={password}
@@ -106,6 +107,7 @@ export default function SetupPage({ onReady }: SetupPageProps): React.JSX.Elemen
               </label>
               <input
                 id="confirm"
+                data-testid="password-confirm-input"
                 type="password"
                 autoComplete="new-password"
                 value={confirm}
@@ -132,6 +134,7 @@ export default function SetupPage({ onReady }: SetupPageProps): React.JSX.Elemen
             {/* Bottone submit */}
             <button
               type="submit"
+              data-testid="setup-submit"
               disabled={isSubmitting}
               className="w-full rounded-lg bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white font-medium py-2.5 px-4 text-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
             >

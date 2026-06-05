@@ -82,8 +82,8 @@ export default function EmittiRicevutaForm({
         .filter((idx) => idx >= 0)
       setVociSelezionate(new Set(idxDaIncassare))
       // Precarica dicitura dalle impostazioni se disponibile
-      const appSettingsExt = settings as typeof settings & { dicitura_pie?: string }
-      setDictPie(appSettingsExt.dicitura_pie ?? '')
+      const diciaturaDefault = settings.dicitura_pie ?? ''
+      setDictPie(diciaturaDefault)
       setSubmitState('idle')
     } catch {
       setSubmitState('error')
@@ -254,6 +254,13 @@ export default function EmittiRicevutaForm({
                 className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors"
               >
                 <input
+                  data-testid={
+                    voce.tipo === 'iscrizione'
+                      ? 'check-voce-iscrizione'
+                      : voce.tipo === 'abbonamento'
+                        ? 'check-voce-abbonamento'
+                        : undefined
+                  }
                   type="checkbox"
                   checked={vociSelezionate.has(idx)}
                   onChange={() => toggleVoce(idx)}
@@ -363,6 +370,7 @@ export default function EmittiRicevutaForm({
         </label>
         <input
           id="ricevuta-data"
+          data-testid="campo-data-emissione"
           type="date"
           value={dataEmissione}
           onChange={(e) => setDataEmissione(e.target.value)}
@@ -378,6 +386,7 @@ export default function EmittiRicevutaForm({
         </label>
         <select
           id="ricevuta-metodo"
+          data-testid="select-metodo-pagamento"
           value={metodoPagamento}
           onChange={(e) => setMetodoPagamento(e.target.value as 'contanti' | 'pos' | 'bonifico')}
           disabled={submitState === 'submitting'}
@@ -437,6 +446,7 @@ export default function EmittiRicevutaForm({
           {t('common.cancel')}
         </button>
         <button
+          data-testid="btn-emetti-ricevuta"
           type="submit"
           disabled={submitState === 'submitting'}
           className={[

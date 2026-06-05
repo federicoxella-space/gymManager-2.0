@@ -216,6 +216,12 @@ export function registerIpcHandlers(): void {
           if (settings.dicitura_pie !== undefined) {
             upsert.run('dicitura_pie', settings.dicitura_pie)
           }
+          const fieldsToSync = ['ragione_sociale', 'indirizzo_attivita', 'codice_fiscale_piva', 'logo_base64', 'backup_on_close'] as const
+          for (const field of fieldsToSync) {
+            if (settings[field] !== undefined) {
+              upsert.run(field, String(settings[field]))
+            }
+          }
         }
       } catch (err) {
         log.error('[ipc] settings:set errore:', err)
@@ -239,7 +245,8 @@ export function registerIpcHandlers(): void {
     'clienti:list',
     (_event, filters?: ClientiFilters): ClienteRow[] => {
       try {
-        return listClienti(filters)
+        const settings = loadSettings()
+        return listClienti(filters, settings.expiry_warning_days_certificates)
       } catch (err) {
         log.error('[ipc] clienti:list errore:', err)
         throw err instanceof Error ? err : new Error('Errore nel recupero clienti')
@@ -658,7 +665,9 @@ export function registerIpcHandlers(): void {
           throw new Error(`Ricevuta con id ${ricevutaId} non trovata`)
         }
 
-        // Legge le impostazioni attività da app_settings
+        // Legge le impostazioni attività: loadSettings() (sorgente primaria)
+        // con fallback su app_settings SQLite per compatibilità con dati precedenti.
+        const appSettings = loadSettings()
         const db = getDatabase()
         const getSetting = (key: string, def = ''): string => {
           const row = db
@@ -668,11 +677,11 @@ export function registerIpcHandlers(): void {
         }
 
         const impostazioni: ImpostazioniAttivitaSnapshot = {
-          ragione_sociale: getSetting('ragione_sociale', 'Palestra'),
-          indirizzo: getSetting('indirizzo', ''),
-          codice_fiscale_piva: getSetting('codice_fiscale_piva', ''),
-          logo_base64: getSetting('logo_base64') || undefined,
-          dicitura_pie_default: getSetting('dicitura_pie', ''),
+          ragione_sociale: appSettings.ragione_sociale || getSetting('ragione_sociale', 'Palestra'),
+          indirizzo: appSettings.indirizzo_attivita || getSetting('indirizzo', ''),
+          codice_fiscale_piva: appSettings.codice_fiscale_piva || getSetting('codice_fiscale_piva', ''),
+          logo_base64: (appSettings.logo_base64 || getSetting('logo_base64')) || undefined,
+          dicitura_pie_default: appSettings.dicitura_pie || getSetting('dicitura_pie', ''),
         }
 
         const html = generaHTMLRicevuta(ricevuta, impostazioni)

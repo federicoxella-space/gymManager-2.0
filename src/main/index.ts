@@ -81,8 +81,7 @@ app.on('window-all-closed', () => {
   if (isDatabaseOpen()) {
     try {
       const settings = loadSettings()
-      const backupOnClose = (settings as unknown as Record<string, unknown>)['backup_on_close']
-      if (backupOnClose !== false && backupOnClose !== 'false') {
+      if (settings.backup_on_close !== false) {
         // Esegui in modo sincrono tramite void: non blocca la chiusura
         backupAutomatico()
           .then((p) => log.info(`[main] Backup automatico chiusura completato: ${p}`))

@@ -1,0 +1,485 @@
+{
+  "app": {
+    "name": "GymManager",
+    "loading": "Loading...",
+    "error": "Error"
+  },
+  "setup": {
+    "title": "Welcome to GymManager",
+    "subtitle": "Set the master password to protect your data",
+    "password_label": "Master password",
+    "confirm_label": "Confirm password",
+    "submit": "Configure GymManager",
+    "password_hint": "Minimum 8 characters. Do not forget it: without it your data cannot be recovered.",
+    "mismatch": "Passwords do not match",
+    "too_short": "Password must be at least 8 characters",
+    "error": "Error during configuration. Please try again."
+  },
+  "unlock": {
+    "title": "GymManager",
+    "subtitle": "Enter the master password to access",
+    "password_label": "Master password",
+    "submit": "Sign in",
+    "wrong_password": "Wrong password. Please try again.",
+    "error": "Error during login. Please try again.",
+    "migration_failed": "Error updating the database after the app update. Restore a recent backup from Settings → Backup. If the problem persists, contact support."
+  },
+  "shell": {
+    "nav": {
+      "aria_label": "Main navigation",
+      "dashboard": "Dashboard",
+      "clients": "Clients",
+      "catalog": "Catalog",
+      "receipts": "Receipts",
+      "settings": "Settings"
+    },
+    "placeholder": {
+      "title": "Phase F0 — structure ready",
+      "description": "The application is configured and ready. Features will be available in subsequent phases."
+    }
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "error_generic": "An error occurred. Please try again.",
+    "actions": "Actions",
+    "coming_soon": "Available in subsequent phases"
+  },
+  "clienti": {
+    "titolo": "Clients",
+    "nuovo": "New client",
+    "cerca": "Search by name, surname or tax code",
+    "nessuno_trovato": "No clients found",
+    "nessuno_trovato_desc": "Try changing the search criteria or add a new client.",
+    "errore_caricamento": "Error loading clients.",
+    "colonne": {
+      "tessera": "Membership N°",
+      "nome": "Name",
+      "iscrizione": "Membership",
+      "certificato": "Certificate",
+      "abbonamenti": "Subscriptions",
+      "azioni": "Actions"
+    },
+    "dettaglio": {
+      "titolo": "Client detail",
+      "modifica": "Edit",
+      "anonimizza": "Anonymize",
+      "minorenne": "Minor",
+      "sezione_anagrafica": "Personal data",
+      "sezione_tutore": "Legal guardian",
+      "sezione_certificato": "Medical certificate",
+      "sezione_iscrizione": "Active membership",
+      "sezione_abbonamenti": "Subscriptions",
+      "sezione_ricevute": "Receipts",
+      "nessun_certificato": "No certificate registered",
+      "aggiorna_certificato": "Update certificate",
+      "vedi_dettaglio": "View detail",
+      "data_inserimento": "Created on",
+      "stato": "Status",
+      "stato_attivo": "Active",
+      "stato_anonimizzato": "Anonymized",
+      "placeholder_f2": "Available from Phase F2",
+      "placeholder_f3": "Available from Phase F3",
+      "errore_caricamento": "Error loading client.",
+      "errore_anonimizzazione": "Error anonymizing client."
+    },
+    "form": {
+      "titolo_crea": "New client",
+      "titolo_modifica": "Edit client",
+      "nome": "First name *",
+      "cognome": "Last name *",
+      "cf": "Tax code *",
+      "cf_hint": "16 characters, e.g. RSSMRA80A01H501Z",
+      "data_nascita": "Date of birth",
+      "sesso": "Gender",
+      "sesso_m": "Male",
+      "sesso_f": "Female",
+      "sesso_seleziona": "Select...",
+      "numero_tessera": "Membership N° (auto)",
+      "via": "Street / Avenue",
+      "civico": "House N°",
+      "citta": "City",
+      "provincia": "Province",
+      "cap": "Postal code",
+      "email": "Email",
+      "telefono": "Phone",
+      "note": "Notes",
+      "sezione_anagrafica": "Personal data",
+      "sezione_contatti": "Contacts and address",
+      "sezione_tutore": "Legal guardian data",
+      "tutore_nota": "The client is a minor: legal guardian data is required.",
+      "tutore_nome": "Guardian first name *",
+      "tutore_cognome": "Guardian last name *",
+      "tutore_cf": "Guardian tax code *",
+      "salva": "Save",
+      "annulla": "Cancel",
+      "errore_invio": "Error during save. Please try again."
+    },
+    "filtri": {
+      "stato_iscrizione": "Membership status",
+      "tutti": "All",
+      "iscrizione_attiva": "Active",
+      "iscrizione_scaduta": "Expired",
+      "iscrizione_assente": "None",
+      "certificato": "Certificate",
+      "cert_valido": "Valid",
+      "cert_in_scadenza": "Expiring soon",
+      "cert_scaduto": "Expired",
+      "tipo_abbonamento": "Subscription type"
+    },
+    "anonimizza": {
+      "titolo": "Anonymize client",
+      "messaggio": "Personal data will be permanently deleted. Receipts, memberships and subscriptions will remain intact.",
+      "conferma": "Anonymize",
+      "annulla": "Cancel"
+    },
+    "certificato": {
+      "tipo_non_agonistico": "Non-competitive",
+      "tipo_agonistico": "Competitive",
+      "scadenza": "Expiry",
+      "stato_valido": "Valid",
+      "stato_in_scadenza": "Expiring soon",
+      "stato_scaduto": "Expired",
+      "stato_assente": "Absent",
+      "aggiorna": "Update certificate",
+      "form_titolo": "Update medical certificate",
+      "tipo_label": "Certificate type",
+      "scadenza_label": "Expiry date",
+      "tipo_seleziona": "Select type...",
+      "errore_salvataggio": "Error during certificate save.",
+      "descrizione_valido": "The certificate is valid.",
+      "descrizione_in_scadenza": "The certificate is expiring soon.",
+      "descrizione_scaduto": "The certificate has expired."
+    }
+  },
+  "catalogo": {
+    "titolo": "Catalog",
+    "tab_iscrizioni": "Memberships",
+    "tab_abbonamenti": "Subscriptions",
+    "nuovo_tipo_iscrizione": "New membership type",
+    "nuovo_tipo_abbonamento": "New subscription type",
+    "mostra_non_validi": "Show invalid too",
+    "nessun_tipo": "No types available",
+    "colonne": {
+      "nome": "Name",
+      "durata": "Duration",
+      "prezzo": "Price",
+      "stato": "Status",
+      "categoria": "Category"
+    },
+    "azioni": {
+      "modifica": "Edit",
+      "invalida": "Invalidate",
+      "elimina": "Delete"
+    },
+    "tipo_assegnato_tooltip": "Cannot delete: type already assigned to clients",
+    "invalida_conferma_titolo": "Invalidate type",
+    "invalida_conferma_msg": "The type will be made invalid and can no longer be assigned. Confirm?",
+    "elimina_conferma_titolo": "Delete type",
+    "elimina_conferma_msg": "The type will be permanently deleted. Confirm?",
+    "stato": {
+      "attivo": "Active",
+      "non_valido": "Invalid"
+    },
+    "form": {
+      "titolo_nuovo_iscrizione": "New membership type",
+      "titolo_modifica_iscrizione": "Edit membership type",
+      "titolo_nuovo_abbonamento": "New subscription type",
+      "titolo_modifica_abbonamento": "Edit subscription type",
+      "nome": "Name *",
+      "descrizione": "Description",
+      "durata_mesi": "Duration (months) *",
+      "prezzo_default": "Default price (€) *",
+      "categoria": "Category",
+      "colore": "Color",
+      "salva": "Save",
+      "annulla": "Cancel",
+      "errore_salvataggio": "Error during save. Please try again."
+    }
+  },
+  "iscrizioni": {
+    "assegna": "Assign membership",
+    "rinnova": "Renew membership",
+    "modifica_date": "Edit dates",
+    "invalida": "Invalidate",
+    "nessuna": "No active membership",
+    "assegna_prima": "Assign a membership first to be able to add subscriptions",
+    "storico": "Membership history",
+    "mostra_storico": "Show history",
+    "nascondi_storico": "Hide history",
+    "periodo": "Period",
+    "prezzo": "Price",
+    "stato_pagamento": "Payment status",
+    "metodo_pagamento": "Method",
+    "tipo": "Membership type",
+    "invalida_conferma_titolo": "Invalidate membership",
+    "invalida_conferma_msg": "The membership will be invalidated. Confirm?",
+    "errore_caricamento": "Error loading membership.",
+    "errore_salvataggio": "Error during save. Please try again.",
+    "stato": {
+      "attiva": "Active",
+      "scaduta": "Expired",
+      "invalidata": "Invalidated",
+      "assente": "None"
+    },
+    "scadenza_breve": "Expires {{data}}",
+    "pagamento": {
+      "pagato": "Paid",
+      "da_incassare": "Pending"
+    },
+    "metodo": {
+      "contanti": "Cash",
+      "pos": "POS",
+      "bonifico": "Bank transfer"
+    },
+    "form": {
+      "tipo": "Membership type *",
+      "tipo_seleziona": "Select type...",
+      "data_inizio": "Start date",
+      "data_scadenza": "Expiry date",
+      "prezzo": "Price (€)",
+      "stato_pagamento": "Payment status",
+      "metodo_pagamento": "Payment method",
+      "nota_rinnovo": "Renewal: the new membership will replace the active one upon saving",
+      "ricevuta_placeholder": "Issue receipt (available in F3)"
+    }
+  },
+  "ricevute": {
+    "titolo": "Receipts",
+    "nuova": "Issue receipt",
+    "nessuna": "No receipts",
+    "colonne": {
+      "numero": "N°",
+      "data": "Date",
+      "cliente": "Client",
+      "importo": "Amount",
+      "metodo": "Method",
+      "stato_pagamento": "Payment",
+      "stato": "Status"
+    },
+    "azioni": {
+      "visualizza": "View PDF",
+      "scarica": "Download PDF",
+      "annulla": "Cancel receipt"
+    },
+    "stato": {
+      "emessa": "Issued",
+      "annullata": "Cancelled"
+    },
+    "annulla_dialog": {
+      "titolo": "Cancel receipt",
+      "messaggio": "The receipt will be marked as cancelled. The number will remain unchanged (no gaps in the series). Covered items will return to «pending».",
+      "conferma": "Cancel receipt",
+      "annulla": "Go back"
+    },
+    "form": {
+      "titolo": "Issue receipt",
+      "voci_pagabili": "Items to include",
+      "nessuna_voce": "No pending items",
+      "riga_libera": "Add free line",
+      "descrizione_libera": "Description",
+      "prezzo_libero": "Amount (€)",
+      "data_emissione": "Issue date",
+      "metodo_pagamento": "Payment method",
+      "stato_pagamento": "Payment status",
+      "dicitura_pie": "Receipt footer text",
+      "totale": "Total",
+      "emetti": "Issue receipt",
+      "errore_nessuna_voce": "Select at least one item or add a free line.",
+      "errore_riga_libera": "Each free line must have a description and a valid amount (≥ 0).",
+      "errore_salvataggio": "Error issuing receipt. Please try again."
+    },
+    "filtri": {
+      "anno": "Year",
+      "stato": "Status",
+      "stato_pagamento": "Payment",
+      "cerca": "Search by number or client",
+      "tutti_stati": "All statuses"
+    },
+    "errore_caricamento": "Error loading receipts.",
+    "errore_pdf": "Error generating PDF."
+  },
+  "impostazioni": {
+    "titolo": "Settings",
+    "salva": "Save settings",
+    "salvato": "Settings saved",
+    "sezione_dati_attivita": "Business details",
+    "ragione_sociale": "Business name",
+    "indirizzo_attivita": "Address",
+    "codice_fiscale_piva": "Tax code / VAT number",
+    "logo": "Business logo",
+    "logo_anteprima": "Logo preview",
+    "logo_carica": "Upload logo",
+    "logo_rimuovi": "Remove logo",
+    "backup_on_close": "Automatic backup on close",
+    "sezione_aspetto": "Appearance",
+    "sezione_ricevute": "Receipts",
+    "sezione_scadenze": "Expiry notices",
+    "sezione_lingua": "Language",
+    "lingua": "Language",
+    "lingua_it": "Italiano",
+    "lingua_en": "English",
+    "tema": "Theme",
+    "tema_sistema": "System",
+    "tema_chiaro": "Light",
+    "tema_scuro": "Dark",
+    "colore_primario": "Primary color",
+    "dicitura_pie": "Receipt footer text",
+    "numero_iniziale_ricevute": "Initial receipt number (current year)",
+    "numero_iniziale_avviso": "Warning: changing this value will change the numbering of future receipts.",
+    "preavviso_certificati": "Notice days for expiring medical certificates",
+    "preavviso_iscrizioni": "Notice days for expiring memberships",
+    "preavviso_abbonamenti": "Notice days for expiring subscriptions",
+    "giorni": "days",
+    "errore_numero_minimo_uno": "The number must be an integer greater than or equal to 1.",
+    "errore_giorni_range": "The value must be an integer between 1 and 365.",
+    "colore_blu": "Blue",
+    "colore_indaco": "Indigo",
+    "colore_viola": "Purple",
+    "colore_rosa": "Pink",
+    "colore_rosso": "Red",
+    "colore_arancione": "Orange",
+    "colore_verde": "Green",
+    "colore_teal": "Teal",
+    "sezione_dashboard": "Dashboard — Visible widgets",
+    "widget_indicatori": "Summary indicators",
+    "widget_scadenze": "Upcoming expiries",
+    "widget_incassi": "Period income",
+    "widget_abbonamenti": "Subscription distribution",
+    "widget_tesseramenti": "New memberships",
+    "widget_compleanni": "Week birthdays"
+  },
+  "dashboard": {
+    "titolo": "Dashboard",
+    "periodo": {
+      "questo_mese": "This month",
+      "ultimi_30": "Last 30 days",
+      "quest_anno": "This year",
+      "personalizzato": "Custom",
+      "dal": "From",
+      "al": "To"
+    },
+    "indicatori": {
+      "soci_attivi": "Active members",
+      "da_rinnovare": "To renew",
+      "certificati": "Expiring certificates",
+      "incassi": "Period income"
+    },
+    "scadenze": {
+      "titolo": "Upcoming expiries",
+      "vuoto": "No upcoming expiries",
+      "vedi_tutti": "View all",
+      "giorni": "days",
+      "oggi": "Expires today",
+      "scaduto": "Expired"
+    },
+    "incassi": {
+      "titolo": "Period income",
+      "pagato": "Collected",
+      "da_incassare": "Pending",
+      "ricevute": "Issued receipts",
+      "totale": "Total receipts"
+    },
+    "abbonamenti": {
+      "titolo": "Active subscriptions by type",
+      "vuoto": "No active subscriptions"
+    },
+    "tesseramenti": {
+      "titolo": "New memberships in period",
+      "nessuno": "No memberships in period"
+    },
+    "compleanni": {
+      "titolo": "Birthdays this week",
+      "vuoto": "No birthdays this week"
+    }
+  },
+  "aggiornamento": {
+    "disponibile": "Update {{version}} available. Downloading...",
+    "scaricamento": "Downloading update: {{percent}}%",
+    "pronto": "Update {{version}} ready. Restart to install.",
+    "installa": "Restart and install",
+    "errore": "Update error (non-blocking)",
+    "controllo": "Checking for updates...",
+    "nessuno": "App up to date"
+  },
+  "backup": {
+    "titolo": "Backup and security",
+    "locale_titolo": "Local backup",
+    "locale_descrizione": "Default: backup folder in the application.",
+    "backup_ora": "Run backup now",
+    "backup_completato": "Backup saved to: {{path}}",
+    "backup_errore": "Error during backup",
+    "drive_titolo": "Google Drive",
+    "drive_non_connesso": "Not connected",
+    "drive_connetti": "Connect Google Drive",
+    "drive_connetti_tooltip": "Requires OAuth configuration (see BLOCKERS.md)",
+    "drive_stub_avviso": "To enable Google Drive backup, OAuth configuration is required. See BLOCKERS.md.",
+    "drive_non_configurato": "Google Drive is not configured. See BLOCKERS.md for OAuth configuration instructions.",
+    "ripristina_titolo": "Restore from backup",
+    "ripristina_percorso": "Backup file path",
+    "ripristina_percorso_placeholder": "e.g. C:\\Users\\name\\backup\\backup.db",
+    "ripristina_percorso_obbligatorio": "Enter the backup file path.",
+    "ripristina_password": "Backup master password",
+    "ripristina_password_obbligatoria": "Enter the backup master password.",
+    "ripristina_avviso": "WARNING: restore will overwrite current data. Make sure you have an up-to-date backup before proceeding.",
+    "ripristina_conferma": "Restore",
+    "ripristina_errore": "Error during restore. Check the path and password.",
+    "ripristina_pulsante": "Restore from backup...",
+    "reset_titolo": "Master password reset",
+    "reset_pulsante": "Change / Reset master password",
+    "reset_step1_titolo": "Warning: irreversible data loss",
+    "reset_step1_avviso": "The reset will permanently delete ALL data.",
+    "reset_step1_effetti": [
+      "All clients will be deleted",
+      "All receipts will be deleted",
+      "All memberships and subscriptions will be deleted"
+    ],
+    "reset_step1_checkbox": "I have read and understood that all data will be permanently deleted",
+    "reset_step1_continua": "Continue",
+    "reset_step2_titolo": "New master password",
+    "reset_step2_nuova": "New password (min. 8 characters)",
+    "reset_step2_conferma": "Confirm new password",
+    "reset_step2_avviso": "After reset the database will be empty.",
+    "reset_step2_conferma_btn": "Confirm and delete data",
+    "reset_completato": "Reset completed. The app will restart.",
+    "reset_errore_password_corta": "Password must be at least 8 characters.",
+    "reset_errore_password_mismatch": "Passwords do not match."
+  },
+  "abbonamenti": {
+    "assegna": "Assign subscription",
+    "invalida": "Invalidate",
+    "nessuno": "No subscriptions",
+    "no_iscrizione_attiva": "The client has no active membership. Assign a membership first.",
+    "oltre_scadenza_iscrizione": "Warning: the subscription expiry ({{dataAbb}}) exceeds the active membership expiry ({{dataIscr}}). You may proceed.",
+    "invalida_conferma_titolo": "Invalidate subscription",
+    "invalida_conferma_msg": "The subscription will be invalidated. Confirm?",
+    "errore_caricamento": "Error loading subscriptions.",
+    "errore_salvataggio": "Error during save. Please try again.",
+    "warning_scadenza": "Expiry beyond membership",
+    "stato": {
+      "attivo": "Active",
+      "scaduto": "Expired",
+      "invalidato": "Invalidated"
+    },
+    "colonne": {
+      "tipo": "Type",
+      "periodo": "Period",
+      "stato": "Status",
+      "prezzo": "Price"
+    },
+    "form": {
+      "tipo": "Subscription type *",
+      "tipo_seleziona": "Select type...",
+      "data_inizio": "Start date",
+      "data_scadenza": "Expiry date",
+      "prezzo": "Price (€)",
+      "stato_pagamento": "Payment status",
+      "metodo_pagamento": "Payment method"
+    }
+  }
+}

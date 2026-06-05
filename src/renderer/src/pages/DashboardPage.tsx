@@ -171,7 +171,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps): React
   // ── Rendering ─────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
+    <div data-testid="dashboard" className="space-y-6">
       {/* Header con selettore periodo */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">

@@ -171,6 +171,7 @@ export default function AssegnaIscrizioneForm({
         </label>
         <select
           id="assegna-iscr-tipo"
+          data-testid="select-tipo-iscrizione"
           value={tipoId}
           onChange={(e) => setTipoId(e.target.value)}
           disabled={isSubmitting}
@@ -198,6 +199,7 @@ export default function AssegnaIscrizioneForm({
           </label>
           <input
             id="assegna-iscr-inizio"
+            data-testid="campo-data-inizio-isc"
             type="date"
             value={dataInizio}
             onChange={(e) => setDataInizio(e.target.value)}
@@ -216,6 +218,7 @@ export default function AssegnaIscrizioneForm({
           </label>
           <input
             id="assegna-iscr-scadenza"
+            data-testid="campo-data-scadenza-isc"
             type="date"
             value={dataScadenza}
             onChange={(e) => setDataScadenza(e.target.value)}
@@ -329,6 +332,7 @@ export default function AssegnaIscrizioneForm({
           {t('common.cancel')}
         </button>
         <button
+          data-testid="btn-salva-iscrizione"
           type="submit"
           disabled={isSubmitting}
           className={[

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ClienteRow, CreateClienteInput, ValidationError } from '../../../../types/shared'
-import { isMinorenne } from '../../utils/dominio'
+import { isMinorenne, decodeCFBasic } from '../../utils/dominio'
 
 interface ClientFormProps {
   mode: 'create' | 'edit'
@@ -112,6 +112,29 @@ export default function ClientForm({
   const minorenneFlag = isMinorenne(formData.data_nascita)
   const isSubmitting = submitState === 'submitting'
 
+  // CF bidirezionale: quando il CF è completo (16 caratteri), precompila data_nascita e sesso
+  useEffect(() => {
+    const cf = formData.codice_fiscale.toUpperCase().trim()
+    if (cf.length !== 16) return
+    try {
+      const decoded = decodeCFBasic(cf)
+      if (!decoded) return
+      const { sesso, annoNascita, meseNascita, giornoNascita } = decoded
+      // Formato YYYY-MM-DD per l'input date
+      const mm = String(meseNascita).padStart(2, '0')
+      const dd = String(giornoNascita).padStart(2, '0')
+      const dataNascita = `${annoNascita}-${mm}-${dd}`
+      setFormData((prev) => ({
+        ...prev,
+        // Precompila solo se i campi sono vuoti (non sovrascrivere la scelta esplicita dell'utente)
+        data_nascita: prev.data_nascita || dataNascita,
+        sesso: prev.sesso || sesso,
+      }))
+    } catch {
+      // Non interrompere il flusso in caso di CF non decodificabile
+    }
+  }, [formData.codice_fiscale])
+
   // Reset errori quando cambiano i dati
   useEffect(() => {
     setApiErrors([])
@@ -200,6 +223,7 @@ export default function ClientForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t('clienti.form.nome')} error={getFieldError('nome')} required>
             <input
+              data-testid="campo-nome"
               type="text"
               name="nome"
               value={formData.nome}
@@ -212,6 +236,7 @@ export default function ClientForm({
 
           <Field label={t('clienti.form.cognome')} error={getFieldError('cognome')} required>
             <input
+              data-testid="campo-cognome"
               type="text"
               name="cognome"
               value={formData.cognome}
@@ -228,6 +253,7 @@ export default function ClientForm({
             required
           >
             <input
+              data-testid="campo-codice-fiscale"
               type="text"
               name="codice_fiscale"
               value={formData.codice_fiscale}
@@ -263,6 +289,7 @@ export default function ClientForm({
 
           <Field label={t('clienti.form.data_nascita')}>
             <input
+              data-testid="campo-data-nascita"
               type="date"
               name="data_nascita"
               value={formData.data_nascita}
@@ -474,6 +501,7 @@ export default function ClientForm({
           {t('clienti.form.annulla')}
         </button>
         <button
+          data-testid="btn-salva-cliente"
           type="submit"
           disabled={isSubmitting}
           className={[

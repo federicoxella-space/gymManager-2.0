@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { ClienteRow } from '../../../../types/shared'
 import { useSettings } from '../../context/SettingsContext'
 import SearchInput from '../ui/SearchInput'
+import Badge from '../ui/Badge'
 import ClientBadge, { getStatoCert } from './ClientBadge'
 
 interface ClientListProps {
@@ -10,6 +11,42 @@ interface ClientListProps {
   isLoading: boolean
   onSelectCliente: (cliente: ClienteRow) => void
   onRefresh: (search: string) => void
+}
+
+interface IscrizioneBadgeProps {
+  stato: 'attiva' | 'scaduta' | 'invalidata' | null
+  scadenza: string | null
+}
+
+function IscrizioneBadge({ stato, scadenza }: IscrizioneBadgeProps): React.JSX.Element {
+  const { t } = useTranslation()
+
+  if (!stato) {
+    return <Badge variant="neutral">{t('iscrizioni.stato.assente')}</Badge>
+  }
+
+  const formatted = scadenza
+    ? new Intl.DateTimeFormat('it-IT').format(new Date(scadenza))
+    : null
+
+  if (stato === 'attiva') {
+    return (
+      <span className="flex flex-col gap-0.5">
+        <Badge variant="success">{t('iscrizioni.stato.attiva')}</Badge>
+        {formatted && (
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            {t('iscrizioni.scadenza_breve', { data: formatted })}
+          </span>
+        )}
+      </span>
+    )
+  }
+
+  if (stato === 'scaduta') {
+    return <Badge variant="warning">{t('iscrizioni.stato.scaduta')}</Badge>
+  }
+
+  return <Badge variant="danger">{t('iscrizioni.stato.invalidata')}</Badge>
 }
 
 function ChevronRightIcon(): React.JSX.Element {
@@ -68,7 +105,7 @@ export default function ClientList({
 
       {/* Tabella */}
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <table className="w-full text-sm">
+        <table data-testid="client-list-table" className="w-full text-sm">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <th
@@ -144,11 +181,18 @@ export default function ClientList({
                         {cliente.cognome} {cliente.nome}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">—</td>
+                    <td className="px-4 py-3">
+                      <IscrizioneBadge
+                        stato={cliente.iscrizione_stato ?? null}
+                        scadenza={cliente.iscrizione_scadenza ?? null}
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <ClientBadge statoCert={statoCert} />
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">0</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
+                      {cliente.abbonamenti_attivi_count ?? 0}
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <button
                         type="button"

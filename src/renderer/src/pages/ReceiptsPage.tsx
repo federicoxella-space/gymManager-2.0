@@ -45,7 +45,11 @@ function anniDisponibili(): number[] {
   return anni
 }
 
-export default function ReceiptsPage(): React.JSX.Element {
+interface ReceiptsPageProps {
+  initialFilter?: { stato_pagamento?: 'pagato' | 'da_incassare' }
+}
+
+export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}): React.JSX.Element {
   const { t } = useTranslation()
 
   const [ricevute, setRicevute] = useState<RicevutaRow[]>([])
@@ -56,6 +60,9 @@ export default function ReceiptsPage(): React.JSX.Element {
   const annoCorrente = new Date().getFullYear()
   const [filtroAnno, setFiltroAnno] = useState<number>(annoCorrente)
   const [filtroStato, setFiltroStato] = useState<string>('')
+  const [filtroPagamento, setFiltroPagamento] = useState<string>(
+    initialFilter?.stato_pagamento === 'da_incassare' ? 'da_incassare' : '',
+  )
   const [filtroSearch, setFiltroSearch] = useState('')
 
   // Annullamento
@@ -86,8 +93,9 @@ export default function ReceiptsPage(): React.JSX.Element {
     void loadRicevute()
   }, [loadRicevute])
 
-  // Filtra localmente per ricerca
+  // Filtra localmente per ricerca e stato pagamento
   const ricevuteFiltrate = ricevute.filter((r) => {
+    if (filtroPagamento && r.stato_pagamento !== filtroPagamento) return false
     if (!filtroSearch.trim()) return true
     const q = filtroSearch.toLowerCase()
     const nomeCliente = `${r.intestatario_cognome} ${r.intestatario_nome}`.toLowerCase()
@@ -181,6 +189,26 @@ export default function ReceiptsPage(): React.JSX.Element {
             <option value="">{t('ricevute.filtri.tutti_stati')}</option>
             <option value="emessa">{t('ricevute.stato.emessa')}</option>
             <option value="annullata">{t('ricevute.stato.annullata')}</option>
+          </select>
+        </div>
+
+        {/* Filtro stato pagamento */}
+        <div>
+          <label
+            htmlFor="ricevute-filtro-pagamento"
+            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+          >
+            {t('ricevute.filtri.stato_pagamento')}
+          </label>
+          <select
+            id="ricevute-filtro-pagamento"
+            value={filtroPagamento}
+            onChange={(e) => setFiltroPagamento(e.target.value)}
+            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">{t('ricevute.filtri.tutti_stati')}</option>
+            <option value="pagato">{t('iscrizioni.pagamento.pagato')}</option>
+            <option value="da_incassare">{t('iscrizioni.pagamento.da_incassare')}</option>
           </select>
         </div>
 

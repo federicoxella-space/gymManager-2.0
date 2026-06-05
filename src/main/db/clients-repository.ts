@@ -110,7 +110,7 @@ export function updateCliente(id: number, data: UpdateClienteInput): ClienteRow 
   return updated
 }
 
-export function listClienti(filters?: ClientiFilters): ClienteRow[] {
+export function listClienti(filters?: ClientiFilters, giorniPreavvisoCert = 30): ClienteRow[] {
   const db = getDatabase()
 
   const stato = filters?.stato ?? 'attivo'
@@ -118,24 +118,83 @@ export function listClienti(filters?: ClientiFilters): ClienteRow[] {
   const limit = filters?.limit ?? -1
   const offset = filters?.offset ?? 0
 
+  // Clausole WHERE dinamiche per i nuovi filtri
+  const extraWhere: string[] = []
+  const extraParams: unknown[] = []
+
+  if (filters?.stato_iscrizione === 'attiva') {
+    extraWhere.push(
+      `EXISTS (SELECT 1 FROM iscrizioni_cliente WHERE cliente_id = c.id AND stato = 'attiva')`
+    )
+  } else if (filters?.stato_iscrizione === 'scaduta') {
+    extraWhere.push(
+      `EXISTS (SELECT 1 FROM iscrizioni_cliente WHERE cliente_id = c.id)
+       AND NOT EXISTS (SELECT 1 FROM iscrizioni_cliente WHERE cliente_id = c.id AND stato = 'attiva')`
+    )
+  } else if (filters?.stato_iscrizione === 'assente') {
+    extraWhere.push(
+      `NOT EXISTS (SELECT 1 FROM iscrizioni_cliente WHERE cliente_id = c.id)`
+    )
+  }
+
+  if (filters?.stato_certificato === 'scaduto') {
+    extraWhere.push(
+      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) < julianday('now')`
+    )
+  } else if (filters?.stato_certificato === 'in_scadenza') {
+    extraWhere.push(
+      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) - julianday('now') BETWEEN 0 AND ?`
+    )
+    extraParams.push(giorniPreavvisoCert)
+  } else if (filters?.stato_certificato === 'valido') {
+    extraWhere.push(
+      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) - julianday('now') > ?`
+    )
+    extraParams.push(giorniPreavvisoCert)
+  }
+
+  if (filters?.tipo_abbonamento_id !== undefined) {
+    extraWhere.push(
+      `EXISTS (SELECT 1 FROM abbonamenti_cliente WHERE cliente_id = c.id AND tipo_abbonamento_id = ? AND stato = 'attivo')`
+    )
+    extraParams.push(filters.tipo_abbonamento_id)
+  }
+
+  const extraWhereStr = extraWhere.length > 0 ? `AND ${extraWhere.join(' AND ')}` : ''
+
   const rows = db
     .prepare(
       `
     SELECT c.*,
       cm.data_scadenza AS cert_scadenza,
-      cm.tipo AS cert_tipo
+      cm.tipo AS cert_tipo,
+      ic.stato AS iscrizione_stato,
+      ic.data_scadenza AS iscrizione_scadenza,
+      COALESCE(ac.cnt, 0) AS abbonamenti_attivi_count
     FROM clienti c
     LEFT JOIN (
       SELECT cliente_id, data_scadenza, tipo,
         ROW_NUMBER() OVER (PARTITION BY cliente_id ORDER BY data_scadenza DESC) AS rn
       FROM certificati_medici
     ) cm ON cm.cliente_id = c.id AND cm.rn = 1
+    LEFT JOIN (
+      SELECT cliente_id, stato, data_scadenza
+      FROM iscrizioni_cliente
+      WHERE stato = 'attiva'
+    ) ic ON ic.cliente_id = c.id
+    LEFT JOIN (
+      SELECT cliente_id, COUNT(*) AS cnt
+      FROM abbonamenti_cliente
+      WHERE stato = 'attivo'
+      GROUP BY cliente_id
+    ) ac ON ac.cliente_id = c.id
     WHERE c.stato = ?
       AND (? IS NULL OR c.nome LIKE ? OR c.cognome LIKE ? OR c.codice_fiscale LIKE ?)
+      ${extraWhereStr}
     LIMIT ? OFFSET ?
   `
     )
-    .all(stato, search, search, search, search, limit, offset)
+    .all(stato, search, search, search, search, ...extraParams, limit, offset)
 
   return rows as ClienteRow[]
 }

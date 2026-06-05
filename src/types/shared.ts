@@ -19,6 +19,16 @@ export interface AppSettings {
   receipt_start_number: number
   /** Widget visibili nella dashboard (es. ['indicatori','scadenze','incassi','abbonamenti','tesseramenti']). */
   dashboard_widgets: string[]
+  /** Ragione sociale dell'attività (usata nelle ricevute). */
+  ragione_sociale: string
+  /** Indirizzo dell'attività (usato nelle ricevute). */
+  indirizzo_attivita: string
+  /** Codice fiscale o Partita IVA dell'attività (usato nelle ricevute). */
+  codice_fiscale_piva: string
+  /** Logo dell'attività in formato data URL base64 (es. '' se non impostato). */
+  logo_base64: string
+  /** Esegui backup automatico alla chiusura dell'app. */
+  backup_on_close: boolean
 }
 
 export type DbState = 'firstRun' | 'locked' | 'ready'
@@ -64,6 +74,12 @@ export interface ClienteRow {
   /** Campi aggiuntivi dalla JOIN con certificati_medici in listClienti */
   cert_scadenza?: string | null
   cert_tipo?: string | null
+  /** Stato dell'iscrizione attiva (null se assente) */
+  iscrizione_stato?: 'attiva' | 'scaduta' | 'invalidata' | null
+  /** Data di scadenza dell'iscrizione attiva (null se assente) */
+  iscrizione_scadenza?: string | null
+  /** Numero di abbonamenti attivi */
+  abbonamenti_attivi_count?: number | null
 }
 
 /** Dati in ingresso per la creazione di un cliente. */
@@ -100,6 +116,9 @@ export type UpdateClienteInput = Partial<CreateClienteInput>
 export interface ClientiFilters {
   search?: string
   stato?: 'attivo' | 'anonimizzato'
+  stato_iscrizione?: 'attiva' | 'scaduta' | 'assente'
+  stato_certificato?: 'valido' | 'in_scadenza' | 'scaduto'
+  tipo_abbonamento_id?: number
   limit?: number
   offset?: number
 }

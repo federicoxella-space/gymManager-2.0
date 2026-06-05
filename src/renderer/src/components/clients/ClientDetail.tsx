@@ -58,11 +58,12 @@ function formatValuta(n: number): string {
 interface SectionProps {
   title: string
   children: React.ReactNode
+  'data-testid'?: string
 }
 
-function Section({ title, children }: SectionProps): React.JSX.Element {
+function Section({ title, children, 'data-testid': dataTestId }: SectionProps): React.JSX.Element {
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden" data-testid={dataTestId}>
       <div className="px-5 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
         <h3 className="text-sm font-semibold text-gray-600 dark:text-gray-300">{title}</h3>
       </div>
@@ -556,7 +557,8 @@ export default function ClientDetail({
       </Section>
 
       {/* Sezione Iscrizione attiva */}
-      <Section title={t('clienti.dettaglio.sezione_iscrizione')}>
+      <Section title={t('clienti.dettaglio.sezione_iscrizione')} data-testid="tab-iscrizioni">
+
         {isLoadingIscrizione ? (
           <div className="flex items-center gap-2 text-gray-400 text-sm">
             <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
@@ -573,6 +575,7 @@ export default function ClientDetail({
                       `#${iscrizioneAttiva.tipo_iscrizione_id}`}
                   </p>
                   <Badge
+                    data-testid={iscrizioneAttiva.stato === 'attiva' ? 'badge-iscrizione-attiva' : undefined}
                     variant={
                       iscrizioneAttiva.stato === 'attiva'
                         ? 'success'
@@ -599,6 +602,7 @@ export default function ClientDetail({
               {!anonimizzato && (
                 <div className="flex flex-wrap gap-2 shrink-0">
                   <button
+                    data-testid="btn-nuova-iscrizione"
                     type="button"
                     onClick={() => {
                       setShowAssegnaIscrizione(true)
@@ -748,6 +752,7 @@ export default function ClientDetail({
             </p>
             {!anonimizzato && (
               <button
+                data-testid="btn-nuova-iscrizione"
                 type="button"
                 onClick={() => setShowAssegnaIscrizione(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
@@ -760,7 +765,7 @@ export default function ClientDetail({
       </Section>
 
       {/* Sezione Abbonamenti */}
-      <Section title={t('clienti.dettaglio.sezione_abbonamenti')}>
+      <Section title={t('clienti.dettaglio.sezione_abbonamenti')} data-testid="tab-abbonamenti">
         {isLoadingAbbonamenti ? (
           <div className="flex items-center gap-2 text-gray-400 text-sm">
             <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
@@ -770,7 +775,10 @@ export default function ClientDetail({
           <div className="space-y-4">
             {/* Messaggio se nessuna iscrizione attiva */}
             {!iscrizioneAttiva && !isLoadingIscrizione && (
-              <div className="px-4 py-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300">
+              <div
+                data-testid="errore-no-iscrizione"
+                className="px-4 py-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300"
+              >
                 {t('iscrizioni.assegna_prima')}
               </div>
             )}
@@ -780,7 +788,7 @@ export default function ClientDetail({
                 {t('abbonamenti.nessuno')}
               </p>
             ) : (
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div data-testid="lista-abbonamenti" className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 dark:bg-gray-800/60">
                     <tr>
@@ -884,6 +892,7 @@ export default function ClientDetail({
             {!anonimizzato && (
               <div className="flex justify-end">
                 <button
+                  data-testid="btn-nuovo-abbonamento"
                   type="button"
                   onClick={() => setShowAssegnaAbbonamento(true)}
                   disabled={!iscrizioneAttiva}
@@ -904,7 +913,7 @@ export default function ClientDetail({
       </Section>
 
       {/* Sezione Ricevute */}
-      <Section title={t('clienti.dettaglio.sezione_ricevute')}>
+      <Section title={t('clienti.dettaglio.sezione_ricevute')} data-testid="tab-ricevute">
         {isLoadingRicevute ? (
           <div className="flex items-center gap-2 text-gray-400 text-sm">
             <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
@@ -943,13 +952,15 @@ export default function ClientDetail({
                     {ricevute.map((r) => (
                       <tr
                         key={r.id}
+                        data-testid="ricevuta-id"
+                        data-id={r.id}
                         className={[
                           'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors',
                           r.stato === 'annullata' ? 'opacity-60' : '',
                         ].join(' ')}
                       >
                         <td className="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">
-                          {r.anno}-{r.numero}
+                          <span data-testid="numero-ricevuta">{r.anno}-{r.numero}</span>
                         </td>
                         <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
                           {formatData(r.data_emissione)}
@@ -974,6 +985,7 @@ export default function ClientDetail({
                             )}
                             {/* Visualizza PDF */}
                             <button
+                              data-testid="btn-scarica-pdf"
                               type="button"
                               onClick={() => void handleVisualizzaPdf(r)}
                               disabled={pdfLoadingId === r.id}
@@ -1017,6 +1029,7 @@ export default function ClientDetail({
             {!anonimizzato && (
               <div className="flex justify-end">
                 <button
+                  data-testid="btn-nuova-ricevuta"
                   type="button"
                   onClick={() => setShowEmittiRicevuta(true)}
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"

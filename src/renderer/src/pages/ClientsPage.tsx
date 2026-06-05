@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { ClienteRow } from '../../../types/shared'
+import type { ClienteRow, ClientiFilters, TipoAbbonamentoRow } from '../../../types/shared'
 import ClientList from '../components/clients/ClientList'
 import ClientDetail from '../components/clients/ClientDetail'
 import ClientForm from '../components/clients/ClientForm'
@@ -8,7 +8,15 @@ import Modal from '../components/ui/Modal'
 
 type View = 'list' | 'detail'
 
-export default function ClientsPage(): React.JSX.Element {
+type StatoIscrizioneFilter = '' | 'attiva' | 'scaduta' | 'assente'
+type StatoCertificatoFilter = '' | 'valido' | 'in_scadenza' | 'scaduto'
+
+interface ClientsPageProps {
+  initialFilter?: ClientiFilters
+  onFilterConsumed?: () => void
+}
+
+export default function ClientsPage({ initialFilter, onFilterConsumed }: ClientsPageProps): React.JSX.Element {
   const { t } = useTranslation()
 
   const [view, setView] = useState<View>('list')
@@ -18,30 +26,92 @@ export default function ClientsPage(): React.JSX.Element {
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null)
   const [showNewModal, setShowNewModal] = useState(false)
   const [currentSearch, setCurrentSearch] = useState('')
+  const [filtroIscrizione, setFiltroIscrizione] = useState<StatoIscrizioneFilter>('')
+  const [filtroCertificato, setFiltroCertificato] = useState<StatoCertificatoFilter>('')
+  const [filtroTipoAbbonamento, setFiltroTipoAbbonamento] = useState<TipoAbbonamentoRow | null>(null)
+  const [tipiAbbonamento, setTipiAbbonamento] = useState<TipoAbbonamentoRow[]>([])
+  const [activeFilter, setActiveFilter] = useState<ClientiFilters | undefined>(initialFilter)
+  const prevInitialFilterRef = useRef<ClientiFilters | undefined>(initialFilter)
 
-  const loadClienti = useCallback(async (search: string): Promise<void> => {
-    setIsLoading(true)
-    setLoadError(false)
-    try {
-      const data = await window.api.clienti.list(
-        search.trim() ? { search: search.trim() } : undefined,
-      )
-      setClienti(data)
-    } catch {
-      setLoadError(true)
-    } finally {
-      setIsLoading(false)
-    }
+  const loadClienti = useCallback(
+    async (
+      search: string,
+      extraFilter?: ClientiFilters,
+      isc?: StatoIscrizioneFilter,
+      cert?: StatoCertificatoFilter,
+      tipoAbb?: TipoAbbonamentoRow | null,
+    ): Promise<void> => {
+      setIsLoading(true)
+      setLoadError(false)
+      try {
+        const filters: ClientiFilters = {
+          ...(extraFilter ?? {}),
+          ...(search.trim() ? { search: search.trim() } : {}),
+          ...(isc ? { stato_iscrizione: isc as ClientiFilters['stato_iscrizione'] } : {}),
+          ...(cert ? { stato_certificato: cert as ClientiFilters['stato_certificato'] } : {}),
+          ...(tipoAbb ? { tipo_abbonamento_id: tipoAbb.id } : {}),
+        }
+        const hasFilters = Object.keys(filters).length > 0
+        const data = await window.api.clienti.list(hasFilters ? filters : undefined)
+        setClienti(data)
+      } catch {
+        setLoadError(true)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [],
+  )
+
+  // Carica i tipi abbonamento al mount per il filtro
+  useEffect(() => {
+    window.api.catalogo.tipiAbbonamento
+      .list(false)
+      .then((tipi) => setTipiAbbonamento(tipi))
+      .catch(() => {
+        // Silenzioso: il filtro non mostrerà le opzioni
+      })
   }, [])
 
-  // Caricamento iniziale
+  // Caricamento iniziale o quando arriva un nuovo filtro dalla dashboard
   useEffect(() => {
-    void loadClienti('')
-  }, [loadClienti])
+    if (initialFilter !== prevInitialFilterRef.current) {
+      prevInitialFilterRef.current = initialFilter
+      setActiveFilter(initialFilter)
+      setCurrentSearch('')
+      setFiltroIscrizione('')
+      setFiltroCertificato('')
+      setFiltroTipoAbbonamento(null)
+      void loadClienti('', initialFilter, '', '', null)
+      onFilterConsumed?.()
+    }
+  }, [initialFilter, loadClienti, onFilterConsumed])
+
+  // Caricamento al mount
+  useEffect(() => {
+    void loadClienti('', activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function handleRefresh(search: string): void {
     setCurrentSearch(search)
-    void loadClienti(search)
+    void loadClienti(search, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
+  }
+
+  function handleFiltroIscrizioneChange(value: StatoIscrizioneFilter): void {
+    setFiltroIscrizione(value)
+    void loadClienti(currentSearch, activeFilter, value, filtroCertificato, filtroTipoAbbonamento)
+  }
+
+  function handleFiltroCertificatoChange(value: StatoCertificatoFilter): void {
+    setFiltroCertificato(value)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, value, filtroTipoAbbonamento)
+  }
+
+  function handleFiltroTipoAbbonamentoChange(value: string): void {
+    const tipo = tipiAbbonamento.find((t) => String(t.id) === value) ?? null
+    setFiltroTipoAbbonamento(tipo)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, tipo)
   }
 
   function handleSelectCliente(cliente: ClienteRow): void {
@@ -55,12 +125,12 @@ export default function ClientsPage(): React.JSX.Element {
   }
 
   function handleClienteUpdated(): void {
-    void loadClienti(currentSearch)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
   }
 
   function handleNewSuccess(cliente: ClienteRow): void {
     setShowNewModal(false)
-    void loadClienti(currentSearch)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
     // Naviga subito al dettaglio del cliente appena creato
     setSelectedClienteId(cliente.id)
     setView('detail')
@@ -89,6 +159,7 @@ export default function ClientsPage(): React.JSX.Element {
         </h2>
         <button
           type="button"
+          data-testid="btn-nuovo-cliente"
           onClick={() => setShowNewModal(true)}
           className={[
             'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg',
@@ -107,6 +178,76 @@ export default function ClientsPage(): React.JSX.Element {
           </svg>
           {t('clienti.nuovo')}
         </button>
+      </div>
+
+      {/* Filtri */}
+      <div className="flex flex-wrap gap-3 items-end">
+        {/* Stato iscrizione */}
+        <div>
+          <label
+            htmlFor="filtro-stato-iscrizione"
+            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+          >
+            {t('clienti.filtri.stato_iscrizione')}
+          </label>
+          <select
+            id="filtro-stato-iscrizione"
+            value={filtroIscrizione}
+            onChange={(e) => handleFiltroIscrizioneChange(e.target.value as StatoIscrizioneFilter)}
+            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">{t('clienti.filtri.tutti')}</option>
+            <option value="attiva">{t('clienti.filtri.iscrizione_attiva')}</option>
+            <option value="scaduta">{t('clienti.filtri.iscrizione_scaduta')}</option>
+            <option value="assente">{t('clienti.filtri.iscrizione_assente')}</option>
+          </select>
+        </div>
+
+        {/* Stato certificato */}
+        <div>
+          <label
+            htmlFor="filtro-stato-certificato"
+            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+          >
+            {t('clienti.filtri.certificato')}
+          </label>
+          <select
+            id="filtro-stato-certificato"
+            value={filtroCertificato}
+            onChange={(e) =>
+              handleFiltroCertificatoChange(e.target.value as StatoCertificatoFilter)
+            }
+            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">{t('clienti.filtri.tutti')}</option>
+            <option value="valido">{t('clienti.filtri.cert_valido')}</option>
+            <option value="in_scadenza">{t('clienti.filtri.cert_in_scadenza')}</option>
+            <option value="scaduto">{t('clienti.filtri.cert_scaduto')}</option>
+          </select>
+        </div>
+
+        {/* Tipo abbonamento */}
+        <div>
+          <label
+            htmlFor="filtro-tipo-abbonamento"
+            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+          >
+            {t('clienti.filtri.tipo_abbonamento')}
+          </label>
+          <select
+            id="filtro-tipo-abbonamento"
+            value={filtroTipoAbbonamento ? String(filtroTipoAbbonamento.id) : ''}
+            onChange={(e) => handleFiltroTipoAbbonamentoChange(e.target.value)}
+            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">{t('clienti.filtri.tutti')}</option>
+            {tipiAbbonamento.map((tipo) => (
+              <option key={tipo.id} value={String(tipo.id)}>
+                {tipo.nome}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Stato errore */}
