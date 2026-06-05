@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AppSettings } from '../../../types/shared'
+import RestoreDialog from '../components/backup/RestoreDialog'
+import ResetPasswordDialog from '../components/backup/ResetPasswordDialog'
 
 // ── Colori preset ─────────────────────────────────────────────────────────────
 
@@ -107,6 +109,12 @@ function CheckIcon(): React.JSX.Element {
 export default function SettingsPage(): React.JSX.Element {
   const { t } = useTranslation()
 
+  const [backupStatus, setBackupStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [isBackingUp, setIsBackingUp] = useState(false)
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false)
+  const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false)
+  const backupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const [form, setForm] = useState<FormState>({
     theme: 'system',
     primaryColor: '37,99,235',
@@ -159,6 +167,9 @@ export default function SettingsPage(): React.JSX.Element {
     return () => {
       if (successTimerRef.current !== null) {
         clearTimeout(successTimerRef.current)
+      }
+      if (backupTimerRef.current !== null) {
+        clearTimeout(backupTimerRef.current)
       }
     }
   }, [t])
@@ -284,6 +295,21 @@ export default function SettingsPage(): React.JSX.Element {
       setSaveError(t('common.error_generic'))
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handleBackupNow(): Promise<void> {
+    setBackupStatus(null)
+    setIsBackingUp(true)
+    try {
+      const path = await window.api.backup.automatico()
+      if (backupTimerRef.current !== null) clearTimeout(backupTimerRef.current)
+      setBackupStatus({ type: 'success', message: t('backup.backup_completato', { path }) })
+      backupTimerRef.current = setTimeout(() => setBackupStatus(null), 5000)
+    } catch {
+      setBackupStatus({ type: 'error', message: t('backup.backup_errore') })
+    } finally {
+      setIsBackingUp(false)
     }
   }
 
@@ -634,6 +660,100 @@ export default function SettingsPage(): React.JSX.Element {
           </fieldset>
         </section>
 
+        {/* ── Sezione Backup e sicurezza ───────────────────────────────────── */}
+        <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-5">
+            {t('backup.titolo')}
+          </h3>
+
+          {/* Backup locale */}
+          <div className="mb-6">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              {t('backup.locale_titolo')}
+            </h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              {t('backup.locale_descrizione')}
+            </p>
+
+            {/* Feedback backup */}
+            {backupStatus !== null && (
+              <div
+                role="status"
+                aria-live="polite"
+                className={[
+                  'mb-3 rounded-lg px-4 py-3 text-sm border',
+                  backupStatus.type === 'success'
+                    ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400'
+                    : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400',
+                ].join(' ')}
+              >
+                {backupStatus.message}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => { void handleBackupNow() }}
+                disabled={isBackingUp}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              >
+                {isBackingUp ? t('common.loading') : t('backup.backup_ora')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowRestoreDialog(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              >
+                {t('backup.ripristina_pulsante')}
+              </button>
+            </div>
+          </div>
+
+          {/* Google Drive */}
+          <div className="mb-6 pb-6 border-b border-gray-100 dark:border-gray-800">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              {t('backup.drive_titolo')}
+            </h4>
+
+            <div className="flex items-center gap-2 mb-3">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500" aria-hidden="true" />
+                {t('backup.drive_non_connesso')}
+              </span>
+            </div>
+
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              {t('backup.drive_stub_avviso')}
+            </p>
+
+            <div title={t('backup.drive_connetti_tooltip')} className="inline-block">
+              <button
+                type="button"
+                disabled
+                aria-disabled="true"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-sm font-medium cursor-not-allowed"
+              >
+                {t('backup.drive_connetti')}
+              </button>
+            </div>
+          </div>
+
+          {/* Sicurezza — Reset password */}
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              {t('backup.reset_titolo')}
+            </h4>
+            <button
+              type="button"
+              onClick={() => setShowResetPasswordDialog(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              {t('backup.reset_pulsante')}
+            </button>
+          </div>
+        </section>
+
         {/* ── Feedback globale e submit ─────────────────────────────────────── */}
 
         {saveError !== null && (
@@ -666,6 +786,16 @@ export default function SettingsPage(): React.JSX.Element {
           </button>
         </div>
       </form>
+
+      {/* Dialogs backup — fuori dal form per non interferire con il submit */}
+      <RestoreDialog
+        isOpen={showRestoreDialog}
+        onClose={() => setShowRestoreDialog(false)}
+      />
+      <ResetPasswordDialog
+        isOpen={showResetPasswordDialog}
+        onClose={() => setShowResetPasswordDialog(false)}
+      />
     </div>
   )
 }

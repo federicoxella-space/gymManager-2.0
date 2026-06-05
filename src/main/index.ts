@@ -2,8 +2,10 @@ import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import log from 'electron-log'
-import { closeDatabase } from './db/database'
+import { closeDatabase, isDatabaseOpen } from './db/database'
 import { registerIpcHandlers } from './ipc/handlers'
+import { loadSettings } from './settings/store'
+import { backupAutomatico } from './backup/backup-service'
 
 function createWindow(): BrowserWindow {
   const preloadPath = join(__dirname, '../preload/index.js')
@@ -70,7 +72,24 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
-  log.info('[main] Tutte le finestre chiuse, chiusura DB')
+  log.info('[main] Tutte le finestre chiuse')
+
+  // Backup automatico alla chiusura se settings.backup_on_close === 'true' e DB aperto
+  if (isDatabaseOpen()) {
+    try {
+      const settings = loadSettings()
+      const backupOnClose = (settings as unknown as Record<string, unknown>)['backup_on_close']
+      if (backupOnClose !== false && backupOnClose !== 'false') {
+        // Esegui in modo sincrono tramite void: non blocca la chiusura
+        backupAutomatico()
+          .then((p) => log.info(`[main] Backup automatico chiusura completato: ${p}`))
+          .catch((err) => log.warn('[main] Backup automatico chiusura fallito (non bloccante):', err))
+      }
+    } catch (err) {
+      log.warn('[main] Errore lettura settings per backup chiusura:', err)
+    }
+  }
+
   closeDatabase()
   if (process.platform !== 'darwin') {
     app.quit()

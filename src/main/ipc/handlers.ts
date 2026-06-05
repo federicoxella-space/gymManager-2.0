@@ -1,4 +1,13 @@
 import { ipcMain, app } from 'electron'
+import { backupLocale, backupAutomatico } from '../backup/backup-service'
+import { verificaBackup, ripristinaBackup, resetDatabase } from '../backup/restore-service'
+import {
+  connectDrive,
+  isDriveConnected,
+  backupSuDrive,
+  listBackupDrive
+} from '../backup/drive-service'
+import type { BackupManifest, DriveBackupItem } from '../../types/shared'
 import { generaHTMLRicevuta } from '../domain/ricevuta'
 import { generaPDFInElectron } from '../pdf/generator'
 import { getDatabase } from '../db/database'
@@ -764,6 +773,131 @@ export function registerIpcHandlers(): void {
       }
     }
   )
+
+  // ── Backup ───────────────────────────────────────────────────────────────
+
+  /**
+   * Esegue il backup locale del file DB verso il percorso scelto dall'utente.
+   */
+  ipcMain.handle(
+    'backup:locale',
+    async (_event, { destinazionePath }: { destinazionePath: string }): Promise<BackupManifest> => {
+      try {
+        return await backupLocale(destinazionePath)
+      } catch (err) {
+        log.error('[ipc] backup:locale errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante il backup locale')
+      }
+    }
+  )
+
+  /**
+   * Esegue il backup automatico nella cartella di default.
+   * Restituisce il percorso del file creato.
+   */
+  ipcMain.handle('backup:automatico', async (): Promise<string> => {
+    try {
+      return await backupAutomatico()
+    } catch (err) {
+      log.error('[ipc] backup:automatico errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante il backup automatico')
+    }
+  })
+
+  /**
+   * Verifica un file di backup e restituisce il suo manifest.
+   */
+  ipcMain.handle(
+    'backup:verifica',
+    async (_event, { backupPath }: { backupPath: string }): Promise<BackupManifest> => {
+      try {
+        return await verificaBackup(backupPath)
+      } catch (err) {
+        log.error('[ipc] backup:verifica errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante la verifica del backup')
+      }
+    }
+  )
+
+  /**
+   * Ripristina un backup nel DB corrente.
+   */
+  ipcMain.handle(
+    'backup:ripristina',
+    async (
+      _event,
+      { backupPath, password }: { backupPath: string; password: string }
+    ): Promise<void> => {
+      try {
+        await ripristinaBackup(backupPath, password)
+      } catch (err) {
+        log.error('[ipc] backup:ripristina errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante il ripristino del backup')
+      }
+    }
+  )
+
+  /**
+   * Reset DISTRUTTIVO del database con nuova password.
+   * D6: cancella tutti i dati, nessun recupero possibile.
+   */
+  ipcMain.handle(
+    'backup:reset',
+    async (_event, { nuovaPassword }: { nuovaPassword: string }): Promise<void> => {
+      try {
+        await resetDatabase(nuovaPassword)
+      } catch (err) {
+        log.error('[ipc] backup:reset errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante il reset del database')
+      }
+    }
+  )
+
+  /**
+   * STUB: connette Google Drive tramite OAuth.
+   */
+  ipcMain.handle('backup:drive:connect', async (): Promise<void> => {
+    try {
+      await connectDrive()
+    } catch (err) {
+      log.error('[ipc] backup:drive:connect errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante la connessione a Drive')
+    }
+  })
+
+  /**
+   * STUB: indica se Google Drive è connesso.
+   */
+  ipcMain.handle('backup:drive:isConnected', (): boolean => {
+    return isDriveConnected()
+  })
+
+  /**
+   * STUB: carica un backup su Google Drive.
+   */
+  ipcMain.handle(
+    'backup:drive:backup',
+    async (_event, { backupPath }: { backupPath: string }): Promise<string> => {
+      try {
+        return await backupSuDrive(backupPath)
+      } catch (err) {
+        log.error('[ipc] backup:drive:backup errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante il backup su Drive')
+      }
+    }
+  )
+
+  /**
+   * STUB: elenca i backup su Google Drive.
+   */
+  ipcMain.handle('backup:drive:list', async (): Promise<DriveBackupItem[]> => {
+    try {
+      return await listBackupDrive()
+    } catch (err) {
+      log.error('[ipc] backup:drive:list errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante il recupero lista backup Drive')
+    }
+  })
 
   log.info('[ipc] Handler IPC registrati')
 }

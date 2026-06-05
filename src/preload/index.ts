@@ -31,7 +31,9 @@ import type {
   IncassiPeriodo,
   NuoviTesseramenti,
   CompleannoDellaSett,
-  DashboardPeriodo
+  DashboardPeriodo,
+  BackupManifest,
+  DriveBackupItem
 } from '../types/shared'
 
 // Espone le API standard di electron-toolkit su window.electron
@@ -221,6 +223,38 @@ const api: ElectronAPI = {
     }
   },
 
+  backup: {
+    locale(destinazionePath: string): Promise<BackupManifest> {
+      return ipcRenderer.invoke('backup:locale', { destinazionePath })
+    },
+    automatico(): Promise<string> {
+      return ipcRenderer.invoke('backup:automatico')
+    },
+    verifica(backupPath: string): Promise<BackupManifest> {
+      return ipcRenderer.invoke('backup:verifica', { backupPath })
+    },
+    ripristina(backupPath: string, password: string): Promise<void> {
+      return ipcRenderer.invoke('backup:ripristina', { backupPath, password })
+    },
+    reset(nuovaPassword: string): Promise<void> {
+      return ipcRenderer.invoke('backup:reset', { nuovaPassword })
+    },
+    drive: {
+      connect(): Promise<void> {
+        return ipcRenderer.invoke('backup:drive:connect')
+      },
+      isConnected(): Promise<boolean> {
+        return ipcRenderer.invoke('backup:drive:isConnected')
+      },
+      backup(backupPath: string): Promise<string> {
+        return ipcRenderer.invoke('backup:drive:backup', { backupPath })
+      },
+      list(): Promise<DriveBackupItem[]> {
+        return ipcRenderer.invoke('backup:drive:list')
+      }
+    }
+  },
+
   on(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void =>
       callback(...args)
@@ -270,5 +304,7 @@ export type {
   IncassiPeriodo,
   NuoviTesseramenti,
   CompleannoDellaSett,
-  DashboardPeriodo
+  DashboardPeriodo,
+  BackupManifest,
+  DriveBackupItem
 }

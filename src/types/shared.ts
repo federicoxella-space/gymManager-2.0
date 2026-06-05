@@ -365,6 +365,26 @@ export interface CompleannoDellaSett {
   giorno_mese: string // gg/mm
 }
 
+// ── Backup ────────────────────────────────────────────────────────────────────
+
+export interface BackupManifest {
+  /** Versione schema DB al momento del backup (PRAGMA user_version). */
+  version: number
+  /** ISO datetime di creazione backup. */
+  createdAt: string
+  /** Versione dell'applicazione. */
+  appVersion: string
+  /** Percorso originale del file DB (per info). */
+  dbPath: string
+}
+
+export interface DriveBackupItem {
+  id: string
+  nome: string
+  createdAt: string
+  size: number
+}
+
 // ── ElectronAPI ───────────────────────────────────────────────────────────────
 
 export interface ElectronAPI {
@@ -448,6 +468,19 @@ export interface ElectronAPI {
     incassi: (params: { periodo: DashboardPeriodo }) => Promise<IncassiPeriodo>
     tesseramenti: (params: { periodo: DashboardPeriodo }) => Promise<NuoviTesseramenti>
     compleanni: (params: { dalGiorno: string; alGiorno: string }) => Promise<CompleannoDellaSett[]>
+  }
+  backup: {
+    locale: (destinazionePath: string) => Promise<BackupManifest>
+    automatico: () => Promise<string>
+    verifica: (backupPath: string) => Promise<BackupManifest>
+    ripristina: (backupPath: string, password: string) => Promise<void>
+    reset: (nuovaPassword: string) => Promise<void>
+    drive: {
+      connect: () => Promise<void>
+      isConnected: () => Promise<boolean>
+      backup: (backupPath: string) => Promise<string>
+      list: () => Promise<DriveBackupItem[]>
+    }
   }
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void
   off: (channel: string, callback: (...args: unknown[]) => void) => void

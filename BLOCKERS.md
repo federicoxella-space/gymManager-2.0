@@ -60,11 +60,18 @@ backup su Google Drive (scope `drive.file`).
 4. Creare credenziali OAuth 2.0 per "Applicazione desktop"
 5. Scaricare il file `credentials.json`
 
-**Dove inserire**: da definire nella fase F5. Le credenziali NON vanno nel sorgente;
+**Dove inserire**: Le credenziali NON vanno nel sorgente;
 andranno in una variabile d'ambiente o nel file di configurazione cifrato dell'app.
 
 **Nota sicurezza (D5)**: il backup è il file DB già cifrato con SQLCipher, quindi
 non richiede ulteriore cifratura lato Drive.
+
+**Stato implementazione (F5)**: `src/main/backup/drive-service.ts` è uno stub.
+Per attivare il backup su Drive:
+1. Inserire Client ID e Client Secret nelle variabili d'ambiente `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET`.
+2. Implementare il flusso OAuth (authorization code → token exchange) in `drive-service.ts`.
+3. Collegare `googleapis` con scope `drive.file` per upload/download/list.
+4. Rimuovere i blocchi STUB e le istruzioni `throw new Error('DRIVE_NOT_CONFIGURED')`.
 
 ---
 
