@@ -37,7 +37,7 @@ nsis:
 publish:
   provider: github
   owner: federicoxella-space
-  repo: gymmanager-2
+  repo: gymManager-2.0
   releaseType: release
 
 npmRebuild: true
