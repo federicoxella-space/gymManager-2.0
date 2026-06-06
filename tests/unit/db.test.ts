@@ -63,17 +63,51 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Controlla se SQLCipher è attivo (cipher_version restituisce un valore). */
+/**
+ * Controlla se la cifratura è attiva verificando che openDatabase lanci
+ * per password errata (comportamento definitivo rispetto a probe su PRAGMA).
+ *
+ * Con better-sqlite3-multiple-ciphers la cifratura è sempre attiva;
+ * il check usa lo stesso openDatabase importato dal modulo.
+ */
 function isCipherEnabled(): boolean {
-  // Accediamo al DB già aperto tramite getDatabase, oppure apriamo temporaneamente
-  // un in-memory DB per controllare cipher_version.
-  // Usiamo better-sqlite3 direttamente per non sporcare lo stato del modulo.
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const BetterSQLite = require('better-sqlite3')
-  const tmp = new BetterSQLite(':memory:')
-  const result = tmp.pragma('cipher_version') as Array<{ cipher_version: string }>
-  tmp.close()
-  return result.length > 0
+  const { join: pjoin } = require('path')
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { tmpdir: ostmpdir } = require('os')
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { unlinkSync: fsUnlink, existsSync: fsExists } = require('fs')
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const BetterSQLite = require('better-sqlite3-multiple-ciphers')
+
+  const tempFile = pjoin(ostmpdir(), `cipher-probe-${process.pid}-${Date.now()}.db`)
+  try {
+    // Crea DB con passphrase A, poi scrivi una tabella reale
+    const dbA: { pragma: (s: string) => unknown; prepare: (s: string) => { run: () => void }; close: () => void } = new BetterSQLite(tempFile)
+    dbA.pragma("key='passphrase-ALPHA'")
+    dbA.prepare('CREATE TABLE IF NOT EXISTS _probe (id INTEGER PRIMARY KEY)').run()
+    dbA.close()
+
+    // Apri con passphrase diversa B e tenta di leggere la tabella
+    const dbB: { pragma: (s: string) => unknown; prepare: (s: string) => { all: () => unknown[] }; close: () => void } = new BetterSQLite(tempFile)
+    dbB.pragma("key='passphrase-BETA'")
+    try {
+      // Con cipher attivo questa legge dati corrotti e POTREBBE lanciare;
+      // con SQLite Multiple Ciphers usa PRAGMA integrity_check per forzare lettura
+      const res = dbB.prepare('PRAGMA integrity_check').all()
+      dbB.close()
+      // Se integrity_check restituisce solo 'ok' il cipher NON è attivo
+      const ok = Array.isArray(res) && res.length === 1 && (res[0] as Record<string, string>)['integrity_check'] === 'ok'
+      return !ok  // se non è ok, il cipher è attivo (dati corrotti)
+    } catch {
+      try { dbB.close() } catch { /* ignore */ }
+      return true  // lancio → cipher attivo
+    }
+  } catch {
+    return false
+  } finally {
+    if (fsExists(tempFile)) { try { fsUnlink(tempFile) } catch { /* ignore */ } }
+  }
 }
 
 const CIPHER_ENABLED = isCipherEnabled()

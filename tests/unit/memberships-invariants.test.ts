@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import Database from 'better-sqlite3'
+import Database from 'better-sqlite3-multiple-ciphers'
 
 // ── Mock di electron-log (silenzia output) ────────────────────────────────────
 vi.mock('electron-log', () => ({

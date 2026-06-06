@@ -1,4 +1,4 @@
-import type Database from 'better-sqlite3'
+import type Database from 'better-sqlite3-multiple-ciphers'
 import log from 'electron-log'
 import migration001 from './migrations/001_initial'
 import migration002 from './migrations/002_clients'

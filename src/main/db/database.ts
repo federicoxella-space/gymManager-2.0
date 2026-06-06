@@ -2,7 +2,7 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 import { pbkdf2Sync } from 'crypto'
 import { app } from 'electron'
-import Database from 'better-sqlite3'
+import Database from 'better-sqlite3-multiple-ciphers'
 import log from 'electron-log'
 import { runMigrations } from './migrations'
 

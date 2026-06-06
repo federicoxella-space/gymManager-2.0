@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import Database from 'better-sqlite3'
+import Database from 'better-sqlite3-multiple-ciphers'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import { unlinkSync, existsSync } from 'fs'

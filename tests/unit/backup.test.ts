@@ -11,7 +11,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import Database from 'better-sqlite3'
+import Database from 'better-sqlite3-multiple-ciphers'
 import { join } from 'path'
 import { tmpdir } from 'os'
 import {
@@ -74,6 +74,7 @@ import {
   listBackupDrive
 } from '../../src/main/backup/drive-service'
 import {
+  openDatabase,
   closeDatabase,
   isDatabaseOpen,
   getDatabase,
@@ -349,34 +350,31 @@ describe('verificaBackup', () => {
 
 describe('ripristinaBackup', () => {
   it('copia il file backup nel percorso DB e apre il DB', async () => {
-    // Crea un DB sorgente separato, copialo su DB_PATH, fai il backup
-    const sourcePath = tempPath('.db')
-    creaDbDiTest(sourcePath)
-    copyFileSync(sourcePath, DB_PATH)
+    // Crea il DB cifrato a DB_PATH tramite openDatabase (obbligatorio con SQLCipher)
+    openDatabase('testpassword')
+    chiudiDbModulo()
 
     const backupPath = tempPath('.db')
     await backupLocale(backupPath)
 
     // Reset DB_PATH per simulare un DB diverso corrente
-    chiudiDbModulo()
     cleanupFiles(DB_PATH)
 
-    // Ripristina
+    // Ripristina — il backup è cifrato con 'testpassword', il restore deve riuscire
     await ripristinaBackup(backupPath, 'testpassword')
     expect(isDatabaseOpen()).toBe(true)
 
-    cleanupFiles(sourcePath, backupPath)
+    cleanupFiles(backupPath)
   })
 
   it('dopo il ripristino le migrazioni sono presenti nel DB', async () => {
-    const sourcePath = tempPath('.db')
-    creaDbDiTest(sourcePath)
-    copyFileSync(sourcePath, DB_PATH)
+    // Crea DB cifrato tramite openDatabase
+    openDatabase('testpassword')
+    chiudiDbModulo()
 
     const backupPath = tempPath('.db')
     await backupLocale(backupPath)
 
-    chiudiDbModulo()
     cleanupFiles(DB_PATH)
 
     await ripristinaBackup(backupPath, 'testpassword')
@@ -388,7 +386,7 @@ describe('ripristinaBackup', () => {
       .all() as { version: number }[]
     expect(versions.length).toBeGreaterThan(0)
 
-    cleanupFiles(sourcePath, backupPath)
+    cleanupFiles(backupPath)
   })
 
   it('lancia errore se il file backup non ha manifest', async () => {
@@ -479,19 +477,17 @@ describe('Drive stub — DRIVE_NOT_CONFIGURED', () => {
 
 describe('round-trip integrazione: backup → restore → DB apribile', () => {
   it('dopo backup e restore il DB è aperto e le migrazioni sono presenti', async () => {
-    // 1. Prepara un DB sorgente con dati
-    const sourcePath = tempPath('.db')
-    creaDbDiTest(sourcePath)
-    copyFileSync(sourcePath, DB_PATH)
+    // 1. Crea DB cifrato a DB_PATH tramite openDatabase (necessario con SQLCipher)
+    openDatabase('testpassword')
+    chiudiDbModulo()
 
-    // 2. Crea il backup
+    // 2. Crea il backup dal DB cifrato
     const backupPath = tempPath('.db')
     await backupLocale(backupPath)
     expect(existsSync(backupPath)).toBe(true)
     expect(existsSync(backupPath + '.manifest.json')).toBe(true)
 
     // 3. Chiudi e svuota il DB corrente
-    chiudiDbModulo()
     cleanupFiles(DB_PATH)
 
     // 4. Ripristina il backup
@@ -507,7 +503,7 @@ describe('round-trip integrazione: backup → restore → DB apribile', () => {
       .all() as { version: number }[]
     expect(versions.length).toBeGreaterThan(0)
 
-    cleanupFiles(sourcePath, backupPath)
+    cleanupFiles(backupPath)
   })
 
   it('il manifest del backup riporta la versione schema corretta', async () => {
