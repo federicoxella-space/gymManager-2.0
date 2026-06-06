@@ -12,11 +12,15 @@ export interface UpdateProgress {
   transferred: number
 }
 
+/** Riferimento alla finestra principale, salvato da initAutoUpdater. */
+let _mainWindow: BrowserWindow | null = null
+
 /**
  * Inizializza electron-updater e registra i listener degli eventi.
  * In ambiente di sviluppo non controlla gli aggiornamenti.
  */
 export function initAutoUpdater(mainWindow: BrowserWindow): void {
+  _mainWindow = mainWindow
   // Usa electron-log come logger per l'updater
   autoUpdater.logger = log
 
@@ -67,8 +71,16 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
 
 /**
  * Avvia manualmente il controllo degli aggiornamenti.
+ * In dev mode non esiste app-update.yml (generato solo da electron-builder),
+ * quindi electron-updater emetterebbe un errore inutile: in quel caso
+ * notifichiamo direttamente il renderer che non ci sono aggiornamenti.
  */
 export function checkForUpdates(): void {
+  if (is.dev) {
+    log.info('[updater] checkForUpdates ignorato in modalità sviluppo')
+    _mainWindow?.webContents.send('update:not-available')
+    return
+  }
   autoUpdater.checkForUpdates().catch((err: Error) => {
     log.error('[updater] Errore nel controllo aggiornamenti:', err.message)
   })
