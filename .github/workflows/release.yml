@@ -27,12 +27,16 @@ jobs:
 
       - name: Install dependencies
         # --ignore-scripts salta postinstall (electron-builder install-app-deps)
-        # che tenta di scaricare binari Electron: non serve in CI.
+        # che tenta di scaricare binari Electron: non serve prima dei test.
         run: npm ci --ignore-scripts
 
-      # Fase 1 — Test con i prebuilt per Node.js (ABI corrente)
-      # I prebuilt di better-sqlite3-multiple-ciphers scaricati da npm ci
-      # sono già compatibili con il Node.js del runner → i test passano.
+      # Fase 1 — Compila il modulo nativo per Node.js (ABI del runner)
+      # npm ci --ignore-scripts NON scarica il prebuilt di
+      # better-sqlite3-multiple-ciphers (il suo postinstall usa prebuild-install).
+      # npm rebuild lo ricompila da sorgente con MSVC → i test Vitest passano.
+      - name: Rebuild native module for Node.js (tests)
+        run: npm rebuild better-sqlite3-multiple-ciphers
+
       - name: Typecheck
         run: npm run typecheck
 

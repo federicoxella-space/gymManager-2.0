@@ -31,8 +31,10 @@ jobs:
 
       # better-sqlite3-multiple-ciphers include SQLCipher internamente:
       # nessun libsqlcipher-dev necessario, nessun flag SQLCIPHER=1.
-      # I prebuilt per Node.js vengono scaricati da npm ci e sono
-      # sufficienti per i test Vitest (che girano su Node, non Electron).
+      # Con --ignore-scripts il suo postinstall (prebuild-install) non gira,
+      # quindi compiliamo da sorgente con gcc per ottenere il .node per Node.js.
+      - name: Rebuild native module for Node.js (tests)
+        run: npm rebuild better-sqlite3-multiple-ciphers
 
       - name: Typecheck
         run: npm run typecheck
