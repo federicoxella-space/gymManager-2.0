@@ -58,17 +58,22 @@ html {
   -moz-osx-font-smoothing: grayscale;
   /* Transizione smooth cambio tema */
   transition: background-color 0.2s ease, color 0.2s ease;
+  /* Impedisce la scrollbar esterna: lo scroll avviene solo nei
+     contenitori overflow-y-auto interni alla Shell. */
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
   @apply bg-surface text-gray-900 dark:text-gray-100;
 }
 
 #root {
-  min-height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
