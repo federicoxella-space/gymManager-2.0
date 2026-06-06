@@ -5,6 +5,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
+    define: {
+      // Credenziali OAuth Google Drive iniettate dai secrets CI a build time.
+      // In sviluppo locale si possono impostare tramite variabili d'ambiente.
+      __GOOGLE_CLIENT_ID__: JSON.stringify(process.env.GOOGLE_CLIENT_ID ?? ''),
+      __GOOGLE_CLIENT_SECRET__: JSON.stringify(process.env.GOOGLE_CLIENT_SECRET ?? '')
+    },
     build: {
       rollupOptions: {
         input: {

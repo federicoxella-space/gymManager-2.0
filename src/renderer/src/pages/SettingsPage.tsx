@@ -85,8 +85,6 @@ interface FormState {
   codice_fiscale_piva: string
   logo_base64: string
   backup_on_close: boolean
-  google_client_id: string
-  google_client_secret: string
 }
 
 interface FormErrors {
@@ -144,8 +142,6 @@ export default function SettingsPage(): React.JSX.Element {
     codice_fiscale_piva: '',
     logo_base64: '',
     backup_on_close: true,
-    google_client_id: '',
-    google_client_secret: '',
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -184,8 +180,6 @@ export default function SettingsPage(): React.JSX.Element {
           codice_fiscale_piva: s.codice_fiscale_piva ?? '',
           logo_base64: s.logo_base64 ?? '',
           backup_on_close: s.backup_on_close ?? true,
-          google_client_id: s.google_client_id ?? '',
-          google_client_secret: s.google_client_secret ?? '',
         })
       })
       .catch(() => {
@@ -323,24 +317,15 @@ export default function SettingsPage(): React.JSX.Element {
   }
 
   async function handleDriveConnect(): Promise<void> {
-    if (!form.google_client_id.trim() || !form.google_client_secret.trim()) {
-      setDriveError(t('backup.drive_errore_credenziali'))
-      return
-    }
     setDriveError(null)
     setIsConnectingDrive(true)
     try {
-      // Salva prima le credenziali
-      await window.api.settings.set({
-        google_client_id: form.google_client_id.trim(),
-        google_client_secret: form.google_client_secret.trim()
-      })
       await window.api.backup.drive.connect()
       setDriveConnected(true)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       if (msg.includes('DRIVE_CREDENTIALS_MISSING')) {
-        setDriveError(t('backup.drive_errore_credenziali'))
+        setDriveError(t('backup.drive_non_configurato'))
       } else {
         setDriveError(t('backup.drive_errore_connessione'))
       }
@@ -395,8 +380,6 @@ export default function SettingsPage(): React.JSX.Element {
         codice_fiscale_piva: form.codice_fiscale_piva,
         logo_base64: form.logo_base64,
         backup_on_close: form.backup_on_close,
-        google_client_id: form.google_client_id,
-        google_client_secret: form.google_client_secret,
       }
       await window.api.settings.set(payload)
       // Applica immediatamente il cambio lingua senza riavvio
@@ -987,48 +970,6 @@ export default function SettingsPage(): React.JSX.Element {
 
             {!driveConnected && (
               <>
-                {/* Istruzioni */}
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
-                  {t('backup.drive_istruzioni')}
-                </p>
-
-                {/* Client ID */}
-                <div className="mb-3">
-                  <label
-                    htmlFor="settings-drive-client-id"
-                    className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                  >
-                    {t('backup.drive_client_id')}
-                  </label>
-                  <input
-                    id="settings-drive-client-id"
-                    type="text"
-                    value={form.google_client_id}
-                    onChange={(e) => setForm(prev => ({ ...prev, google_client_id: e.target.value }))}
-                    placeholder="xxxxxxxxx.apps.googleusercontent.com"
-                    autoComplete="off"
-                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
-                  />
-                </div>
-
-                {/* Client Secret */}
-                <div className="mb-4">
-                  <label
-                    htmlFor="settings-drive-client-secret"
-                    className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
-                  >
-                    {t('backup.drive_client_secret')}
-                  </label>
-                  <input
-                    id="settings-drive-client-secret"
-                    type="password"
-                    value={form.google_client_secret}
-                    onChange={(e) => setForm(prev => ({ ...prev, google_client_secret: e.target.value }))}
-                    autoComplete="new-password"
-                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
-                  />
-                </div>
-
                 {/* Messaggio di errore Drive */}
                 {driveError !== null && (
                   <div

@@ -51,6 +51,10 @@ jobs:
       # Fase 3 — Build Vite + packaging NSIS + pubblicazione release GitHub
       - name: Build Electron app (Vite)
         run: npm run build:electron
+        env:
+          # Credenziali OAuth Google Drive iniettate nella build tramite Vite define
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
 
       - name: Package & Publish to GitHub Releases
         run: npx electron-builder --publish always

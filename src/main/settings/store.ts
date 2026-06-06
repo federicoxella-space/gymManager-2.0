@@ -18,9 +18,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   indirizzo_attivita: '',
   codice_fiscale_piva: '',
   logo_base64: '',
-  backup_on_close: true,
-  google_client_id: '',
-  google_client_secret: ''
+  backup_on_close: true
 }
 
 export function getSettingsPath(): string {
@@ -66,9 +64,7 @@ export function loadSettings(): AppSettings {
       indirizzo_attivita: parsed.indirizzo_attivita ?? DEFAULT_SETTINGS.indirizzo_attivita,
       codice_fiscale_piva: parsed.codice_fiscale_piva ?? DEFAULT_SETTINGS.codice_fiscale_piva,
       logo_base64: parsed.logo_base64 ?? DEFAULT_SETTINGS.logo_base64,
-      backup_on_close: parsed.backup_on_close ?? DEFAULT_SETTINGS.backup_on_close,
-      google_client_id: parsed.google_client_id ?? DEFAULT_SETTINGS.google_client_id,
-      google_client_secret: parsed.google_client_secret ?? DEFAULT_SETTINGS.google_client_secret
+      backup_on_close: parsed.backup_on_close ?? DEFAULT_SETTINGS.backup_on_close
     }
   } catch (err) {
     log.error('[settings] Errore lettura impostazioni, uso defaults:', err)

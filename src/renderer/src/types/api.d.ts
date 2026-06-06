@@ -24,10 +24,6 @@ interface AppSettings {
   logo_base64: string
   /** Esegui backup automatico alla chiusura dell'app. */
   backup_on_close: boolean
-  /** Client ID OAuth per il backup su Google Drive. */
-  google_client_id?: string
-  /** Client Secret OAuth per il backup su Google Drive. */
-  google_client_secret?: string
 }
 
 type DbState = 'firstRun' | 'locked' | 'ready'

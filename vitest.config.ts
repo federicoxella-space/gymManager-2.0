@@ -2,6 +2,12 @@ import { defineConfig } from 'vitest/config'
 import { resolve } from 'path'
 
 export default defineConfig({
+  define: {
+    // Stessa sostituzione usata da electron-vite; in test sono stringhe vuote
+    // salvo che la variabile d'ambiente sia impostata manualmente.
+    __GOOGLE_CLIENT_ID__: JSON.stringify(process.env.GOOGLE_CLIENT_ID ?? ''),
+    __GOOGLE_CLIENT_SECRET__: JSON.stringify(process.env.GOOGLE_CLIENT_SECRET ?? '')
+  },
   test: {
     environment: 'node',
     globals: true,

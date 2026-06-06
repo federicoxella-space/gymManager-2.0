@@ -19,8 +19,13 @@ import type { AddressInfo } from 'node:net'
 import { join } from 'node:path'
 import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'node:fs'
 import log from 'electron-log'
-import { loadSettings } from '../settings/store'
 import type { DriveBackupItem } from '../../types/shared'
+
+// Costanti iniettate da Vite define al momento del build.
+// In sviluppo locale si impostano tramite variabili d'ambiente GOOGLE_CLIENT_ID
+// e GOOGLE_CLIENT_SECRET (vedi electron.vite.config.ts).
+declare const __GOOGLE_CLIENT_ID__: string
+declare const __GOOGLE_CLIENT_SECRET__: string
 
 // ── Costanti ──────────────────────────────────────────────────────────────────
 
@@ -177,9 +182,8 @@ async function getOrCreateFolder(accessToken: string): Promise<string> {
  * 4. Salva i token su disco.
  */
 export async function connectDrive(): Promise<void> {
-  const settings = loadSettings()
-  const clientId = settings.google_client_id ?? ''
-  const clientSecret = settings.google_client_secret ?? ''
+  const clientId = __GOOGLE_CLIENT_ID__
+  const clientSecret = __GOOGLE_CLIENT_SECRET__
 
   if (!clientId || !clientSecret) {
     throw new Error('DRIVE_CREDENTIALS_MISSING')
