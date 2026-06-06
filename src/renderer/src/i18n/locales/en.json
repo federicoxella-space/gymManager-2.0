@@ -309,6 +309,7 @@
     "salva": "Save settings",
     "salvato": "Settings saved",
     "sezione_dati_attivita": "Business details",
+    "sezione_info": "About",
     "ragione_sociale": "Business name",
     "indirizzo_attivita": "Address",
     "codice_fiscale_piva": "Tax code / VAT number",
@@ -405,7 +406,9 @@
     "installa": "Restart and install",
     "errore": "Update error (non-blocking)",
     "controllo": "Checking for updates...",
-    "nessuno": "App up to date"
+    "nessuno": "App up to date",
+    "controlla_pulsante": "Check for updates",
+    "versione_corrente": "Current version"
   },
   "backup": {
     "titolo": "Backup and security",

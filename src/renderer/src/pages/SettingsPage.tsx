@@ -127,6 +127,11 @@ export default function SettingsPage(): React.JSX.Element {
   const [isConnectingDrive, setIsConnectingDrive] = useState(false)
   const [driveError, setDriveError] = useState<string | null>(null)
 
+  // Versione app e controllo aggiornamenti
+  const [appVersion, setAppVersion] = useState('')
+  const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
+  const [updateCheckResult, setUpdateCheckResult] = useState<'idle' | 'aggiornato'>('idle')
+
   const [form, setForm] = useState<FormState>({
     theme: 'system',
     language: 'it',
@@ -150,10 +155,30 @@ export default function SettingsPage(): React.JSX.Element {
   const [saveError, setSaveError] = useState<string | null>(null)
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Listener eventi aggiornamento (separato — non dipende dalle impostazioni)
+  useEffect(() => {
+    const unsubNotAvailable = window.api.on('update:not-available', () => {
+      setIsCheckingUpdate(false)
+      setUpdateCheckResult('aggiornato')
+    })
+    const unsubAvailable = window.api.on('update:available', () => {
+      setIsCheckingUpdate(false)
+    })
+    const unsubError = window.api.on('update:error', () => {
+      setIsCheckingUpdate(false)
+    })
+    return () => {
+      unsubNotAvailable()
+      unsubAvailable()
+      unsubError()
+    }
+  }, [])
+
   // Caricamento impostazioni al mount
   useEffect(() => {
     setIsLoading(true)
     void window.api.backup.drive.isConnected().then(c => setDriveConnected(c)).catch(() => {})
+    void window.api.app.getVersion().then(v => setAppVersion(v)).catch(() => {})
     window.api.settings
       .get()
       .then((s: AppSettings) => {
@@ -342,6 +367,12 @@ export default function SettingsPage(): React.JSX.Element {
     } catch {
       setDriveError(t('backup.drive_errore_connessione'))
     }
+  }
+
+  function handleCheckUpdate(): void {
+    setIsCheckingUpdate(true)
+    setUpdateCheckResult('idle')
+    void window.api.updater.check()
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
@@ -1056,6 +1087,40 @@ export default function SettingsPage(): React.JSX.Element {
           </button>
         </div>
       </form>
+
+      {/* ── Sezione Informazioni app (fuori dal form — non salvabile) ──────── */}
+      <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mt-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-5">
+          {t('impostazioni.sezione_info')}
+        </h3>
+
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+              {t('aggiornamento.versione_corrente')}
+            </p>
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              {appVersion !== '' ? `v${appVersion}` : '…'}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCheckUpdate}
+            disabled={isCheckingUpdate}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60 disabled:cursor-not-allowed text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          >
+            {isCheckingUpdate ? t('aggiornamento.controllo') : t('aggiornamento.controlla_pulsante')}
+          </button>
+        </div>
+
+        {updateCheckResult === 'aggiornato' && (
+          <p className="mt-3 flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+            <CheckIcon />
+            {t('aggiornamento.nessuno')}
+          </p>
+        )}
+      </section>
 
       {/* Dialogs backup — fuori dal form per non interferire con il submit */}
       <RestoreDialog

@@ -309,6 +309,7 @@
     "salva": "Salva impostazioni",
     "salvato": "Impostazioni salvate",
     "sezione_dati_attivita": "Dati attività",
+    "sezione_info": "Informazioni",
     "ragione_sociale": "Ragione sociale",
     "indirizzo_attivita": "Indirizzo",
     "codice_fiscale_piva": "Codice fiscale / P.IVA",
@@ -405,7 +406,9 @@
     "installa": "Riavvia e installa",
     "errore": "Errore aggiornamento (non bloccante)",
     "controllo": "Controllo aggiornamenti...",
-    "nessuno": "App aggiornata"
+    "nessuno": "App aggiornata",
+    "controlla_pulsante": "Controlla aggiornamenti",
+    "versione_corrente": "Versione corrente"
   },
   "backup": {
     "titolo": "Backup e sicurezza",

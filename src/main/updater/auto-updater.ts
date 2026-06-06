@@ -31,6 +31,7 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
 
   autoUpdater.on('update-not-available', (info: UpdateInfo) => {
     log.info(`[updater] Nessun aggiornamento disponibile (versione corrente: v${info.version})`)
+    mainWindow.webContents.send('update:not-available')
   })
 
   autoUpdater.on('download-progress', (progress: ProgressInfo) => {
