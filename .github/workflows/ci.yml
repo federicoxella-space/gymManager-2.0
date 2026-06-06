@@ -29,10 +29,13 @@ jobs:
         # Electron, esegue solo typecheck/lint/test(Vitest)/build(Vite).
         run: npm ci --ignore-scripts
 
-      # better-sqlite3-multiple-ciphers include SQLCipher internamente:
-      # nessun libsqlcipher-dev necessario, nessun flag SQLCIPHER=1.
-      # Con --ignore-scripts il suo postinstall (prebuild-install) non gira,
-      # quindi compiliamo da sorgente con gcc per ottenere il .node per Node.js.
+      # better-sqlite3-multiple-ciphers non pubblica prebuilt per runtime=node su
+      # linux/win32, quindi si ricade su node-gyp per compilare da sorgente.
+      # Python 3.12 (default su ubuntu-latest) ha rimosso distutils: setuptools
+      # lo ripristina. SQLCipher è bundled, nessuna dipendenza esterna.
+      - name: Install setuptools (distutils rimosso in Python 3.12, richiesto da node-gyp)
+        run: pip install setuptools
+
       - name: Rebuild native module for Node.js (tests)
         run: npm rebuild better-sqlite3-multiple-ciphers
 
