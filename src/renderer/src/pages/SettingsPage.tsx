@@ -130,7 +130,8 @@ export default function SettingsPage(): React.JSX.Element {
   // Versione app e controllo aggiornamenti
   const [appVersion, setAppVersion] = useState('')
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
-  const [updateCheckResult, setUpdateCheckResult] = useState<'idle' | 'aggiornato'>('idle')
+  const [updateCheckResult, setUpdateCheckResult] = useState<'idle' | 'aggiornato' | 'errore'>('idle')
+  const [updateErrorMsg, setUpdateErrorMsg] = useState<string | null>(null)
 
   const [form, setForm] = useState<FormState>({
     theme: 'system',
@@ -164,8 +165,10 @@ export default function SettingsPage(): React.JSX.Element {
     const unsubAvailable = window.api.on('update:available', () => {
       setIsCheckingUpdate(false)
     })
-    const unsubError = window.api.on('update:error', () => {
+    const unsubError = window.api.on('update:error', (...args: unknown[]) => {
       setIsCheckingUpdate(false)
+      setUpdateCheckResult('errore')
+      setUpdateErrorMsg((args[0] as string | undefined) ?? null)
     })
     return () => {
       unsubNotAvailable()
@@ -372,6 +375,7 @@ export default function SettingsPage(): React.JSX.Element {
   function handleCheckUpdate(): void {
     setIsCheckingUpdate(true)
     setUpdateCheckResult('idle')
+    setUpdateErrorMsg(null)
     void window.api.updater.check()
   }
 
@@ -1119,6 +1123,19 @@ export default function SettingsPage(): React.JSX.Element {
             <CheckIcon />
             {t('aggiornamento.nessuno')}
           </p>
+        )}
+
+        {updateCheckResult === 'errore' && (
+          <div className="mt-3">
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {t('aggiornamento.errore_verifica')}
+            </p>
+            {updateErrorMsg !== null && (
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 font-mono break-all">
+                {updateErrorMsg}
+              </p>
+            )}
+          </div>
         )}
       </section>
 

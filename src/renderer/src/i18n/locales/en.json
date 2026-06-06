@@ -408,7 +408,8 @@
     "controllo": "Checking for updates...",
     "nessuno": "App up to date",
     "controlla_pulsante": "Check for updates",
-    "versione_corrente": "Current version"
+    "versione_corrente": "Current version",
+    "errore_verifica": "Unable to check for updates"
   },
   "backup": {
     "titolo": "Backup and security",

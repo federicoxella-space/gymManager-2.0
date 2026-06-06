@@ -408,7 +408,8 @@
     "controllo": "Controllo aggiornamenti...",
     "nessuno": "App aggiornata",
     "controlla_pulsante": "Controlla aggiornamenti",
-    "versione_corrente": "Versione corrente"
+    "versione_corrente": "Versione corrente",
+    "errore_verifica": "Impossibile verificare gli aggiornamenti"
   },
   "backup": {
     "titolo": "Backup e sicurezza",
