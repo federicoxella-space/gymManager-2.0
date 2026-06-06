@@ -21,18 +21,13 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install system dependencies (Electron)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-dev \
-            libwebkit2gtk-4.0-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf
-
       - name: Install dependencies
-        run: npm ci
+        # --ignore-scripts salta postinstall (electron-builder install-app-deps)
+        # che sostituirebbe i prebuilt Node.js di better-sqlite3-multiple-ciphers
+        # con quelli per Electron (ABI diverso), rompendo i test Vitest.
+        # Le dipendenze di sistema GTK/WebKit non servono: ci.yml non avvia
+        # Electron, esegue solo typecheck/lint/test(Vitest)/build(Vite).
+        run: npm ci --ignore-scripts
 
       # better-sqlite3-multiple-ciphers include SQLCipher internamente:
       # nessun libsqlcipher-dev necessario, nessun flag SQLCIPHER=1.
