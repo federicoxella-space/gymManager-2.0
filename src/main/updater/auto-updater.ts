@@ -12,6 +12,8 @@ export interface UpdateProgress {
   transferred: number
 }
 
+declare const __GITHUB_UPDATE_TOKEN__: string
+
 /** Riferimento alla finestra principale, salvato da initAutoUpdater. */
 let _mainWindow: BrowserWindow | null = null
 
@@ -23,6 +25,13 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
   _mainWindow = mainWindow
   // Usa electron-log come logger per l'updater
   autoUpdater.logger = log
+
+  // Autentica le richieste verso le release del repo privato.
+  // Il token è un GitHub PAT read-only iniettato a build time via Vite define.
+  const updateToken = __GITHUB_UPDATE_TOKEN__
+  if (updateToken) {
+    autoUpdater.requestHeaders = { Authorization: `token ${updateToken}` }
+  }
 
   autoUpdater.on('checking-for-update', () => {
     log.info('[updater] Verifica aggiornamenti in corso...')

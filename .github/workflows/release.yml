@@ -63,6 +63,8 @@ jobs:
           # Credenziali OAuth Google Drive iniettate nella build tramite Vite define
           GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # PAT GitHub read-only per l'auto-update da repo privato
+          GITHUB_UPDATE_TOKEN: ${{ secrets.GITHUB_UPDATE_TOKEN }}
 
       - name: Package & Publish to GitHub Releases
         run: npx electron-builder --publish always
