@@ -21,7 +21,7 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install system dependencies
+      - name: Install system dependencies (Electron)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -29,17 +29,15 @@ jobs:
             libwebkit2gtk-4.0-dev \
             libappindicator3-dev \
             librsvg2-dev \
-            patchelf \
-            libsqlcipher-dev
+            patchelf
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Rebuild native modules for Electron
-        run: npx electron-rebuild -f -w better-sqlite3
-        env:
-          SQLCIPHER: 1
-        continue-on-error: true
+      # better-sqlite3-multiple-ciphers include SQLCipher internamente:
+      # nessun libsqlcipher-dev necessario, nessun flag SQLCIPHER=1.
+      # I prebuilt per Node.js vengono scaricati da npm ci e sono
+      # sufficienti per i test Vitest (che girano su Node, non Electron).
 
       - name: Typecheck
         run: npm run typecheck
@@ -50,7 +48,7 @@ jobs:
       - name: Test
         run: npm run test
 
-      - name: Build (Electron)
+      - name: Build (Electron — verifica che il bundle compili)
         run: npm run build:electron
         env:
           CI: true

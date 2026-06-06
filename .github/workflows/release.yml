@@ -1,0 +1,60 @@
+name: Release
+
+# Si attiva quando viene pushato un tag che inizia con "v" (es. v1.0.0, v0.2.1)
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Permessi necessari per creare release e caricare asset su GitHub
+permissions:
+  contents: write
+
+jobs:
+  release-windows:
+    name: Build & Release (Windows x64)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        # --ignore-scripts salta postinstall (electron-builder install-app-deps)
+        # che tenta di scaricare binari Electron: non serve in CI.
+        run: npm ci --ignore-scripts
+
+      # Fase 1 — Test con i prebuilt per Node.js (ABI corrente)
+      # I prebuilt di better-sqlite3-multiple-ciphers scaricati da npm ci
+      # sono già compatibili con il Node.js del runner → i test passano.
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      # Fase 2 — Ricompila i moduli nativi per Electron (ABI diverso da Node.js)
+      # Questo sovrascrive il prebuilt Node.js con quello per Electron,
+      # ma avviene DOPO i test, quindi non rompe nulla.
+      - name: Rebuild native modules for Electron
+        run: npx electron-rebuild -f -w better-sqlite3-multiple-ciphers
+
+      # Fase 3 — Build Vite + packaging NSIS + pubblicazione release GitHub
+      - name: Build Electron app (Vite)
+        run: npm run build:electron
+
+      - name: Package & Publish to GitHub Releases
+        run: npx electron-builder --publish always
+        env:
+          # GITHUB_TOKEN è fornito automaticamente da Actions con i permessi
+          # dichiarati sopra (contents: write). Non serve un PAT manuale.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
