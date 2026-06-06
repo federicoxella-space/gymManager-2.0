@@ -453,21 +453,22 @@ describe('resetDatabase', () => {
 // Suite 6: Drive stub
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('Drive stub — DRIVE_NOT_CONFIGURED', () => {
-  it('isDriveConnected restituisce sempre false', () => {
+describe('Drive — stato non configurato/connesso', () => {
+  it('isDriveConnected restituisce false quando non ci sono token salvati', () => {
     expect(isDriveConnected()).toBe(false)
   })
 
-  it('connectDrive lancia Error con codice DRIVE_NOT_CONFIGURED', async () => {
-    await expect(connectDrive()).rejects.toThrow('DRIVE_NOT_CONFIGURED')
+  it('connectDrive lancia errore quando le credenziali non sono configurate', async () => {
+    // Con settings vuote (mock electron), il Client ID e Secret saranno stringa vuota
+    await expect(connectDrive()).rejects.toThrow()
   })
 
-  it('backupSuDrive lancia Error con codice DRIVE_NOT_CONFIGURED', async () => {
-    await expect(backupSuDrive('/fake/path.db')).rejects.toThrow('DRIVE_NOT_CONFIGURED')
+  it('backupSuDrive lancia DRIVE_NOT_CONNECTED quando non connesso', async () => {
+    await expect(backupSuDrive('/fake/path.db')).rejects.toThrow('DRIVE_NOT_CONNECTED')
   })
 
-  it('listBackupDrive lancia Error con codice DRIVE_NOT_CONFIGURED', async () => {
-    await expect(listBackupDrive()).rejects.toThrow('DRIVE_NOT_CONFIGURED')
+  it('listBackupDrive lancia DRIVE_NOT_CONNECTED quando non connesso', async () => {
+    await expect(listBackupDrive()).rejects.toThrow('DRIVE_NOT_CONNECTED')
   })
 })
 

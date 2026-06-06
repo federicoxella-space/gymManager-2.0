@@ -85,6 +85,8 @@ interface FormState {
   codice_fiscale_piva: string
   logo_base64: string
   backup_on_close: boolean
+  google_client_id: string
+  google_client_secret: string
 }
 
 interface FormErrors {
@@ -122,6 +124,11 @@ export default function SettingsPage(): React.JSX.Element {
   const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false)
   const backupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Drive OAuth state
+  const [driveConnected, setDriveConnected] = useState(false)
+  const [isConnectingDrive, setIsConnectingDrive] = useState(false)
+  const [driveError, setDriveError] = useState<string | null>(null)
+
   const [form, setForm] = useState<FormState>({
     theme: 'system',
     language: 'it',
@@ -137,6 +144,8 @@ export default function SettingsPage(): React.JSX.Element {
     codice_fiscale_piva: '',
     logo_base64: '',
     backup_on_close: true,
+    google_client_id: '',
+    google_client_secret: '',
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -148,6 +157,7 @@ export default function SettingsPage(): React.JSX.Element {
   // Caricamento impostazioni al mount
   useEffect(() => {
     setIsLoading(true)
+    void window.api.backup.drive.isConnected().then(c => setDriveConnected(c)).catch(() => {})
     window.api.settings
       .get()
       .then((s: AppSettings) => {
@@ -174,6 +184,8 @@ export default function SettingsPage(): React.JSX.Element {
           codice_fiscale_piva: s.codice_fiscale_piva ?? '',
           logo_base64: s.logo_base64 ?? '',
           backup_on_close: s.backup_on_close ?? true,
+          google_client_id: s.google_client_id ?? '',
+          google_client_secret: s.google_client_secret ?? '',
         })
       })
       .catch(() => {
@@ -310,6 +322,43 @@ export default function SettingsPage(): React.JSX.Element {
     setForm((prev) => ({ ...prev, backup_on_close: e.target.checked }))
   }
 
+  async function handleDriveConnect(): Promise<void> {
+    if (!form.google_client_id.trim() || !form.google_client_secret.trim()) {
+      setDriveError(t('backup.drive_errore_credenziali'))
+      return
+    }
+    setDriveError(null)
+    setIsConnectingDrive(true)
+    try {
+      // Salva prima le credenziali
+      await window.api.settings.set({
+        google_client_id: form.google_client_id.trim(),
+        google_client_secret: form.google_client_secret.trim()
+      })
+      await window.api.backup.drive.connect()
+      setDriveConnected(true)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('DRIVE_CREDENTIALS_MISSING')) {
+        setDriveError(t('backup.drive_errore_credenziali'))
+      } else {
+        setDriveError(t('backup.drive_errore_connessione'))
+      }
+    } finally {
+      setIsConnectingDrive(false)
+    }
+  }
+
+  async function handleDriveDisconnect(): Promise<void> {
+    try {
+      await window.api.backup.drive.disconnect()
+      setDriveConnected(false)
+      setDriveError(null)
+    } catch {
+      setDriveError(t('backup.drive_errore_connessione'))
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault()
     setSaveError(null)
@@ -346,6 +395,8 @@ export default function SettingsPage(): React.JSX.Element {
         codice_fiscale_piva: form.codice_fiscale_piva,
         logo_base64: form.logo_base64,
         backup_on_close: form.backup_on_close,
+        google_client_id: form.google_client_id,
+        google_client_secret: form.google_client_secret,
       }
       await window.api.settings.set(payload)
       // Applica immediatamente il cambio lingua senza riavvio
@@ -919,27 +970,102 @@ export default function SettingsPage(): React.JSX.Element {
               {t('backup.drive_titolo')}
             </h4>
 
-            <div className="flex items-center gap-2 mb-3">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500" aria-hidden="true" />
-                {t('backup.drive_non_connesso')}
-              </span>
+            {/* Stato connessione */}
+            <div className="flex items-center gap-2 mb-4">
+              {driveConnected ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" aria-hidden="true" />
+                  {t('backup.drive_connesso')}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500" aria-hidden="true" />
+                  {t('backup.drive_non_connesso')}
+                </span>
+              )}
             </div>
 
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              {t('backup.drive_stub_avviso')}
-            </p>
+            {!driveConnected && (
+              <>
+                {/* Istruzioni */}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 leading-relaxed">
+                  {t('backup.drive_istruzioni')}
+                </p>
 
-            <div title={t('backup.drive_connetti_tooltip')} className="inline-block">
-              <button
-                type="button"
-                disabled
-                aria-disabled="true"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-sm font-medium cursor-not-allowed"
-              >
-                {t('backup.drive_connetti')}
-              </button>
-            </div>
+                {/* Client ID */}
+                <div className="mb-3">
+                  <label
+                    htmlFor="settings-drive-client-id"
+                    className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                  >
+                    {t('backup.drive_client_id')}
+                  </label>
+                  <input
+                    id="settings-drive-client-id"
+                    type="text"
+                    value={form.google_client_id}
+                    onChange={(e) => setForm(prev => ({ ...prev, google_client_id: e.target.value }))}
+                    placeholder="xxxxxxxxx.apps.googleusercontent.com"
+                    autoComplete="off"
+                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
+                  />
+                </div>
+
+                {/* Client Secret */}
+                <div className="mb-4">
+                  <label
+                    htmlFor="settings-drive-client-secret"
+                    className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                  >
+                    {t('backup.drive_client_secret')}
+                  </label>
+                  <input
+                    id="settings-drive-client-secret"
+                    type="password"
+                    value={form.google_client_secret}
+                    onChange={(e) => setForm(prev => ({ ...prev, google_client_secret: e.target.value }))}
+                    autoComplete="new-password"
+                    className="block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono"
+                  />
+                </div>
+
+                {/* Messaggio di errore Drive */}
+                {driveError !== null && (
+                  <div
+                    role="alert"
+                    className="mb-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2"
+                  >
+                    {driveError}
+                  </div>
+                )}
+
+                {/* Pulsante Connetti */}
+                <button
+                  type="button"
+                  onClick={() => { void handleDriveConnect() }}
+                  disabled={isConnectingDrive}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                >
+                  {isConnectingDrive ? t('backup.drive_connessione_in_corso') : t('backup.drive_connetti')}
+                </button>
+              </>
+            )}
+
+            {driveConnected && (
+              <div className="flex items-center gap-3">
+                {/* Errore disconnessione */}
+                {driveError !== null && (
+                  <span className="text-xs text-red-600 dark:text-red-400">{driveError}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => { void handleDriveDisconnect() }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                >
+                  {t('backup.drive_disconnetti')}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Sicurezza — Reset password */}

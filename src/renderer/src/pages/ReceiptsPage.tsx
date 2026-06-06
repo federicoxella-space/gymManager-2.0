@@ -36,15 +36,6 @@ function scaricaPdf(base64: string, numero: number, anno: number): void {
   URL.revokeObjectURL(url)
 }
 
-function anniDisponibili(): number[] {
-  const annoCorrente = new Date().getFullYear()
-  const anni: number[] = []
-  for (let a = annoCorrente; a >= annoCorrente - 5; a--) {
-    anni.push(a)
-  }
-  return anni
-}
-
 interface ReceiptsPageProps {
   initialFilter?: { stato_pagamento?: 'pagato' | 'da_incassare' }
 }
@@ -58,6 +49,7 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
 
   // Filtri
   const annoCorrente = new Date().getFullYear()
+  const [anni, setAnni] = useState<number[]>([annoCorrente])
   const [filtroAnno, setFiltroAnno] = useState<number>(annoCorrente)
   const [filtroStato, setFiltroStato] = useState<string>('')
   const [filtroPagamento, setFiltroPagamento] = useState<string>(
@@ -72,6 +64,23 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
   // PDF
   const [pdfLoading, setPdfLoading] = useState<number | null>(null)
   const [pdfError, setPdfError] = useState<number | null>(null)
+
+  // Carica gli anni con ricevute effettive dal DB
+  useEffect(() => {
+    window.api.ricevute.anni()
+      .then(result => {
+        const list = result.length > 0 ? result : [annoCorrente]
+        setAnni(list)
+        // Se l'anno corrente non è in lista, seleziona il più recente disponibile
+        if (!list.includes(filtroAnno)) {
+          setFiltroAnno(list[0])
+        }
+      })
+      .catch(() => {
+        setAnni([annoCorrente])
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const loadRicevute = useCallback(async (): Promise<void> => {
     setIsLoading(true)
@@ -162,9 +171,9 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
             id="ricevute-filtro-anno"
             value={filtroAnno}
             onChange={(e) => setFiltroAnno(Number(e.target.value))}
-            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="pl-3 pr-10 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
-            {anniDisponibili().map((a) => (
+            {anni.map((a) => (
               <option key={a} value={a}>
                 {a}
               </option>
@@ -184,7 +193,7 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
             id="ricevute-filtro-stato"
             value={filtroStato}
             onChange={(e) => setFiltroStato(e.target.value)}
-            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="pl-3 pr-10 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">{t('ricevute.filtri.tutti_stati')}</option>
             <option value="emessa">{t('ricevute.stato.emessa')}</option>
@@ -204,7 +213,7 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
             id="ricevute-filtro-pagamento"
             value={filtroPagamento}
             onChange={(e) => setFiltroPagamento(e.target.value)}
-            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="pl-3 pr-10 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">{t('ricevute.filtri.tutti_stati')}</option>
             <option value="pagato">{t('iscrizioni.pagamento.pagato')}</option>

@@ -185,6 +185,9 @@ const api: ElectronAPI = {
     },
     vociPagabili(clienteId: number): Promise<VocePagabile[]> {
       return ipcRenderer.invoke('ricevute:vociPagabili', { clienteId })
+    },
+    anni(): Promise<number[]> {
+      return ipcRenderer.invoke('ricevute:anni')
     }
   },
 
@@ -244,6 +247,9 @@ const api: ElectronAPI = {
     drive: {
       connect(): Promise<void> {
         return ipcRenderer.invoke('backup:drive:connect')
+      },
+      disconnect(): Promise<void> {
+        return ipcRenderer.invoke('backup:drive:disconnect')
       },
       isConnected(): Promise<boolean> {
         return ipcRenderer.invoke('backup:drive:isConnected')

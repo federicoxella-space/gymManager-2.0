@@ -5,6 +5,7 @@ import { verificaBackup, ripristinaBackup, resetDatabase } from '../backup/resto
 import {
   connectDrive,
   isDriveConnected,
+  disconnectDrive,
   backupSuDrive,
   listBackupDrive
 } from '../backup/drive-service'
@@ -52,7 +53,8 @@ import {
   creaRicevuta,
   listRicevute,
   annullaRicevuta,
-  getVociPagabili
+  getVociPagabili,
+  listAnniRicevute
 } from '../db/receipts-repository'
 import {
   getIndicatori,
@@ -645,6 +647,18 @@ export function registerIpcHandlers(): void {
     }
   )
 
+  /**
+   * Restituisce gli anni per cui esistono ricevute (per il filtro anno).
+   */
+  ipcMain.handle('ricevute:anni', (): number[] => {
+    try {
+      return listAnniRicevute()
+    } catch (err) {
+      log.error('[ipc] ricevute:anni errore:', err)
+      return []
+    }
+  })
+
   // ── PDF ───────────────────────────────────────────────────────────────────
 
   /**
@@ -881,10 +895,22 @@ export function registerIpcHandlers(): void {
   })
 
   /**
-   * STUB: indica se Google Drive è connesso.
+   * Indica se Google Drive è connesso (token salvati su disco).
    */
   ipcMain.handle('backup:drive:isConnected', (): boolean => {
     return isDriveConnected()
+  })
+
+  /**
+   * Disconnette Google Drive rimuovendo i token locali.
+   */
+  ipcMain.handle('backup:drive:disconnect', async (): Promise<void> => {
+    try {
+      await disconnectDrive()
+    } catch (err) {
+      log.error('[ipc] backup:drive:disconnect errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante la disconnessione da Drive')
+    }
   })
 
   /**

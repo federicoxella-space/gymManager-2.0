@@ -298,6 +298,17 @@ export function annullaRicevuta(id: number): RicevutaRow {
 }
 
 /**
+ * Restituisce la lista degli anni per cui esistono ricevute, in ordine decrescente.
+ */
+export function listAnniRicevute(): number[] {
+  const db = getDatabase()
+  const rows = db
+    .prepare('SELECT DISTINCT anno FROM ricevute ORDER BY anno DESC')
+    .all() as Array<{ anno: number }>
+  return rows.map((r) => r.anno)
+}
+
+/**
  * Restituisce le voci pagabili di un cliente (iscrizioni e abbonamenti
  * con stato_pagamento='da_incassare' e stato attivo/attiva).
  */

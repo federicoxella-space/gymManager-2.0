@@ -1,9 +1,4 @@
-/**
- * Tipi condivisi tra main process, preload e renderer.
- * Nessuna dipendenza da Node o da Electron deve essere presente qui.
- */
-
-export interface AppSettings {
+interface AppSettings {
   theme: 'light' | 'dark' | 'system'
   language: string
   primaryColor: string
@@ -13,11 +8,11 @@ export interface AppSettings {
   expiry_warning_days_memberships: number
   /** Giorni di anticipo per la segnalazione "in scadenza" degli abbonamenti. */
   expiry_warning_days_subscriptions: number
-  /** Testo default a piè di ricevuta (modificabile per singola ricevuta). */
+  /** Testo default a piè di ricevuta. */
   dicitura_pie: string
-  /** Numero da cui parte la numerazione ricevute per l'anno corrente (configurabile dall'utente). */
+  /** Numero di partenza ricevute per anno (configurabile dall'utente). */
   receipt_start_number: number
-  /** Widget visibili nella dashboard (es. ['indicatori','scadenze','incassi','abbonamenti','tesseramenti']). */
+  /** Widget visibili nella dashboard. */
   dashboard_widgets: string[]
   /** Ragione sociale dell'attività (usata nelle ricevute). */
   ragione_sociale: string
@@ -35,19 +30,9 @@ export interface AppSettings {
   google_client_secret?: string
 }
 
-export type DbState = 'firstRun' | 'locked' | 'ready'
+type DbState = 'firstRun' | 'locked' | 'ready'
 
-// ── Tipi di dominio ───────────────────────────────────────────────────────────
-
-export type StatoCertificato = 'valido' | 'in_scadenza' | 'scaduto'
-
-export type { ValidationResult, ValidationError } from '../main/domain/cliente'
-export type { CertificatoConStato } from '../main/domain/certificato-medico'
-
-// ── Clienti ──────────────────────────────────────────────────────────────────
-
-/** Riflette la riga della tabella `clienti`. */
-export interface ClienteRow {
+interface ClienteRow {
   id: number
   numero_tessera: string | null
   nome: string
@@ -75,7 +60,6 @@ export interface ClienteRow {
   stato: 'attivo' | 'anonimizzato'
   data_inserimento: string
   data_modifica: string
-  /** Campi aggiuntivi dalla JOIN con certificati_medici in listClienti */
   cert_scadenza?: string | null
   cert_tipo?: string | null
   /** Stato dell'iscrizione attiva (null se assente) */
@@ -86,8 +70,7 @@ export interface ClienteRow {
   abbonamenti_attivi_count?: number | null
 }
 
-/** Dati in ingresso per la creazione di un cliente. */
-export interface CreateClienteInput {
+interface CreateClienteInput {
   numero_tessera?: string
   nome: string
   cognome: string
@@ -113,11 +96,9 @@ export interface CreateClienteInput {
   tutore_cap?: string | null
 }
 
-/** Dati aggiornabili di un cliente (tutti i campi opzionali). */
-export type UpdateClienteInput = Partial<CreateClienteInput>
+type UpdateClienteInput = Partial<CreateClienteInput>
 
-/** Filtri per la lista clienti. */
-export interface ClientiFilters {
+interface ClientiFilters {
   search?: string
   stato?: 'attivo' | 'anonimizzato'
   stato_iscrizione?: 'attiva' | 'scaduta' | 'assente'
@@ -127,10 +108,7 @@ export interface ClientiFilters {
   offset?: number
 }
 
-// ── Certificati medici ────────────────────────────────────────────────────────
-
-/** Riflette la riga della tabella `certificati_medici`. */
-export interface CertificatoRow {
+interface CertificatoRow {
   id: number
   cliente_id: number
   tipo: string
@@ -138,16 +116,15 @@ export interface CertificatoRow {
   data_inserimento: string
 }
 
-/** Dati in ingresso per l'aggiunta di un certificato. */
-export interface CreateCertificatoInput {
+interface CreateCertificatoInput {
   cliente_id: number
   tipo: string
   data_scadenza: string
 }
 
-// ── Catalogo tipi ─────────────────────────────────────────────────────────────
+// ── Catalogo ──────────────────────────────────────────────────────────────────
 
-export interface TipoIscrizioneRow {
+interface TipoIscrizioneRow {
   id: number
   nome: string
   descrizione: string | null
@@ -158,7 +135,7 @@ export interface TipoIscrizioneRow {
   data_modifica: string
 }
 
-export interface TipoAbbonamentoRow {
+interface TipoAbbonamentoRow {
   id: number
   nome: string
   descrizione: string | null
@@ -171,18 +148,18 @@ export interface TipoAbbonamentoRow {
   data_modifica: string
 }
 
-export interface CreateTipoIscrizioneInput {
+interface CreateTipoIscrizioneInput {
   nome: string
   descrizione?: string
   durata_mesi: number
   prezzo_default: number
 }
 
-export type UpdateTipoIscrizioneInput = Partial<CreateTipoIscrizioneInput> & {
+type UpdateTipoIscrizioneInput = Partial<CreateTipoIscrizioneInput> & {
   stato?: 'attivo' | 'non_valido'
 }
 
-export interface CreateTipoAbbonamentoInput {
+interface CreateTipoAbbonamentoInput {
   nome: string
   descrizione?: string
   durata_mesi: number
@@ -191,13 +168,13 @@ export interface CreateTipoAbbonamentoInput {
   colore?: string
 }
 
-export type UpdateTipoAbbonamentoInput = Partial<CreateTipoAbbonamentoInput> & {
+type UpdateTipoAbbonamentoInput = Partial<CreateTipoAbbonamentoInput> & {
   stato?: 'attivo' | 'non_valido'
 }
 
 // ── Associazioni cliente ──────────────────────────────────────────────────────
 
-export interface IscrizioneClienteRow {
+interface IscrizioneClienteRow {
   id: number
   cliente_id: number
   tipo_iscrizione_id: number
@@ -212,7 +189,7 @@ export interface IscrizioneClienteRow {
   data_modifica: string
 }
 
-export interface AbbonamentoClienteRow {
+interface AbbonamentoClienteRow {
   id: number
   cliente_id: number
   tipo_abbonamento_id: number
@@ -227,7 +204,7 @@ export interface AbbonamentoClienteRow {
   data_modifica: string
 }
 
-export interface AssegnaIscrizioneInput {
+interface AssegnaIscrizioneInput {
   cliente_id: number
   tipo_iscrizione_id: number
   data_inizio: string
@@ -238,7 +215,7 @@ export interface AssegnaIscrizioneInput {
   note?: string
 }
 
-export interface AssegnaAbbonamentoInput {
+interface AssegnaAbbonamentoInput {
   cliente_id: number
   tipo_abbonamento_id: number
   data_inizio: string
@@ -251,8 +228,7 @@ export interface AssegnaAbbonamentoInput {
 
 // ── Ricevute ──────────────────────────────────────────────────────────────────
 
-/** Riflette la riga della tabella `ricevute`. */
-export interface RicevutaRow {
+interface RicevutaRow {
   id: number
   numero: number
   anno: number
@@ -278,11 +254,9 @@ export interface RicevutaRow {
   data_emissione_sistema: string
 }
 
-/** Riflette la riga della tabella `righe_ricevuta`. */
-export interface RigaRicevutaRow {
+interface RigaRicevutaRow {
   id: number
   ricevuta_id: number
-  /** 'iscrizione' | 'abbonamento' | 'libera' */
   tipo: string
   riferimento_id: number | null
   descrizione: string
@@ -292,13 +266,11 @@ export interface RigaRicevutaRow {
   ordine: number
 }
 
-/** Ricevuta con le proprie righe, usata per la generazione PDF. */
-export interface RicevutaConRighe extends RicevutaRow {
+interface RicevutaConRighe extends RicevutaRow {
   righe: RigaRicevutaRow[]
 }
 
-/** Voce pagabile (iscrizione o abbonamento da incassare) esposta nella schermata di emissione. */
-export interface VocePagabile {
+interface VocePagabile {
   tipo: 'iscrizione' | 'abbonamento'
   riferimentoId: number
   descrizione: string
@@ -308,16 +280,14 @@ export interface VocePagabile {
   stato_pagamento: 'pagato' | 'da_incassare'
 }
 
-/** Filtri per la lista ricevute. */
-export interface RicevutaFilters {
+interface RicevutaFilters {
   anno?: number
   stato?: string
   clienteId?: number
   search?: string
 }
 
-/** Singola riga nella creazione di una ricevuta. */
-export interface CreaRigaInput {
+interface CreaRigaInput {
   tipo: 'iscrizione' | 'abbonamento' | 'libera'
   riferimentoId?: number
   descrizione: string
@@ -326,8 +296,7 @@ export interface CreaRigaInput {
   prezzo: number
 }
 
-/** Dati in ingresso per la creazione di una ricevuta. */
-export interface CreaRicevutaInput {
+interface CreaRicevutaInput {
   clienteId: number
   dataEmissione: string
   metodo_pagamento: 'contanti' | 'pos' | 'bonifico'
@@ -336,72 +305,16 @@ export interface CreaRicevutaInput {
   righe: CreaRigaInput[]
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
-
-export interface DashboardPeriodo {
-  dal: string // YYYY-MM-DD
-  al: string  // YYYY-MM-DD
-}
-
-export interface WidgetIndicatori {
-  soci_attivi: number
-  da_rinnovare: number
-  certificati_in_scadenza: number
-  certificati_scaduti: number
-  incassi_pagati: number
-  incassi_da_incassare: number
-}
-
-export interface ClienteInScadenza {
-  cliente_id: number
-  nome: string
-  cognome: string
-  tipo: 'certificato' | 'iscrizione' | 'abbonamento'
-  nome_tipo: string
-  data_scadenza: string
-  giorni_alla_scadenza: number
-}
-
-export interface AbbonamentoPerTipo {
-  tipo_abbonamento_id: number
-  nome: string
-  colore: string
-  totale: number
-}
-
-export interface IncassiPeriodo {
-  totale_pagato: number
-  totale_da_incassare: number
-  ricevute_emesse: number
-  totale_ricevute: number
-}
-
-export interface NuoviTesseramenti {
-  totale: number
-}
-
-export interface CompleannoDellaSett {
-  cliente_id: number
-  nome: string
-  cognome: string
-  data_nascita: string
-  giorno_mese: string // gg/mm
-}
-
 // ── Backup ────────────────────────────────────────────────────────────────────
 
-export interface BackupManifest {
-  /** Versione schema DB al momento del backup (PRAGMA user_version). */
+interface BackupManifest {
   version: number
-  /** ISO datetime di creazione backup. */
   createdAt: string
-  /** Versione dell'applicazione. */
   appVersion: string
-  /** Percorso originale del file DB (per info). */
   dbPath: string
 }
 
-export interface DriveBackupItem {
+interface DriveBackupItem {
   id: string
   nome: string
   createdAt: string
@@ -410,7 +323,7 @@ export interface DriveBackupItem {
 
 // ── ElectronAPI ───────────────────────────────────────────────────────────────
 
-export interface ElectronAPI {
+interface ElectronAPI {
   db: {
     getState: () => Promise<{ state: DbState }>
     setup: (password: string) => Promise<void>
@@ -476,34 +389,24 @@ export interface ElectronAPI {
     genera: (args: { ricevutaId: number }) => Promise<string>
   }
   dashboard: {
-    indicatori: (params: {
-      oggi: string
-      giorniCert: number
-      giorniIsc: number
-      giorniAbb: number
-    }) => Promise<WidgetIndicatori>
-    scadenze: (params: {
-      oggi: string
-      giorniCert: number
-      giorniIsc: number
-      giorniAbb: number
-    }) => Promise<ClienteInScadenza[]>
+    indicatori: (params: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number }) => Promise<WidgetIndicatori>
+    scadenze: (params: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number }) => Promise<ClienteInScadenza[]>
     abbonamenti: (params: { soloAttivi?: boolean }) => Promise<AbbonamentoPerTipo[]>
     incassi: (params: { periodo: DashboardPeriodo }) => Promise<IncassiPeriodo>
     tesseramenti: (params: { periodo: DashboardPeriodo }) => Promise<NuoviTesseramenti>
     compleanni: (params: { dalGiorno: string; alGiorno: string }) => Promise<CompleannoDellaSett[]>
   }
   backup: {
-    locale: (destinazionePath: string) => Promise<BackupManifest>
+    locale: (args: { destinazionePath: string }) => Promise<BackupManifest>
     automatico: () => Promise<string>
-    verifica: (backupPath: string) => Promise<BackupManifest>
-    ripristina: (backupPath: string, password: string) => Promise<void>
-    reset: (nuovaPassword: string) => Promise<void>
+    verifica: (args: { backupPath: string }) => Promise<BackupManifest>
+    ripristina: (args: { backupPath: string; password: string }) => Promise<void>
+    reset: (args: { nuovaPassword: string }) => Promise<void>
     drive: {
+      isConnected: () => Promise<boolean>
       connect: () => Promise<void>
       disconnect: () => Promise<void>
-      isConnected: () => Promise<boolean>
-      backup: (backupPath: string) => Promise<string>
+      backup: (args: { backupPath: string }) => Promise<string>
       list: () => Promise<DriveBackupItem[]>
     }
   }
@@ -517,14 +420,74 @@ export interface ElectronAPI {
 
 // ── Auto-update ───────────────────────────────────────────────────────────────
 
-export interface UpdateInfo {
+interface UpdateInfo {
   version: string
   releaseNotes?: string
 }
 
-export interface UpdateProgress {
+interface UpdateProgress {
   percent: number
   bytesPerSecond: number
   total: number
   transferred: number
 }
+
+// ── Dashboard types ───────────────────────────────────────────────────────────
+
+interface DashboardPeriodo {
+  dal: string
+  al: string
+}
+
+interface WidgetIndicatori {
+  soci_attivi: number
+  da_rinnovare: number
+  certificati_in_scadenza: number
+  certificati_scaduti: number
+  incassi_pagati: number
+  incassi_da_incassare: number
+}
+
+interface ClienteInScadenza {
+  cliente_id: number
+  nome: string
+  cognome: string
+  tipo: 'certificato' | 'iscrizione' | 'abbonamento'
+  nome_tipo: string
+  data_scadenza: string
+  giorni_alla_scadenza: number
+}
+
+interface AbbonamentoPerTipo {
+  tipo_abbonamento_id: number
+  nome: string
+  colore: string
+  totale: number
+}
+
+interface IncassiPeriodo {
+  totale_pagato: number
+  totale_da_incassare: number
+  ricevute_emesse: number
+  totale_ricevute: number
+}
+
+interface NuoviTesseramenti {
+  totale: number
+}
+
+interface CompleannoDellaSett {
+  cliente_id: number
+  nome: string
+  cognome: string
+  data_nascita: string
+  giorno_mese: string
+}
+
+declare global {
+  interface Window {
+    api: ElectronAPI
+  }
+}
+
+export {}
