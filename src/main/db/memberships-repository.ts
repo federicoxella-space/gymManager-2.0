@@ -88,31 +88,40 @@ export function updateIscrizioneDate(
 ): IscrizioneClienteRow {
   const db = getDatabase()
 
-  const today = new Date().toISOString().slice(0, 10)
-  const nuovoStato: 'attiva' | 'scaduta' = dataScadenza < today ? 'scaduta' : 'attiva'
+  const corrente = db
+    .prepare('SELECT cliente_id, stato FROM iscrizioni_cliente WHERE id = ?')
+    .get(id) as { cliente_id: number; stato: 'attiva' | 'scaduta' | 'invalidata' } | undefined
+  if (!corrente) throw new Error(`Iscrizione con id ${id} non trovata`)
 
-  if (nuovoStato === 'attiva') {
-    // Invariante 1: non ci deve essere un'altra iscrizione attiva per questo cliente
-    const current = db
-      .prepare('SELECT cliente_id FROM iscrizioni_cliente WHERE id = ?')
-      .get(id) as { cliente_id: number } | undefined
-    if (current) {
+  const today = new Date().toISOString().slice(0, 10)
+  // N1: un'iscrizione invalidata non viene riportata in vita dalla modifica delle date.
+  const nuovoStato: 'attiva' | 'scaduta' | 'invalidata' =
+    corrente.stato === 'invalidata'
+      ? 'invalidata'
+      : dataScadenza < today
+        ? 'scaduta'
+        : 'attiva'
+
+  // N2: check invariante 1 + UPDATE nella stessa transazione immediata (write-lock subito).
+  const esegui = db.transaction(() => {
+    if (nuovoStato === 'attiva') {
       const altraAttiva = db
         .prepare(
           "SELECT id FROM iscrizioni_cliente WHERE cliente_id = ? AND stato = 'attiva' AND id != ?"
         )
-        .get(current.cliente_id, id)
+        .get(corrente.cliente_id, id)
       if (altraAttiva) {
         throw new Error('ISCRIZIONE_GIA_ATTIVA')
       }
     }
-  }
 
-  db.prepare(`
-    UPDATE iscrizioni_cliente
-    SET data_inizio = ?, data_scadenza = ?, stato = ?, data_modifica = datetime('now')
-    WHERE id = ?
-  `).run(dataInizio, dataScadenza, nuovoStato, id)
+    db.prepare(`
+      UPDATE iscrizioni_cliente
+      SET data_inizio = ?, data_scadenza = ?, stato = ?, data_modifica = datetime('now')
+      WHERE id = ?
+    `).run(dataInizio, dataScadenza, nuovoStato, id)
+  })
+  esegui.immediate()
 
   const updated = db
     .prepare('SELECT * FROM iscrizioni_cliente WHERE id = ?')

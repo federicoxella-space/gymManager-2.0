@@ -33,7 +33,13 @@ import {
   assegnaIscrizione,
   getIscrizioneAttiva,
   invalidaIscrizione,
-  assegnaAbbonamento
+  assegnaAbbonamento,
+  updateIscrizioneDate,
+  updateAbbonamentoDate,
+  invalidaAbbonamento,
+  getAbbonamento,
+  aggiornaStatoIscrizioni,
+  aggiornaStatoAbbonamenti
 } from '../../src/main/db/memberships-repository'
 import {
   createTipoIscrizione,
@@ -370,5 +376,77 @@ describe('Invariante 4: tipo non eliminabile se assegnato', () => {
     })
 
     expect(() => deleteTipoAbbonamento(tipoAbb.id)).not.toThrow()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// WP1 — Modifica date iscrizione (N1/N2/A3)
+// ---------------------------------------------------------------------------
+
+/** Inserisce un'iscrizione con date e stato espliciti, ritorna l'id. */
+function inserisciIscrizione(
+  db: Database.Database,
+  clienteId: number,
+  tipoIscId: number,
+  dataInizio: string,
+  dataScadenza: string,
+  stato: 'attiva' | 'scaduta' | 'invalidata'
+): number {
+  const info = db
+    .prepare(
+      `INSERT INTO iscrizioni_cliente
+        (cliente_id, tipo_iscrizione_id, data_inizio, data_scadenza, prezzo, stato_pagamento, stato)
+       VALUES (?, ?, ?, ?, 30, 'da_incassare', ?)`
+    )
+    .run(clienteId, tipoIscId, dataInizio, dataScadenza, stato)
+  return info.lastInsertRowid as number
+}
+
+describe('updateIscrizioneDate (WP1: N1/N2/A3)', () => {
+  it('ricalcola lo stato a "scaduta" se la nuova scadenza è nel passato', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoIscrizione(db)
+    const id = inserisciIscrizione(db, clienteId, tipoId, '2999-01-01', '2999-12-31', 'attiva')
+
+    const updated = updateIscrizioneDate(id, '2000-01-01', '2000-12-31')
+
+    expect(updated.stato).toBe('scaduta')
+  })
+
+  it('ricalcola lo stato a "attiva" se la nuova scadenza è nel futuro', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoIscrizione(db)
+    const id = inserisciIscrizione(db, clienteId, tipoId, '2000-01-01', '2000-12-31', 'scaduta')
+
+    const updated = updateIscrizioneDate(id, '2999-01-01', '2999-12-31')
+
+    expect(updated.stato).toBe('attiva')
+  })
+
+  it('N1: NON riporta in vita un\'iscrizione invalidata modificandone le date', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoIscrizione(db)
+    const id = inserisciIscrizione(db, clienteId, tipoId, '2000-01-01', '2000-12-31', 'invalidata')
+
+    const updated = updateIscrizioneDate(id, '2999-01-01', '2999-12-31')
+
+    expect(updated.stato).toBe('invalidata')
+  })
+
+  it('invariante 1: rifiuta se la modifica produrrebbe una seconda iscrizione attiva', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoIscrizione(db)
+    // Una già attiva
+    inserisciIscrizione(db, clienteId, tipoId, '2999-01-01', '2999-12-31', 'attiva')
+    // Una scaduta da riportare in futuro → diventerebbe la seconda attiva
+    const scaduta = inserisciIscrizione(db, clienteId, tipoId, '2000-01-01', '2000-12-31', 'scaduta')
+
+    expect(() => updateIscrizioneDate(scaduta, '2998-01-01', '2998-12-31')).toThrow(
+      'ISCRIZIONE_GIA_ATTIVA'
+    )
   })
 })
