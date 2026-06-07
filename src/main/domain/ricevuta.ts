@@ -76,9 +76,10 @@ export function generaHTMLRicevuta(
   }
   const indirizzoIntestatario = indirizzoParti.join(', ')
 
-  // Riga tutore aggiuntiva
+  // Riga tutore aggiuntiva: mostra il CF del minore (assistito_cf), non quello del tutore
+  const cfMinore = ricevuta.assistito_cf ?? ricevuta.intestatario_cf
   const rigaTutore = haTutore
-    ? `<p class="tutore">Tutore di ${escapeHtml(ricevuta.intestatario_cf)}: ${escapeHtml(ricevuta.intestatario_nome)} ${escapeHtml(ricevuta.intestatario_cognome)}</p>`
+    ? `<p class="tutore">Tutore di ${escapeHtml(cfMinore)}: ${escapeHtml(ricevuta.intestatario_nome)} ${escapeHtml(ricevuta.intestatario_cognome)}</p>`
     : ''
 
   // Dicitura a piè

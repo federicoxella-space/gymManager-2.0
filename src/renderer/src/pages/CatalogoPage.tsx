@@ -153,7 +153,7 @@ function TipiIscrizioneTab({ showNonValidi }: TipiIscrizioneTabProps): React.JSX
           onClick={() => void loadTipi()}
           className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
         >
-          {t('common.error_generic')}
+          {t('common.riprova')}
         </button>
       </div>
     )

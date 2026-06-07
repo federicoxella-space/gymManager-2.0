@@ -1,4 +1,5 @@
 import { getDatabase } from './database'
+import { isMinorenne } from '../domain/cliente'
 import type {
   RicevutaRow,
   RigaRicevutaRow,
@@ -43,12 +44,19 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
   const db = getDatabase()
 
   // Legge il cliente per lo snapshot intestatario
-  const cliente = db.prepare('SELECT * FROM clienti WHERE id = ?').get(input.clienteId) as
+  const cliente = db
+    .prepare(
+      'SELECT id, nome, cognome, codice_fiscale, data_nascita, via, civico, citta, provincia, cap,' +
+        ' tutore_nome, tutore_cognome, tutore_cf, tutore_via, tutore_civico, tutore_citta, tutore_provincia, tutore_cap' +
+        ' FROM clienti WHERE id = ?'
+    )
+    .get(input.clienteId) as
     | {
         id: number
         nome: string
         cognome: string
         codice_fiscale: string
+        data_nascita: string | null
         via: string | null
         civico: string | null
         citta: string | null
@@ -69,8 +77,8 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
     throw new Error(`Cliente con id ${input.clienteId} non trovato`)
   }
 
-  // Se il cliente ha un tutore, l'intestatario è il tutore
-  const haTutore = Boolean(cliente.tutore_cf)
+  // Il tutore è intestatario solo se il cliente ha un tutore E è effettivamente minorenne
+  const haTutore = Boolean(cliente.tutore_cf) && isMinorenne(cliente.data_nascita ?? null)
   const intestatarioNome = haTutore ? (cliente.tutore_nome ?? '') : cliente.nome
   const intestatarioCognome = haTutore ? (cliente.tutore_cognome ?? '') : cliente.cognome
   const intestatarioCf = haTutore ? (cliente.tutore_cf ?? '') : cliente.codice_fiscale
@@ -84,6 +92,8 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
   const tutoreNome = haTutore ? cliente.tutore_nome : null
   const tutoreCognome = haTutore ? cliente.tutore_cognome : null
   const tutoreCf = haTutore ? cliente.tutore_cf : null
+  // CF del minore assistito: serve per la dicitura "Tutore di [CF minore]"
+  const assistitoCf = haTutore ? cliente.codice_fiscale : null
 
   // Anno della data di emissione scelta dall'utente
   const anno = parseInt(input.dataEmissione.substring(0, 4), 10)
@@ -109,7 +119,7 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
           intestatario_nome, intestatario_cognome, intestatario_cf,
           intestatario_via, intestatario_civico, intestatario_citta,
           intestatario_provincia, intestatario_cap,
-          tutore_nome, tutore_cognome, tutore_cf,
+          tutore_nome, tutore_cognome, tutore_cf, assistito_cf,
           totale, metodo_pagamento, stato_pagamento,
           dicitura_pie, stato
         ) VALUES (
@@ -117,7 +127,7 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
           @intestatario_nome, @intestatario_cognome, @intestatario_cf,
           @intestatario_via, @intestatario_civico, @intestatario_citta,
           @intestatario_provincia, @intestatario_cap,
-          @tutore_nome, @tutore_cognome, @tutore_cf,
+          @tutore_nome, @tutore_cognome, @tutore_cf, @assistito_cf,
           @totale, @metodo_pagamento, @stato_pagamento,
           @dicitura_pie, 'emessa'
         )`
@@ -138,6 +148,7 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
         tutore_nome: tutoreNome,
         tutore_cognome: tutoreCognome,
         tutore_cf: tutoreCf,
+        assistito_cf: assistitoCf,
         totale,
         metodo_pagamento: input.metodo_pagamento,
         stato_pagamento: input.stato_pagamento,
@@ -188,7 +199,7 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
     })
   })
 
-  esegui()
+  esegui.immediate()
 
   const ricevuta = getRicevuta(ricevutaId)
   if (!ricevuta) {

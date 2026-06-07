@@ -47,6 +47,7 @@
     "close": "Close",
     "loading": "Loading...",
     "error_generic": "An error occurred. Please try again.",
+    "riprova": "Retry",
     "actions": "Actions",
     "coming_soon": "Available in subsequent phases"
   },

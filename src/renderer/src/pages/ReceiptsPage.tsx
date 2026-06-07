@@ -254,7 +254,7 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
             onClick={() => void loadRicevute()}
             className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
           >
-            {t('common.error_generic')}
+            {t('common.riprova')}
           </button>
         </div>
       ) : ricevuteFiltrate.length === 0 ? (

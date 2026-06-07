@@ -78,7 +78,8 @@ export function listIscrizioni(clienteId: number): IscrizioneClienteRow[] {
 }
 
 /**
- * Aggiorna le date di un'iscrizione.
+ * Aggiorna le date di un'iscrizione ricalcolando lo stato.
+ * Se le nuove date produrrebbero una seconda iscrizione attiva, lancia ISCRIZIONE_GIA_ATTIVA.
  */
 export function updateIscrizioneDate(
   id: number,
@@ -87,11 +88,31 @@ export function updateIscrizioneDate(
 ): IscrizioneClienteRow {
   const db = getDatabase()
 
+  const today = new Date().toISOString().slice(0, 10)
+  const nuovoStato: 'attiva' | 'scaduta' = dataScadenza < today ? 'scaduta' : 'attiva'
+
+  if (nuovoStato === 'attiva') {
+    // Invariante 1: non ci deve essere un'altra iscrizione attiva per questo cliente
+    const current = db
+      .prepare('SELECT cliente_id FROM iscrizioni_cliente WHERE id = ?')
+      .get(id) as { cliente_id: number } | undefined
+    if (current) {
+      const altraAttiva = db
+        .prepare(
+          "SELECT id FROM iscrizioni_cliente WHERE cliente_id = ? AND stato = 'attiva' AND id != ?"
+        )
+        .get(current.cliente_id, id)
+      if (altraAttiva) {
+        throw new Error('ISCRIZIONE_GIA_ATTIVA')
+      }
+    }
+  }
+
   db.prepare(`
     UPDATE iscrizioni_cliente
-    SET data_inizio = ?, data_scadenza = ?, data_modifica = datetime('now')
+    SET data_inizio = ?, data_scadenza = ?, stato = ?, data_modifica = datetime('now')
     WHERE id = ?
-  `).run(dataInizio, dataScadenza, id)
+  `).run(dataInizio, dataScadenza, nuovoStato, id)
 
   const updated = db
     .prepare('SELECT * FROM iscrizioni_cliente WHERE id = ?')
@@ -208,7 +229,7 @@ export function listAbbonamenti(clienteId: number, soloAttivi = false): Abboname
 }
 
 /**
- * Aggiorna le date di un abbonamento.
+ * Aggiorna le date di un abbonamento ricalcolando lo stato.
  */
 export function updateAbbonamentoDate(
   id: number,
@@ -217,11 +238,14 @@ export function updateAbbonamentoDate(
 ): AbbonamentoClienteRow {
   const db = getDatabase()
 
+  const today = new Date().toISOString().slice(0, 10)
+  const nuovoStato: 'attivo' | 'scaduto' = dataScadenza < today ? 'scaduto' : 'attivo'
+
   db.prepare(`
     UPDATE abbonamenti_cliente
-    SET data_inizio = ?, data_scadenza = ?, data_modifica = datetime('now')
+    SET data_inizio = ?, data_scadenza = ?, stato = ?, data_modifica = datetime('now')
     WHERE id = ?
-  `).run(dataInizio, dataScadenza, id)
+  `).run(dataInizio, dataScadenza, nuovoStato, id)
 
   const updated = db
     .prepare('SELECT * FROM abbonamenti_cliente WHERE id = ?')

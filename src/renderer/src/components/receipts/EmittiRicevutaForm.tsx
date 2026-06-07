@@ -211,7 +211,7 @@ export default function EmittiRicevutaForm({
           onClick={() => void loadVoci()}
           className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
         >
-          {t('common.error_generic')}
+          {t('common.riprova')}
         </button>
       </div>
     )

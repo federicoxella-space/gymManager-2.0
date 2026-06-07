@@ -5,6 +5,7 @@ import migration002 from './migrations/002_clients'
 import migration003 from './migrations/003_memberships'
 import migration004 from './migrations/004_receipts'
 import migration005 from './migrations/005_update_test'
+import migration006 from './migrations/006_receipts_assistito_cf'
 
 export interface Migration {
   version: number
@@ -14,7 +15,7 @@ export interface Migration {
 }
 
 /** Elenco ordinato di tutte le migrazioni registrate. */
-const migrations: Migration[] = [migration001, migration002, migration003, migration004, migration005]
+const migrations: Migration[] = [migration001, migration002, migration003, migration004, migration005, migration006]
 
 /**
  * Applica tutte le migrazioni non ancora applicate al DB.

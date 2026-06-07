@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from '../i18n'
+import { applyTheme, applyPrimaryColor } from '../theme'
+import { useSettings } from '../context/SettingsContext'
 import type { AppSettings } from '../../../types/shared'
 import RestoreDialog from '../components/backup/RestoreDialog'
 import ResetPasswordDialog from '../components/backup/ResetPasswordDialog'
@@ -115,6 +117,7 @@ function CheckIcon(): React.JSX.Element {
 
 export default function SettingsPage(): React.JSX.Element {
   const { t } = useTranslation()
+  const { refresh: refreshSettings } = useSettings()
 
   const [backupStatus, setBackupStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
   const [isBackingUp, setIsBackingUp] = useState(false)
@@ -421,6 +424,13 @@ export default function SettingsPage(): React.JSX.Element {
       if (form.language !== i18n.language) {
         await i18n.changeLanguage(form.language)
       }
+      // Applica immediatamente tema e colore senza riavvio (C4)
+      applyTheme(form.theme as 'light' | 'dark' | 'system')
+      if (form.primaryColor) {
+        applyPrimaryColor(form.primaryColor)
+      }
+      // Aggiorna il context delle impostazioni (soglie scadenza, widget, ecc.) (C5)
+      refreshSettings()
 
       setSuccessMessage(true)
       if (successTimerRef.current !== null) {

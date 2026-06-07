@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 const DEFAULT_WIDGETS = ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti']
 
@@ -11,6 +11,8 @@ interface SettingsContextValue {
   expiryWarningDaysSubscriptions: number
   /** Widget visibili nella dashboard. */
   dashboardWidgets: string[]
+  /** Ricarica le impostazioni dal main process (da chiamare dopo il salvataggio). */
+  refresh: () => void
 }
 
 const DEFAULT_VALUE: SettingsContextValue = {
@@ -18,15 +20,19 @@ const DEFAULT_VALUE: SettingsContextValue = {
   expiryWarningDaysMemberships: 30,
   expiryWarningDaysSubscriptions: 30,
   dashboardWidgets: DEFAULT_WIDGETS,
+  refresh: () => {},
 }
 
 const SettingsContext = createContext<SettingsContextValue>(DEFAULT_VALUE)
 
 /** Carica le impostazioni dal main process e le rende disponibili ai componenti figli. */
 export function SettingsProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
-  const [value, setValue] = useState<SettingsContextValue>(DEFAULT_VALUE)
+  const [value, setValue] = useState<Omit<SettingsContextValue, 'refresh'>>(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (({ refresh: _r, ...rest }) => rest)(DEFAULT_VALUE)
+  )
 
-  useEffect(() => {
+  const load = useCallback(() => {
     window.api.settings
       .get()
       .then((s) => {
@@ -42,7 +48,15 @@ export function SettingsProvider({ children }: { children: React.ReactNode }): R
       })
   }, [])
 
-  return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>
+  useEffect(() => {
+    load()
+  }, [load])
+
+  return (
+    <SettingsContext.Provider value={{ ...value, refresh: load }}>
+      {children}
+    </SettingsContext.Provider>
+  )
 }
 
 /** Hook per leggere le impostazioni correnti dal context. */

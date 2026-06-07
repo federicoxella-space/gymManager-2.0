@@ -229,8 +229,8 @@ describe('Simulazione update con cambio schema F6', () => {
     // Simula l'avvio post-aggiornamento
     runMigrations(db)
 
-    // Dopo l'upgrade: 5 migrazioni applicate
-    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5])
+    // Dopo l'upgrade: 6 migrazioni applicate
+    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6])
   })
 
   // Test 8: tutte le tabelle preesistenti sopravvivono alla migrazione 005
@@ -262,6 +262,7 @@ describe('Simulazione update con cambio schema F6', () => {
     expect(pending).toContain(3)
     expect(pending).toContain(4)
     expect(pending).toContain(5)
-    expect(pending).toHaveLength(5)
+    expect(pending).toContain(6)
+    expect(pending).toHaveLength(6)
   })
 })

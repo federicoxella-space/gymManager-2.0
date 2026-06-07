@@ -37,14 +37,21 @@ export function isMinorenne(
 ): boolean {
   if (!dataNascita) return false
 
-  const nascita = new Date(dataNascita)
-  if (isNaN(nascita.getTime())) return false
+  // Parse YYYY-MM-DD esplicitamente in UTC per coerenza con il resto del dominio
+  const parts = dataNascita.split('-')
+  if (parts.length !== 3) return false
+  const y = parseInt(parts[0], 10)
+  const m = parseInt(parts[1], 10)
+  const d = parseInt(parts[2], 10)
+  if (isNaN(y) || isNaN(m) || isNaN(d)) return false
 
-  // Il 18° compleanno: se oggi è ancora prima → è minorenne
-  const eta18 = new Date(nascita)
-  eta18.setFullYear(eta18.getFullYear() + 18)
+  // 18° compleanno a mezzanotte UTC
+  const eta18 = new Date(Date.UTC(y + 18, m - 1, d))
 
-  return oggi < eta18
+  // Normalizza "oggi" a mezzanotte UTC per evitare errori al giorno del compleanno
+  const oggiUTC = new Date(Date.UTC(oggi.getFullYear(), oggi.getMonth(), oggi.getDate()))
+
+  return oggiUTC < eta18
 }
 
 // ---------------------------------------------------------------------------

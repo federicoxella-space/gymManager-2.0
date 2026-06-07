@@ -46,7 +46,9 @@ import {
   assegnaAbbonamento,
   listAbbonamenti,
   updateAbbonamentoDate,
-  invalidaAbbonamento
+  invalidaAbbonamento,
+  aggiornaStatoIscrizioni,
+  aggiornaStatoAbbonamenti
 } from '../db/memberships-repository'
 import {
   getRicevuta,
@@ -135,6 +137,8 @@ export function registerIpcHandlers(): void {
         throw new Error('La password non può essere vuota')
       }
       openDatabase(password)
+      aggiornaStatoIscrizioni()
+      aggiornaStatoAbbonamenti()
       log.info('[ipc] db:setup completato')
     } catch (err) {
       log.error('[ipc] db:setup errore:', err)
@@ -156,6 +160,8 @@ export function registerIpcHandlers(): void {
           throw new Error('La password non può essere vuota')
         }
         openDatabase(password)
+        aggiornaStatoIscrizioni()
+        aggiornaStatoAbbonamenti()
         log.info('[ipc] db:unlock completato')
       } catch (err) {
         log.error('[ipc] db:unlock errore:', err)

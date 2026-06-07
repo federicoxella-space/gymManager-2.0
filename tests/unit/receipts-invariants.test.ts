@@ -44,14 +44,14 @@ import type { CreaRicevutaInput } from '../../src/types/shared'
 function creaCliente(
   db: Database.Database,
   cf = 'RSSMRA85T10H501Z',
-  opts: { tutore_cf?: string; tutore_nome?: string; tutore_cognome?: string } = {}
+  opts: { tutore_cf?: string; tutore_nome?: string; tutore_cognome?: string; data_nascita?: string } = {}
 ): number {
   const info = db
     .prepare(
-      `INSERT INTO clienti (nome, cognome, codice_fiscale, tutore_nome, tutore_cognome, tutore_cf)
-       VALUES ('Mario', 'Rossi', ?, ?, ?, ?)`
+      `INSERT INTO clienti (nome, cognome, codice_fiscale, data_nascita, tutore_nome, tutore_cognome, tutore_cf)
+       VALUES ('Mario', 'Rossi', ?, ?, ?, ?, ?)`
     )
-    .run(cf, opts.tutore_nome ?? null, opts.tutore_cognome ?? null, opts.tutore_cf ?? null)
+    .run(cf, opts.data_nascita ?? null, opts.tutore_nome ?? null, opts.tutore_cognome ?? null, opts.tutore_cf ?? null)
   return info.lastInsertRowid as number
 }
 
@@ -482,6 +482,7 @@ describe('Snapshot intestatario', () => {
   it('per un minore con tutore, l\'intestatario è il tutore', () => {
     const db = _testDb!
     const clienteId = creaCliente(db, 'BNCNNA10A01H501X', {
+      data_nascita: '2015-01-01', // minorenne nel 2026
       tutore_cf: 'RSSMRA80T10H501Z',
       tutore_nome: 'Giuseppe',
       tutore_cognome: 'Verdi'
@@ -492,6 +493,8 @@ describe('Snapshot intestatario', () => {
     expect(r.intestatario_cognome).toBe('Verdi')
     // Il tutore è presente anche nei campi tutore_*
     expect(r.tutore_cf).toBe('RSSMRA80T10H501Z')
+    // Il CF del minore è salvato in assistito_cf (A4)
+    expect(r.assistito_cf).toBe('BNCNNA10A01H501X')
   })
 })
 

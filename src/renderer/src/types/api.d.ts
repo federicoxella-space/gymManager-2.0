@@ -241,6 +241,8 @@ interface RicevutaRow {
   tutore_nome: string | null
   tutore_cognome: string | null
   tutore_cf: string | null
+  /** CF del minore assistito; valorizzato solo quando intestatario è un tutore. */
+  assistito_cf: string | null
   totale: number
   metodo_pagamento: string
   stato_pagamento: 'pagato' | 'da_incassare'
