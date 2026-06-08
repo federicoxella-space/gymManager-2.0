@@ -249,8 +249,19 @@ export function updateAbbonamentoDate(
 ): AbbonamentoClienteRow {
   const db = getDatabase()
 
+  const corrente = db
+    .prepare('SELECT stato FROM abbonamenti_cliente WHERE id = ?')
+    .get(id) as { stato: 'attivo' | 'scaduto' | 'invalidato' } | undefined
+  if (!corrente) throw new Error(`Abbonamento con id ${id} non trovato`)
+
   const today = new Date().toISOString().slice(0, 10)
-  const nuovoStato: 'attivo' | 'scaduto' = dataScadenza < today ? 'scaduto' : 'attivo'
+  // N1: un abbonamento invalidato non viene riportato in vita dalla modifica delle date.
+  const nuovoStato: 'attivo' | 'scaduto' | 'invalidato' =
+    corrente.stato === 'invalidato'
+      ? 'invalidato'
+      : dataScadenza < today
+        ? 'scaduto'
+        : 'attivo'
 
   db.prepare(`
     UPDATE abbonamenti_cliente

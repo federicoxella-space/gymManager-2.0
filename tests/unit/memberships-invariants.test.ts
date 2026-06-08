@@ -453,3 +453,53 @@ describe('updateIscrizioneDate (WP1: N1/N2/A3)', () => {
     )
   })
 })
+
+// ---------------------------------------------------------------------------
+// WP1 — Modifica date abbonamento (N1/A3)
+// ---------------------------------------------------------------------------
+
+/** Inserisce un abbonamento con date e stato espliciti, ritorna l'id. */
+function inserisciAbbonamento(
+  db: Database.Database,
+  clienteId: number,
+  tipoAbbId: number,
+  dataInizio: string,
+  dataScadenza: string,
+  stato: 'attivo' | 'scaduto' | 'invalidato'
+): number {
+  const info = db
+    .prepare(
+      `INSERT INTO abbonamenti_cliente
+        (cliente_id, tipo_abbonamento_id, data_inizio, data_scadenza, prezzo, stato_pagamento, stato)
+       VALUES (?, ?, ?, ?, 40, 'da_incassare', ?)`
+    )
+    .run(clienteId, tipoAbbId, dataInizio, dataScadenza, stato)
+  return info.lastInsertRowid as number
+}
+
+describe('updateAbbonamentoDate (WP1: N1/A3)', () => {
+  it('ricalcola lo stato a "scaduto" se la nuova scadenza è nel passato', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoAbbonamento(db)
+    const id = inserisciAbbonamento(db, clienteId, tipoId, '2999-01-01', '2999-12-31', 'attivo')
+
+    const updated = updateAbbonamentoDate(id, '2000-01-01', '2000-12-31')
+
+    expect(updated.stato).toBe('scaduto')
+  })
+
+  it('N1: NON riporta in vita un abbonamento invalidato modificandone le date', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoAbbonamento(db)
+    const id = inserisciAbbonamento(db, clienteId, tipoId, '2000-01-01', '2000-12-31', 'invalidato')
+
+    const updated = updateAbbonamentoDate(id, '2999-01-01', '2999-12-31')
+
+    expect(updated.stato).toBe('invalidato')
+    // Le date devono comunque essere state aggiornate (guardia contro UPDATE no-op)
+    expect(updated.data_inizio).toBe('2999-01-01')
+    expect(updated.data_scadenza).toBe('2999-12-31')
+  })
+})
