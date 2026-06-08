@@ -93,4 +93,16 @@ describe('listClienti — filtro stato_iscrizione="scaduta" (WP1: A15a)', () => 
 
     expect(result.map((r) => r.id)).not.toContain(c)
   })
+
+  it('NON include un cliente con iscrizione scaduta MA anche una attiva (già rinnovato)', () => {
+    const db = _testDb!
+    const tipoId = creaTipoIscrizione(db)
+    const c = creaCliente(db, 'TSTCLN99A01H501Q')
+    inserisciIscrizione(db, c, tipoId, 'scaduta') // vecchia
+    inserisciIscrizione(db, c, tipoId, 'attiva') // rinnovata
+
+    const result = listClienti({ stato_iscrizione: 'scaduta' })
+
+    expect(result.map((r) => r.id)).not.toContain(c)
+  })
 })
