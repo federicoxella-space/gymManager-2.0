@@ -496,6 +496,24 @@ describe('Snapshot intestatario', () => {
     // Il CF del minore è salvato in assistito_cf (A4)
     expect(r.assistito_cf).toBe('BNCNNA10A01H501X')
   })
+
+  it('A5: per un MAGGIORENNE con dati tutore, l\'intestatario è il cliente (non il tutore)', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db, 'RSSMRA85T10H501Z', {
+      data_nascita: '1985-01-01', // maggiorenne
+      tutore_cf: 'BNCNNA10A01H501X',
+      tutore_nome: 'Anna',
+      tutore_cognome: 'Bianchi'
+    })
+    const r = creaRicevuta(buildInput(clienteId))
+
+    expect(r.intestatario_cf).toBe('RSSMRA85T10H501Z')
+    expect(r.intestatario_nome).toBe('Mario')
+    expect(r.intestatario_cognome).toBe('Rossi')
+    // Nessuna intestazione al tutore né CF assistito
+    expect(r.tutore_cf).toBeNull()
+    expect(r.assistito_cf).toBeNull()
+  })
 })
 
 // ---------------------------------------------------------------------------
