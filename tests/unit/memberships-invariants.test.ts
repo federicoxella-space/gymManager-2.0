@@ -434,6 +434,9 @@ describe('updateIscrizioneDate (WP1: N1/N2/A3)', () => {
     const updated = updateIscrizioneDate(id, '2999-01-01', '2999-12-31')
 
     expect(updated.stato).toBe('invalidata')
+    // Le date devono comunque essere state aggiornate (guardia contro UPDATE no-op)
+    expect(updated.data_inizio).toBe('2999-01-01')
+    expect(updated.data_scadenza).toBe('2999-12-31')
   })
 
   it('invariante 1: rifiuta se la modifica produrrebbe una seconda iscrizione attiva', () => {

@@ -102,7 +102,9 @@ export function updateIscrizioneDate(
         ? 'scaduta'
         : 'attiva'
 
-  // N2: check invariante 1 + UPDATE nella stessa transazione immediata (write-lock subito).
+  // N2: check invariante 1 + UPDATE nella stessa transazione immediata (write-lock all'avvio
+  // della transazione). La lettura di `corrente` resta fuori transazione, coerente con il pattern
+  // di assegnaIscrizione; accettabile nell'app desktop monoprocesso (SQLite serializza le scritture).
   const esegui = db.transaction(() => {
     if (nuovoStato === 'attiva') {
       const altraAttiva = db
