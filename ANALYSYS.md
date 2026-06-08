@@ -573,21 +573,21 @@ I problemi principali si concentrano su:
 |---|---|---|
 | **A1** Race numerazione | ✅ **RISOLTO** | `receipts-repository.ts:202` usa `esegui.immediate()` (write-lock immediato). |
 | **A2** Stati stantii | ✅ **RISOLTO** | `aggiornaStatoIscrizioni()`/`aggiornaStatoAbbonamenti()` chiamati in `handlers.ts:140-141` (`db:setup`) e `:163-164` (`db:unlock`). |
-| **A3** Date senza ricalcolo stato | ✅ **RISOLTO** (con riserva → N1) | `memberships-repository.ts:92` e `:242` ricalcolano lo stato; `updateIscrizioneDate` verifica invariante 1 (`:94-109`). |
+| **A3** Date senza ricalcolo stato | ✅ **RISOLTO** | `memberships-repository.ts:92` e `:242` ricalcolano lo stato; `updateIscrizioneDate` verifica invariante 1 (`:94-109`). |
 | **A4** Dicitura "Tutore di [CF tutore]" | ✅ **RISOLTO** | Migrazione `006_receipts_assistito_cf.ts` (col. `assistito_cf`), `receipts-repository.ts:96,151`, template `ricevuta.ts:80`. Test `receipts-invariants.test.ts:497`. |
 | **A5** `haTutore` ignora minore età | ✅ **RISOLTO** (test parziale → N3) | `receipts-repository.ts:81` combina `tutore_cf` **e** `isMinorenne(...)`. |
 | **A6** `isMinorenne` in fuso locale | ✅ **RISOLTO** | `cliente.ts:41-54` normalizza in UTC (`Date.UTC`). Test boundary 18° compleanno `cliente.test.ts:32-41`. |
 | **C1** Label "Riprova" errata | ✅ **RISOLTO** | Chiave `common.riprova` (it/en:50) usata in `CatalogoPage.tsx:156`, `ReceiptsPage.tsx:257`, `EmittiRicevutaForm.tsx:214`. |
 | **C4** Tema/colore non live | ✅ **RISOLTO** (parziale → N5) | Estratto `theme.ts`; `applyTheme`/`applyPrimaryColor` richiamati in `SettingsPage.tsx:428-431` dopo `settings.set`. |
 | **C5** Soglie non aggiornate | ✅ **RISOLTO** | `SettingsContext.tsx:15,56` espone `refresh()`; chiamato in `SettingsPage.tsx:433`. |
-| A7–A15, B1–B12, C2, C3, C6–C13, D1–D12 | ⬜ **APERTO** | Non toccati dal commit. Nota: il titolo dice "p0-p3" ma sono stati corretti solo P0 + C1/C4/C5; **C2, C3, C6** (resto di P3) e tutto P1/P2/P4 restano da fare. |
+| A7–A14, A15b/A15c (decisi), B1–B12, C2, C3, C6–C13, D1–D12 | ⬜ **APERTO** | Non toccati dal commit. Nota: il titolo dice "p0-p3" ma sono stati corretti solo P0 + C1/C4/C5; **C2, C3, C6** (resto di P3) e tutto P1/P2/P4 restano da fare. A15a risolto in WP1; A15b/A15c registrati come decisioni (vedi OPEN-QUESTIONS / DECISIONS D14). |
 
 **Conclusione:** i 9 fix dichiarati sono implementati correttamente e `verify` è verde. Restano aperti
 i punti P1–P2–P4 e parte di P3, oltre ai nuovi rilievi sotto.
 
 ### Nuovi rilievi emersi dalla verifica
 
-#### N1 — [MEDIA] `updateIscrizioneDate`/`updateAbbonamentoDate` possono "resuscitare" un record invalidato
+#### N1 — [MEDIA] ✅ RISOLTO (WP1) — `updateIscrizioneDate`/`updateAbbonamentoDate` possono "resuscitare" un record invalidato
 - **Evidenza:** `memberships-repository.ts:92` e `:242`
 - **Descrizione:** il fix A3 ricalcola lo stato **solo** dalle date (`attiva`/`scaduta`), senza considerare
   lo stato corrente. Modificando le date di un'iscrizione/abbonamento `invalidata`/`invalidato`, il
@@ -597,14 +597,14 @@ i punti P1–P2–P4 e parte di P3, oltre ai nuovi rilievi sotto.
 - **Soluzione:** se lo stato corrente è `invalidata`/`invalidato`, conservarlo (o rifiutare l'update);
   ricalcolare `attiva`/`scaduta` solo se il record non era invalidato.
 
-#### N2 — [BASSA] Check invariante 1 in `updateIscrizioneDate` non transazionale (TOCTOU)
+#### N2 — [BASSA] ✅ RISOLTO (WP1) — Check invariante 1 in `updateIscrizioneDate` non transazionale (TOCTOU)
 - **Evidenza:** `memberships-repository.ts:94-115` (SELECT `altraAttiva` separato dall'UPDATE)
 - **Descrizione:** la lettura di un'eventuale altra iscrizione attiva e l'UPDATE non sono nella stessa
   transazione. In un'app desktop monoutente il rischio è trascurabile, ma è incoerente con l'approccio
   `immediate()` adottato per A1.
 - **Soluzione:** avvolgere check+UPDATE in `db.transaction(...).immediate()`.
 
-#### N3 — [MEDIA] Copertura test mancante per i fix P0 (A2, A3, A5-negativo)
+#### N3 — [MEDIA] ✅ RISOLTO (WP1) — Copertura test mancante per i fix P0 (A2, A3, A5-negativo)
 - **Evidenza:** nessun test su `aggiornaStatoIscrizioni/Abbonamenti` né su `updateIscrizioneDate/`
   `updateAbbonamentoDate` (grep in `tests/`); `receipts-invariants.test.ts:482` copre solo il caso
   **positivo** del minore con tutore, non quello del **maggiorenne con dati tutore** (cuore del fix A5).
@@ -642,4 +642,4 @@ i punti P1–P2–P4 e parte di P3, oltre ai nuovi rilievi sotto.
 ### Verifica «verde»
 `npm run verify` eseguito il 2026-06-08: **typecheck OK · lint 0 warning · 272 test passati (1 skip) ·
 build OK**. La Definition of Done è soddisfatta per i fix applicati; i nuovi rilievi N1–N5 non bloccano
-il verde ma andrebbero pianificati (N3 prioritario per allineamento alla DoD sui fix P0).
+il verde ma andrebbero pianificati (N3 prioritario per allineamento alla DoD sui fix P0). **WP1 chiuso il 2026-06-08:** N1, N2, N3, A15a risolti e verificati; A15b/A15c registrati come decisioni. `npm run verify` verde.
