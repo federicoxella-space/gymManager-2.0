@@ -128,7 +128,7 @@ export function listClienti(filters?: ClientiFilters, giorniPreavvisoCert = 30):
     )
   } else if (filters?.stato_iscrizione === 'scaduta') {
     extraWhere.push(
-      `EXISTS (SELECT 1 FROM iscrizioni_cliente WHERE cliente_id = c.id)
+      `EXISTS (SELECT 1 FROM iscrizioni_cliente WHERE cliente_id = c.id AND stato = 'scaduta')
        AND NOT EXISTS (SELECT 1 FROM iscrizioni_cliente WHERE cliente_id = c.id AND stato = 'attiva')`
     )
   } else if (filters?.stato_iscrizione === 'assente') {
