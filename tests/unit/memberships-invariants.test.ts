@@ -503,3 +503,51 @@ describe('updateAbbonamentoDate (WP1: N1/A3)', () => {
     expect(updated.data_scadenza).toBe('2999-12-31')
   })
 })
+
+// ---------------------------------------------------------------------------
+// WP1 — Transizione automatica stati scaduti (A2, guardia di regressione)
+// ---------------------------------------------------------------------------
+
+describe('aggiornaStatoIscrizioni / aggiornaStatoAbbonamenti (WP1: A2)', () => {
+  it('porta a "scaduta" un\'iscrizione attiva con scadenza passata', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoIscrizione(db)
+    const id = inserisciIscrizione(db, clienteId, tipoId, '2000-01-01', '2000-12-31', 'attiva')
+
+    aggiornaStatoIscrizioni()
+
+    const row = db
+      .prepare('SELECT stato FROM iscrizioni_cliente WHERE id = ?')
+      .get(id) as { stato: string }
+    expect(row.stato).toBe('scaduta')
+  })
+
+  it('NON tocca un\'iscrizione attiva con scadenza futura', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoIscrizione(db)
+    const id = inserisciIscrizione(db, clienteId, tipoId, '2999-01-01', '2999-12-31', 'attiva')
+
+    aggiornaStatoIscrizioni()
+
+    const row = db
+      .prepare('SELECT stato FROM iscrizioni_cliente WHERE id = ?')
+      .get(id) as { stato: string }
+    expect(row.stato).toBe('attiva')
+  })
+
+  it('porta a "scaduto" un abbonamento attivo con scadenza passata', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoAbbonamento(db)
+    const id = inserisciAbbonamento(db, clienteId, tipoId, '2000-01-01', '2000-12-31', 'attivo')
+
+    aggiornaStatoAbbonamenti()
+
+    const row = db
+      .prepare('SELECT stato FROM abbonamenti_cliente WHERE id = ?')
+      .get(id) as { stato: string }
+    expect(row.stato).toBe('scaduto')
+  })
+})
