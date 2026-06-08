@@ -36,8 +36,6 @@ import {
   assegnaAbbonamento,
   updateIscrizioneDate,
   updateAbbonamentoDate,
-  invalidaAbbonamento,
-  getAbbonamento,
   aggiornaStatoIscrizioni,
   aggiornaStatoAbbonamenti
 } from '../../src/main/db/memberships-repository'
