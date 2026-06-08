@@ -239,6 +239,8 @@ export function listRicevute(filters?: RicevutaFilters): RicevutaRow[] {
     conditions.push('cliente_id = ?')
     params.push(filters.clienteId)
   }
+  // Nota (A15b, vedi OPEN-QUESTIONS): la ricerca per numero non vincola l'anno.
+  // In pratica la UI passa sempre filters.anno (ANDato sotto), quindi il caso cross-anno è latente.
   if (filters?.search != null && filters.search.trim() !== '') {
     const term = filters.search.trim()
     const numTerm = parseInt(term, 10)
