@@ -154,16 +154,16 @@ export function listClienti(filters?: ClientiFilters, giorniPreavvisoCert = 30):
 
   if (filters?.stato_certificato === 'scaduto') {
     extraWhere.push(
-      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) < julianday('now')`
+      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) < julianday(date('now'))`
     )
   } else if (filters?.stato_certificato === 'in_scadenza') {
     extraWhere.push(
-      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) - julianday('now') BETWEEN 0 AND ?`
+      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) - julianday(date('now')) BETWEEN 0 AND ?`
     )
     extraParams.push(giorniPreavvisoCert)
   } else if (filters?.stato_certificato === 'valido') {
     extraWhere.push(
-      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) - julianday('now') > ?`
+      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) - julianday(date('now')) > ?`
     )
     extraParams.push(giorniPreavvisoCert)
   }

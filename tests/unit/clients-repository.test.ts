@@ -135,3 +135,23 @@ describe('createCliente — numero_tessera (WP2: A8)', () => {
     ).toThrow(/UNIQUE constraint failed: clienti\.codice_fiscale/i)
   })
 })
+
+describe('listClienti — filtro certificato in scadenza oggi (WP2: A11)', () => {
+  it('un certificato che scade OGGI è "in_scadenza", non "scaduto"', () => {
+    const db = _testDb!
+    const c = creaCliente(db, 'RSSMRA85T10H501Z')
+    // Schema reale di certificati_medici: id, cliente_id, tipo, data_scadenza, data_inserimento.
+    // NON esiste data_rilascio — adattato rispetto alla spec del task.
+    // tipo è NOT NULL, nessun CHECK constraint rilevato: usiamo 'agonistico'.
+    db.prepare(
+      `INSERT INTO certificati_medici (cliente_id, tipo, data_scadenza)
+       VALUES (?, 'agonistico', date('now'))`
+    ).run(c)
+
+    const inScadenza = listClienti({ stato_certificato: 'in_scadenza' }, 30)
+    const scaduti = listClienti({ stato_certificato: 'scaduto' }, 30)
+
+    expect(inScadenza.map((r) => r.id)).toContain(c)
+    expect(scaduti.map((r) => r.id)).not.toContain(c)
+  })
+})
