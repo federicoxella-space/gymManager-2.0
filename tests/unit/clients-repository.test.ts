@@ -154,4 +154,19 @@ describe('listClienti — filtro certificato in scadenza oggi (WP2: A11)', () =>
     expect(inScadenza.map((r) => r.id)).toContain(c)
     expect(scaduti.map((r) => r.id)).not.toContain(c)
   })
+
+  it('un certificato scaduto IERI è "scaduto", non "in_scadenza"', () => {
+    const db = _testDb!
+    const c = creaCliente(db, 'VRDMRA00T10H501K')
+    db.prepare(
+      `INSERT INTO certificati_medici (cliente_id, tipo, data_scadenza)
+       VALUES (?, 'agonistico', date('now','-1 day'))`
+    ).run(c)
+
+    const scaduti = listClienti({ stato_certificato: 'scaduto' }, 30)
+    const inScadenza = listClienti({ stato_certificato: 'in_scadenza' }, 30)
+
+    expect(scaduti.map((r) => r.id)).toContain(c)
+    expect(inScadenza.map((r) => r.id)).not.toContain(c)
+  })
 })
