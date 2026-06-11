@@ -2,6 +2,7 @@
  * Funzioni di utilità di dominio condivise nel renderer.
  * Non importano da main/domain per rispettare il confine di processo.
  */
+import type { ClienteRow } from '../../../types/shared'
 
 /**
  * Determina se la data di nascita corrisponde a un minorenne
@@ -62,4 +63,50 @@ export function decodeCFBasic(
   if (giornoNascita < 1 || giornoNascita > 31) return null
 
   return { sesso, annoNascita, meseNascita, giornoNascita }
+}
+
+// ── Helper intestatario ricevuta ──────────────────────────────────────────────
+
+export interface IntestatarioCalcolato {
+  nome: string
+  cognome: string
+  cf: string
+  /** CF del minore assistito; valorizzato solo quando l'intestatario è il tutore. */
+  assistitoCf: string | null
+  /** true se il cliente è minorenne e ha un tutore (intestatario = tutore). */
+  isTutore: boolean
+}
+
+/** Replica lato renderer della logica intestatario di creaRicevuta (receipts-repository.ts). */
+export function calcolaIntestatario(cliente: ClienteRow): IntestatarioCalcolato {
+  const haTutore = Boolean(cliente.tutore_cf) && isMinorenne(cliente.data_nascita)
+  if (haTutore) {
+    return {
+      nome: cliente.tutore_nome ?? '',
+      cognome: cliente.tutore_cognome ?? '',
+      cf: cliente.tutore_cf ?? '',
+      assistitoCf: cliente.codice_fiscale,
+      isTutore: true
+    }
+  }
+  return {
+    nome: cliente.nome,
+    cognome: cliente.cognome,
+    cf: cliente.codice_fiscale,
+    assistitoCf: null,
+    isTutore: false
+  }
+}
+
+/**
+ * true se l'indirizzo che finirà sulla ricevuta (via + città + cap) è completo.
+ * Controlla gli stessi campi che creaRicevuta scrive come intestatario:
+ * tutore_* quando il cliente è minore con tutore, altrimenti i campi del cliente.
+ */
+export function indirizzoIntestatarioCompleto(cliente: ClienteRow): boolean {
+  const haTutore = Boolean(cliente.tutore_cf) && isMinorenne(cliente.data_nascita)
+  const via = haTutore ? cliente.tutore_via : cliente.via
+  const citta = haTutore ? cliente.tutore_citta : cliente.citta
+  const cap = haTutore ? cliente.tutore_cap : cliente.cap
+  return Boolean(via?.trim() && citta?.trim() && cap?.trim())
 }
