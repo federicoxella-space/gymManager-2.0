@@ -81,7 +81,7 @@ export default function IndicatoriWidget({
   if (hasError) {
     return (
       <div
-        className="col-span-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 px-4 py-3 text-sm text-red-700 dark:text-red-300"
+        className="col-span-2 lg:col-span-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 px-4 py-3 text-sm text-red-700 dark:text-red-300"
         role="alert"
       >
         {t('common.error_generic')}
@@ -114,6 +114,18 @@ export default function IndicatoriWidget({
         isLoading={isLoading}
         onClick={onNavigateClientiCertificati}
         ariaLabel={t('dashboard.indicatori.certificati')}
+      />
+      <StatCard
+        label={t('dashboard.indicatori.iscrizioni_in_scadenza')}
+        value={data?.iscrizioni_in_scadenza ?? 0}
+        colorClasses="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700 text-amber-900 dark:text-amber-100"
+        isLoading={isLoading}
+      />
+      <StatCard
+        label={t('dashboard.indicatori.abbonamenti_in_scadenza')}
+        value={data?.abbonamenti_in_scadenza ?? 0}
+        colorClasses="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 text-purple-900 dark:text-purple-100"
+        isLoading={isLoading}
       />
       <StatCard
         label={t('dashboard.indicatori.incassi')}

@@ -370,6 +370,8 @@
       "soci_attivi": "Soci attivi",
       "da_rinnovare": "Da rinnovare",
       "certificati": "Certificati in scadenza",
+      "iscrizioni_in_scadenza": "Iscrizioni in scadenza",
+      "abbonamenti_in_scadenza": "Abbonamenti in scadenza",
       "incassi": "Incassi del periodo"
     },
     "scadenze": {

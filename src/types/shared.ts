@@ -346,6 +346,8 @@ export interface WidgetIndicatori {
   da_rinnovare: number
   certificati_in_scadenza: number
   certificati_scaduti: number
+  iscrizioni_in_scadenza: number
+  abbonamenti_in_scadenza: number
   incassi_pagati: number
   incassi_da_incassare: number
 }

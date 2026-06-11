@@ -370,6 +370,8 @@
       "soci_attivi": "Active members",
       "da_rinnovare": "To renew",
       "certificati": "Expiring certificates",
+      "iscrizioni_in_scadenza": "Expiring memberships",
+      "abbonamenti_in_scadenza": "Expiring subscriptions",
       "incassi": "Period income"
     },
     "scadenze": {

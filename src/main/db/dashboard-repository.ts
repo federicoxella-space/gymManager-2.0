@@ -18,6 +18,8 @@ export interface WidgetIndicatori {
   da_rinnovare: number
   certificati_in_scadenza: number
   certificati_scaduti: number
+  iscrizioni_in_scadenza: number
+  abbonamenti_in_scadenza: number
   incassi_pagati: number
   incassi_da_incassare: number
 }
@@ -159,16 +161,35 @@ export function getIndicatori(
     )
     .get() as { totale: number }
 
-  // Sopprime i parametri non usati in SQL per evitare warning — i valori servono
-  // alle query getClientiInScadenza; qui li accettiamo per firma uniforme.
-  void giorniPreavvisoIsc
-  void giorniPreavvisoAbb
+  const iscInScadenzaRow = db
+    .prepare(
+      `SELECT COUNT(*) AS cnt
+       FROM iscrizioni_cliente ic
+       JOIN clienti c ON c.id = ic.cliente_id
+       WHERE c.stato = 'attivo'
+         AND ic.stato != 'invalidata'
+         AND julianday(ic.data_scadenza) - julianday(:oggi) BETWEEN 0 AND :giorni`
+    )
+    .get({ oggi, giorni: giorniPreavvisoIsc }) as { cnt: number }
+
+  const abbInScadenzaRow = db
+    .prepare(
+      `SELECT COUNT(*) AS cnt
+       FROM abbonamenti_cliente ac
+       JOIN clienti c ON c.id = ac.cliente_id
+       WHERE c.stato = 'attivo'
+         AND ac.stato != 'invalidato'
+         AND julianday(ac.data_scadenza) - julianday(:oggi) BETWEEN 0 AND :giorni`
+    )
+    .get({ oggi, giorni: giorniPreavvisoAbb }) as { cnt: number }
 
   return {
     soci_attivi: sociRow.cnt,
     da_rinnovare: daRinnovareRow.cnt,
     certificati_in_scadenza: certInScadenzaRow.cnt,
     certificati_scaduti: certScadutiRow.cnt,
+    iscrizioni_in_scadenza: iscInScadenzaRow.cnt,
+    abbonamenti_in_scadenza: abbInScadenzaRow.cnt,
     incassi_pagati: incassiPagatiRow.totale,
     incassi_da_incassare: incassiDaIncassareRow.totale,
   }

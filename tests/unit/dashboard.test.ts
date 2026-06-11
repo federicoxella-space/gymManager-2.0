@@ -585,3 +585,34 @@ describe('getCompleanni', () => {
     expect(lista.length).toBe(0)
   })
 })
+
+// ---------------------------------------------------------------------------
+// getIndicatori — in scadenza iscrizioni/abbonamenti (WP2: A13)
+// ---------------------------------------------------------------------------
+
+describe('getIndicatori — in scadenza iscrizioni/abbonamenti (WP2: A13)', () => {
+  it('conta iscrizioni e abbonamenti in scadenza entro la finestra di preavviso', () => {
+    const db = _testDb!
+    const tipoIsc = creaTipoIscrizione(db)
+    const tipoAbb = creaTipoAbbonamento(db)
+
+    const clienteId = creaCliente(db, 'WPAAABBB80A01H501Z')
+
+    // Iscrizione che scade tra 5 giorni (entro finestra di 30gg)
+    db.prepare(
+      `INSERT INTO iscrizioni_cliente (cliente_id, tipo_iscrizione_id, data_inizio, data_scadenza, prezzo, stato_pagamento, stato)
+       VALUES (?, ?, date('now','-30 days'), date('now','+5 days'), 30, 'da_incassare', 'attiva')`
+    ).run(clienteId, tipoIsc)
+
+    // Abbonamento che scade tra 5 giorni (entro finestra di 30gg)
+    db.prepare(
+      `INSERT INTO abbonamenti_cliente (cliente_id, tipo_abbonamento_id, data_inizio, data_scadenza, prezzo, stato_pagamento, stato)
+       VALUES (?, ?, date('now','-30 days'), date('now','+5 days'), 40, 'da_incassare', 'attivo')`
+    ).run(clienteId, tipoAbb)
+
+    const oggi = new Date().toISOString().slice(0, 10)
+    const ind = getIndicatori(oggi, 30, 30, 30)
+    expect(ind.iscrizioni_in_scadenza).toBe(1)
+    expect(ind.abbonamenti_in_scadenza).toBe(1)
+  })
+})
