@@ -161,6 +161,9 @@ export function getIndicatori(
     )
     .get() as { totale: number }
 
+  // Conteggi PER RIGA (iscrizioni/abbonamenti in scadenza), coerenti con certificati_in_scadenza
+  // che pure usa COUNT(*). Non sono conteggi di clienti distinti: per gli abbonamenti un cliente
+  // può averne più d'uno in scadenza, e l'etichetta indica "abbonamenti in scadenza".
   const iscInScadenzaRow = db
     .prepare(
       `SELECT COUNT(*) AS cnt

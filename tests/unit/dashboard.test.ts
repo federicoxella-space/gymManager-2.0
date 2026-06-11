@@ -596,7 +596,7 @@ describe('getIndicatori — in scadenza iscrizioni/abbonamenti (WP2: A13)', () =
     const tipoIsc = creaTipoIscrizione(db)
     const tipoAbb = creaTipoAbbonamento(db)
 
-    const clienteId = creaCliente(db, 'WPAAABBB80A01H501Z')
+    const clienteId = creaCliente(db, 'XLLFRC91A06E730O')
 
     // Iscrizione che scade tra 5 giorni (entro finestra di 30gg)
     db.prepare(

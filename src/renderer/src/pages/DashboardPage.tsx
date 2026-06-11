@@ -180,7 +180,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps): React
         <PeriodSelector periodo={periodo} onPeriodoChange={handlePeriodoChange} />
       </div>
 
-      {/* Indicatori sintetici — 4 card in riga */}
+      {/* Indicatori sintetici — 6 card (3 per riga su desktop) */}
       {widgetVisibili.includes('indicatori') && (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
           <IndicatoriWidget
