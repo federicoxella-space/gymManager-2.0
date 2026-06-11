@@ -580,7 +580,7 @@ I problemi principali si concentrano su:
 | **C1** Label "Riprova" errata | ✅ **RISOLTO** | Chiave `common.riprova` (it/en:50) usata in `CatalogoPage.tsx:156`, `ReceiptsPage.tsx:257`, `EmittiRicevutaForm.tsx:214`. |
 | **C4** Tema/colore non live | ✅ **RISOLTO** (parziale → N5) | Estratto `theme.ts`; `applyTheme`/`applyPrimaryColor` richiamati in `SettingsPage.tsx:428-431` dopo `settings.set`. |
 | **C5** Soglie non aggiornate | ✅ **RISOLTO** | `SettingsContext.tsx:15,56` espone `refresh()`; chiamato in `SettingsPage.tsx:433`. |
-| A7–A14, A15b/A15c (decisi), B1–B12, C2, C3, C6–C13, D1–D12 | ⬜ **APERTO** | Non toccati dal commit. Nota: il titolo dice "p0-p3" ma sono stati corretti solo P0 + C1/C4/C5; **C2, C3, C6** (resto di P3) e tutto P1/P2/P4 restano da fare. A15a risolto in WP1; A15b/A15c registrati come decisioni (vedi OPEN-QUESTIONS / DECISIONS D14). |
+| B1–B12, C2, C3, C6–C13, D1–D12, N4, N5 | ⬜ **APERTO** | Non toccati dal commit. Nota: il titolo dice "p0-p3" ma sono stati corretti solo P0 + C1/C4/C5; **C2, C3, C6** (resto di P3) e tutto P1/P2/P4 restano da fare. A15a risolto in WP1; A15b/A15c registrati come decisioni (vedi OPEN-QUESTIONS / DECISIONS D14). A7a, A8, A9, A10, A11, A12, A13, A14 risolti in WP2 (2026-06-11); A7b fixture CF reale aggiunta. |
 
 **Conclusione:** i 9 fix dichiarati sono implementati correttamente e `verify` è verde. Restano aperti
 i punti P1–P2–P4 e parte di P3, oltre ai nuovi rilievi sotto.
@@ -642,4 +642,4 @@ i punti P1–P2–P4 e parte di P3, oltre ai nuovi rilievi sotto.
 ### Verifica «verde»
 `npm run verify` eseguito il 2026-06-08: **typecheck OK · lint 0 warning · 272 test passati (1 skip) ·
 build OK**. La Definition of Done è soddisfatta per i fix applicati; i nuovi rilievi N1–N5 non bloccano
-il verde ma andrebbero pianificati (N3 prioritario per allineamento alla DoD sui fix P0). **WP1 chiuso il 2026-06-08:** N1, N2, N3, A15a risolti e verificati; A15b/A15c registrati come decisioni. `npm run verify` verde.
+il verde ma andrebbero pianificati (N3 prioritario per allineamento alla DoD sui fix P0). **WP1 chiuso il 2026-06-08:** N1, N2, N3, A15a risolti e verificati; A15b/A15c registrati come decisioni. `npm run verify` verde. **WP2 chiuso il 2026-06-11:** A7–A14 risolti e verificati (validazioni, univocità tessera, blocco anonimizzati, date certificati, indicatori in scadenza, atomicità settings, commenti+fixture CF); `npm run verify` verde.
