@@ -263,6 +263,15 @@ const api: ElectronAPI = {
     }
   },
 
+  dialog: {
+    showOpenDialog(options?: {
+      title?: string
+      filters?: { name: string; extensions: string[] }[]
+    }): Promise<{ canceled: boolean; filePaths: string[] }> {
+      return ipcRenderer.invoke('dialog:showOpenDialog', options)
+    }
+  },
+
   updater: {
     check(): Promise<void> {
       return ipcRenderer.invoke('updater:check')

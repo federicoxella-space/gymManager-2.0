@@ -412,6 +412,12 @@ interface ElectronAPI {
       list: () => Promise<DriveBackupItem[]>
     }
   }
+  dialog: {
+    showOpenDialog: (options?: {
+      title?: string
+      filters?: { name: string; extensions: string[] }[]
+    }) => Promise<{ canceled: boolean; filePaths: string[] }>
+  }
   updater: {
     check: () => Promise<void>
     install: () => Promise<void>

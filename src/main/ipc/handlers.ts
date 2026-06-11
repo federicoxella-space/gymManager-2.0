@@ -1,4 +1,4 @@
-import { ipcMain, app } from 'electron'
+import { ipcMain, app, dialog, BrowserWindow } from 'electron'
 import { checkForUpdates, installUpdate } from '../updater/auto-updater'
 import { backupLocale, backupAutomatico } from '../backup/backup-service'
 import { verificaBackup, ripristinaBackup, resetDatabase } from '../backup/restore-service'
@@ -876,6 +876,34 @@ export function registerIpcHandlers(): void {
       } catch (err) {
         log.error('[ipc] backup:ripristina errore:', err)
         throw err instanceof Error ? err : new Error('Errore durante il ripristino del backup')
+      }
+    }
+  )
+
+  /**
+   * Apre la finestra di dialogo nativa per la selezione di un file.
+   * Usata dal renderer per il pulsante "Sfoglia…" nel ripristino backup.
+   */
+  ipcMain.handle(
+    'dialog:showOpenDialog',
+    async (
+      event,
+      options?: { title?: string; filters?: { name: string; extensions: string[] }[] }
+    ): Promise<{ canceled: boolean; filePaths: string[] }> => {
+      try {
+        const win = BrowserWindow.fromWebContents(event.sender)
+        const dialogOptions: Electron.OpenDialogOptions = {
+          title: options?.title,
+          properties: ['openFile'],
+          filters: options?.filters ?? [{ name: 'Database', extensions: ['db'] }]
+        }
+        const result = win
+          ? await dialog.showOpenDialog(win, dialogOptions)
+          : await dialog.showOpenDialog(dialogOptions)
+        return { canceled: result.canceled, filePaths: result.filePaths }
+      } catch (err) {
+        log.error('[ipc] dialog:showOpenDialog errore:', err)
+        throw err instanceof Error ? err : new Error('Errore apertura finestra di selezione file')
       }
     }
   )
