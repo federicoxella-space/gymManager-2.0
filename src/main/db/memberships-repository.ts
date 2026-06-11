@@ -6,6 +6,15 @@ import type {
   AssegnaAbbonamentoInput
 } from '../../types/shared'
 
+/** Verifica che il cliente esista e sia attivo (non anonimizzato). */
+function assertClienteAttivo(db: ReturnType<typeof getDatabase>, clienteId: number): void {
+  const cliente = db.prepare('SELECT stato FROM clienti WHERE id = ?').get(clienteId) as
+    | { stato: 'attivo' | 'anonimizzato' }
+    | undefined
+  if (!cliente) throw new Error('CLIENTE_NOT_FOUND')
+  if (cliente.stato !== 'attivo') throw new Error('CLIENTE_ANONIMIZZATO')
+}
+
 // ── Iscrizioni cliente ────────────────────────────────────────────────────────
 
 /**
@@ -15,11 +24,7 @@ import type {
 export function assegnaIscrizione(data: AssegnaIscrizioneInput): IscrizioneClienteRow {
   const db = getDatabase()
 
-  const cliente = db.prepare('SELECT stato FROM clienti WHERE id = ?').get(data.cliente_id) as
-    | { stato: 'attivo' | 'anonimizzato' }
-    | undefined
-  if (!cliente) throw new Error('CLIENTE_NOT_FOUND')
-  if (cliente.stato !== 'attivo') throw new Error('CLIENTE_ANONIMIZZATO')
+  assertClienteAttivo(db, data.cliente_id)
 
   const attiva = getIscrizioneAttiva(data.cliente_id)
   if (attiva) {
@@ -182,11 +187,7 @@ export function aggiornaStatoIscrizioni(): void {
 export function assegnaAbbonamento(data: AssegnaAbbonamentoInput): AbbonamentoClienteRow {
   const db = getDatabase()
 
-  const cliente = db.prepare('SELECT stato FROM clienti WHERE id = ?').get(data.cliente_id) as
-    | { stato: 'attivo' | 'anonimizzato' }
-    | undefined
-  if (!cliente) throw new Error('CLIENTE_NOT_FOUND')
-  if (cliente.stato !== 'attivo') throw new Error('CLIENTE_ANONIMIZZATO')
+  assertClienteAttivo(db, data.cliente_id)
 
   const iscrizioneAttiva = getIscrizioneAttiva(data.cliente_id)
   if (!iscrizioneAttiva) {

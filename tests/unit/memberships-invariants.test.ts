@@ -542,6 +542,36 @@ describe('assegnazioni — cliente anonimizzato (WP2: A10)', () => {
       })
     ).toThrow('CLIENTE_ANONIMIZZATO')
   })
+
+  it('assegnaIscrizione rifiuta un clienteId inesistente', () => {
+    const db = _testDb!
+    const tipoId = creaTipoIscrizione(db)
+    expect(() =>
+      assegnaIscrizione({
+        cliente_id: 99999,
+        tipo_iscrizione_id: tipoId,
+        data_inizio: '2025-01-01',
+        data_scadenza: '2025-12-31',
+        prezzo: 30,
+        stato_pagamento: 'da_incassare'
+      })
+    ).toThrow('CLIENTE_NOT_FOUND')
+  })
+
+  it('assegnaAbbonamento rifiuta un clienteId inesistente', () => {
+    const db = _testDb!
+    const tipoAbbId = creaTipoAbbonamento(db)
+    expect(() =>
+      assegnaAbbonamento({
+        cliente_id: 99999,
+        tipo_abbonamento_id: tipoAbbId,
+        data_inizio: '2025-01-01',
+        data_scadenza: '2025-01-31',
+        prezzo: 40,
+        stato_pagamento: 'da_incassare'
+      })
+    ).toThrow('CLIENTE_NOT_FOUND')
+  })
 })
 
 // ---------------------------------------------------------------------------
