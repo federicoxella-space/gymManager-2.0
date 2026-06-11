@@ -85,3 +85,17 @@ describe('listTipiAbbonamento — assegnati_count (B5)', () => {
     expect(tipo2.assegnati_count).toBe(1)
   })
 })
+
+describe('createTipoIscrizione — assegnati_count nel valore di ritorno', () => {
+  it('restituisce assegnati_count = 0 al momento della creazione', () => {
+    const tipo = createTipoIscrizione({ nome: 'X', durata_mesi: 12, prezzo_default: 10 })
+    expect(tipo.assegnati_count).toBe(0)
+  })
+})
+
+describe('createTipoAbbonamento — assegnati_count nel valore di ritorno', () => {
+  it('restituisce assegnati_count = 0 al momento della creazione', () => {
+    const tipo = createTipoAbbonamento({ nome: 'Y', durata_mesi: 1, prezzo_default: 10 })
+    expect(tipo.assegnati_count).toBe(0)
+  })
+})

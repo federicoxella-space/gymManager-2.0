@@ -34,7 +34,13 @@ export function createTipoIscrizione(data: CreateTipoIscrizioneInput): TipoIscri
 
 export function getTipoIscrizione(id: number): TipoIscrizioneRow | null {
   const db = getDatabase()
-  const row = db.prepare('SELECT * FROM tipi_iscrizione WHERE id = ?').get(id)
+  const row = db
+    .prepare(
+      `SELECT t.*,
+              (SELECT COUNT(*) FROM iscrizioni_cliente ic WHERE ic.tipo_iscrizione_id = t.id) AS assegnati_count
+       FROM tipi_iscrizione t WHERE t.id = ?`
+    )
+    .get(id)
   return (row as TipoIscrizioneRow) ?? null
 }
 
@@ -137,7 +143,13 @@ export function createTipoAbbonamento(data: CreateTipoAbbonamentoInput): TipoAbb
 
 export function getTipoAbbonamento(id: number): TipoAbbonamentoRow | null {
   const db = getDatabase()
-  const row = db.prepare('SELECT * FROM tipi_abbonamento WHERE id = ?').get(id)
+  const row = db
+    .prepare(
+      `SELECT t.*,
+              (SELECT COUNT(*) FROM abbonamenti_cliente ac WHERE ac.tipo_abbonamento_id = t.id) AS assegnati_count
+       FROM tipi_abbonamento t WHERE t.id = ?`
+    )
+    .get(id)
   return (row as TipoAbbonamentoRow) ?? null
 }
 
