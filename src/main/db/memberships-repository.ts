@@ -15,6 +15,12 @@ import type {
 export function assegnaIscrizione(data: AssegnaIscrizioneInput): IscrizioneClienteRow {
   const db = getDatabase()
 
+  const cliente = db.prepare('SELECT stato FROM clienti WHERE id = ?').get(data.cliente_id) as
+    | { stato: 'attivo' | 'anonimizzato' }
+    | undefined
+  if (!cliente) throw new Error('CLIENTE_NOT_FOUND')
+  if (cliente.stato !== 'attivo') throw new Error('CLIENTE_ANONIMIZZATO')
+
   const attiva = getIscrizioneAttiva(data.cliente_id)
   if (attiva) {
     throw new Error('ISCRIZIONE_GIA_ATTIVA')
@@ -175,6 +181,12 @@ export function aggiornaStatoIscrizioni(): void {
  */
 export function assegnaAbbonamento(data: AssegnaAbbonamentoInput): AbbonamentoClienteRow {
   const db = getDatabase()
+
+  const cliente = db.prepare('SELECT stato FROM clienti WHERE id = ?').get(data.cliente_id) as
+    | { stato: 'attivo' | 'anonimizzato' }
+    | undefined
+  if (!cliente) throw new Error('CLIENTE_NOT_FOUND')
+  if (cliente.stato !== 'attivo') throw new Error('CLIENTE_ANONIMIZZATO')
 
   const iscrizioneAttiva = getIscrizioneAttiva(data.cliente_id)
   if (!iscrizioneAttiva) {

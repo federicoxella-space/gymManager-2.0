@@ -503,6 +503,48 @@ describe('updateAbbonamentoDate (WP1: N1/A3)', () => {
 })
 
 // ---------------------------------------------------------------------------
+// WP2 — Blocco assegnazioni a clienti anonimizzati (A10)
+// ---------------------------------------------------------------------------
+
+describe('assegnazioni — cliente anonimizzato (WP2: A10)', () => {
+  it('assegnaIscrizione rifiuta un cliente anonimizzato', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoIscrizione(db)
+    db.prepare("UPDATE clienti SET stato = 'anonimizzato' WHERE id = ?").run(clienteId)
+
+    expect(() =>
+      assegnaIscrizione({
+        cliente_id: clienteId,
+        tipo_iscrizione_id: tipoId,
+        data_inizio: '2025-01-01',
+        data_scadenza: '2025-12-31',
+        prezzo: 30,
+        stato_pagamento: 'da_incassare'
+      })
+    ).toThrow('CLIENTE_ANONIMIZZATO')
+  })
+
+  it('assegnaAbbonamento rifiuta un cliente anonimizzato', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoAbbId = creaTipoAbbonamento(db)
+    db.prepare("UPDATE clienti SET stato = 'anonimizzato' WHERE id = ?").run(clienteId)
+
+    expect(() =>
+      assegnaAbbonamento({
+        cliente_id: clienteId,
+        tipo_abbonamento_id: tipoAbbId,
+        data_inizio: '2025-01-01',
+        data_scadenza: '2025-01-31',
+        prezzo: 40,
+        stato_pagamento: 'da_incassare'
+      })
+    ).toThrow('CLIENTE_ANONIMIZZATO')
+  })
+})
+
+// ---------------------------------------------------------------------------
 // WP1 — Transizione automatica stati scaduti (A2, guardia di regressione)
 // ---------------------------------------------------------------------------
 
