@@ -129,6 +129,8 @@ interface TipoIscrizioneRow {
   stato: 'attivo' | 'non_valido'
   data_inserimento: string
   data_modifica: string
+  /** Numero di clienti a cui il tipo è assegnato (storico incluso). 0 ⇒ eliminabile. */
+  assegnati_count: number
 }
 
 interface TipoAbbonamentoRow {
@@ -142,6 +144,8 @@ interface TipoAbbonamentoRow {
   stato: 'attivo' | 'non_valido'
   data_inserimento: string
   data_modifica: string
+  /** Numero di clienti a cui il tipo è assegnato (storico incluso). 0 ⇒ eliminabile. */
+  assegnati_count: number
 }
 
 interface CreateTipoIscrizioneInput {

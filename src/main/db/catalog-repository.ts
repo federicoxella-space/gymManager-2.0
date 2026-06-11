@@ -71,10 +71,14 @@ export function updateTipoIscrizione(
 export function listTipiIscrizione(includeNonValidi = false): TipoIscrizioneRow[] {
   const db = getDatabase()
 
-  const sql = includeNonValidi
-    ? 'SELECT * FROM tipi_iscrizione ORDER BY nome'
-    : "SELECT * FROM tipi_iscrizione WHERE stato = 'attivo' ORDER BY nome"
-
+  const where = includeNonValidi ? '' : "WHERE t.stato = 'attivo'"
+  const sql = `
+    SELECT t.*,
+           (SELECT COUNT(*) FROM iscrizioni_cliente ic WHERE ic.tipo_iscrizione_id = t.id) AS assegnati_count
+    FROM tipi_iscrizione t
+    ${where}
+    ORDER BY t.nome
+  `
   return db.prepare(sql).all() as TipoIscrizioneRow[]
 }
 
@@ -170,10 +174,14 @@ export function updateTipoAbbonamento(
 export function listTipiAbbonamento(includeNonValidi = false): TipoAbbonamentoRow[] {
   const db = getDatabase()
 
-  const sql = includeNonValidi
-    ? 'SELECT * FROM tipi_abbonamento ORDER BY nome'
-    : "SELECT * FROM tipi_abbonamento WHERE stato = 'attivo' ORDER BY nome"
-
+  const where = includeNonValidi ? '' : "WHERE t.stato = 'attivo'"
+  const sql = `
+    SELECT t.*,
+           (SELECT COUNT(*) FROM abbonamenti_cliente ac WHERE ac.tipo_abbonamento_id = t.id) AS assegnati_count
+    FROM tipi_abbonamento t
+    ${where}
+    ORDER BY t.nome
+  `
   return db.prepare(sql).all() as TipoAbbonamentoRow[]
 }
 
