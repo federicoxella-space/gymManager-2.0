@@ -444,6 +444,8 @@
     "ripristina_avviso": "ATTENZIONE: il ripristino sovrascriverà i dati correnti. Assicurati di avere un backup aggiornato prima di procedere.",
     "ripristina_conferma": "Ripristina",
     "ripristina_errore": "Errore durante il ripristino. Verifica il percorso e la password.",
+    "ripristina_sfoglia": "Sfoglia…",
+    "ripristina_completato": "Ripristino completato. L'app verrà riavviata.",
     "ripristina_pulsante": "Ripristina da backup...",
     "reset_titolo": "Reset master password",
     "reset_pulsante": "Cambia / Reimposta master password",

@@ -444,6 +444,8 @@
     "ripristina_avviso": "WARNING: restore will overwrite current data. Make sure you have an up-to-date backup before proceeding.",
     "ripristina_conferma": "Restore",
     "ripristina_errore": "Error during restore. Check the path and password.",
+    "ripristina_sfoglia": "Browse…",
+    "ripristina_completato": "Restore completed. The app will restart.",
     "ripristina_pulsante": "Restore from backup...",
     "reset_titolo": "Master password reset",
     "reset_pulsante": "Change / Reset master password",
