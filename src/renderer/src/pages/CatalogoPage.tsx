@@ -68,6 +68,7 @@ function TipiIscrizioneTab({ showNonValidi }: TipiIscrizioneTabProps): React.JSX
   const [invalidaTarget, setInvalidaTarget] = useState<TipoIscrizioneRow | null>(null)
   const [eliminaTarget, setEliminaTarget] = useState<TipoIscrizioneRow | null>(null)
   const [isActioning, setIsActioning] = useState(false)
+  const [eliminaError, setEliminaError] = useState<string | null>(null)
 
   const loadTipi = useCallback(async (): Promise<void> => {
     setIsLoading(true)
@@ -126,12 +127,18 @@ function TipiIscrizioneTab({ showNonValidi }: TipiIscrizioneTabProps): React.JSX
   async function handleElimina(): Promise<void> {
     if (!eliminaTarget) return
     setIsActioning(true)
+    setEliminaError(null)
     try {
       await window.api.catalogo.tipiIscrizione.delete(eliminaTarget.id)
       setTipi((prev) => prev.filter((t) => t.id !== eliminaTarget.id))
+      setEliminaTarget(null)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      setEliminaError(
+        msg.includes('TIPO_ASSEGNATO') ? t('catalogo.elimina_errore') : t('common.error_generic'),
+      )
     } finally {
       setIsActioning(false)
-      setEliminaTarget(null)
     }
   }
 
@@ -247,13 +254,17 @@ function TipiIscrizioneTab({ showNonValidi }: TipiIscrizioneTabProps): React.JSX
       {/* Dialog elimina */}
       <ConfirmDialog
         isOpen={eliminaTarget !== null}
-        onClose={() => setEliminaTarget(null)}
+        onClose={() => {
+          setEliminaTarget(null)
+          setEliminaError(null)
+        }}
         onConfirm={() => void handleElimina()}
         title={t('catalogo.elimina_conferma_titolo')}
         message={t('catalogo.elimina_conferma_msg')}
         confirmLabel={t('catalogo.azioni.elimina')}
         variant="danger"
         isLoading={isActioning}
+        errorMessage={eliminaError}
       />
     </>
   )
@@ -273,10 +284,6 @@ function TipoIscrizioneRow({
   onElimina,
 }: TipoIscrizioneRowProps): React.JSX.Element {
   const { t } = useTranslation()
-  // Non possiamo sapere lato renderer se il tipo è assegnato senza una query apposita.
-  // L'eliminazione fallirà lato backend se assegnato; mostriamo il tooltip genericamente.
-  // Per semplicità (F2): il pulsante elimina è sempre visibile; se il backend lo rifiuta,
-  // l'utente vedrà un messaggio. Il tooltip informativo è presente.
   const isAttivo = tipo.stato === 'attivo'
 
   return (
@@ -323,8 +330,13 @@ function TipoIscrizioneRow({
           <button
             type="button"
             onClick={onElimina}
-            title={t('catalogo.tipo_assegnato_tooltip')}
-            className="p-1.5 rounded-md text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            disabled={tipo.assegnati_count > 0}
+            title={
+              tipo.assegnati_count > 0
+                ? t('catalogo.elimina_non_consentito', { count: tipo.assegnati_count })
+                : t('catalogo.azioni.elimina')
+            }
+            className="p-1.5 rounded-md text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-gray-500 disabled:hover:bg-transparent"
           >
             <TrashIcon />
             <span className="sr-only">{t('catalogo.azioni.elimina')}</span>
@@ -352,6 +364,7 @@ function TipiAbbonamentoTab({ showNonValidi }: TipiAbbonamentoTabProps): React.J
   const [invalidaTarget, setInvalidaTarget] = useState<TipoAbbonamentoRow | null>(null)
   const [eliminaTarget, setEliminaTarget] = useState<TipoAbbonamentoRow | null>(null)
   const [isActioning, setIsActioning] = useState(false)
+  const [eliminaError, setEliminaError] = useState<string | null>(null)
 
   const loadTipi = useCallback(async (): Promise<void> => {
     setIsLoading(true)
@@ -410,12 +423,18 @@ function TipiAbbonamentoTab({ showNonValidi }: TipiAbbonamentoTabProps): React.J
   async function handleElimina(): Promise<void> {
     if (!eliminaTarget) return
     setIsActioning(true)
+    setEliminaError(null)
     try {
       await window.api.catalogo.tipiAbbonamento.delete(eliminaTarget.id)
       setTipi((prev) => prev.filter((t) => t.id !== eliminaTarget.id))
+      setEliminaTarget(null)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      setEliminaError(
+        msg.includes('TIPO_ASSEGNATO') ? t('catalogo.elimina_errore') : t('common.error_generic'),
+      )
     } finally {
       setIsActioning(false)
-      setEliminaTarget(null)
     }
   }
 
@@ -524,13 +543,17 @@ function TipiAbbonamentoTab({ showNonValidi }: TipiAbbonamentoTabProps): React.J
 
       <ConfirmDialog
         isOpen={eliminaTarget !== null}
-        onClose={() => setEliminaTarget(null)}
+        onClose={() => {
+          setEliminaTarget(null)
+          setEliminaError(null)
+        }}
         onConfirm={() => void handleElimina()}
         title={t('catalogo.elimina_conferma_titolo')}
         message={t('catalogo.elimina_conferma_msg')}
         confirmLabel={t('catalogo.azioni.elimina')}
         variant="danger"
         isLoading={isActioning}
+        errorMessage={eliminaError}
       />
     </>
   )
@@ -608,8 +631,13 @@ function TipoAbbonamentoRow({
           <button
             type="button"
             onClick={onElimina}
-            title={t('catalogo.tipo_assegnato_tooltip')}
-            className="p-1.5 rounded-md text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            disabled={tipo.assegnati_count > 0}
+            title={
+              tipo.assegnati_count > 0
+                ? t('catalogo.elimina_non_consentito', { count: tipo.assegnati_count })
+                : t('catalogo.azioni.elimina')
+            }
+            className="p-1.5 rounded-md text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-gray-500 disabled:hover:bg-transparent"
           >
             <TrashIcon />
             <span className="sr-only">{t('catalogo.azioni.elimina')}</span>

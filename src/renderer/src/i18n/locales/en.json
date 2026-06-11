@@ -179,6 +179,8 @@
       "elimina": "Delete"
     },
     "tipo_assegnato_tooltip": "Cannot delete: type already assigned to clients",
+    "elimina_non_consentito": "Cannot delete: assigned to {{count}} clients (you can invalidate it).",
+    "elimina_errore": "Cannot delete: type already assigned to clients.",
     "invalida_conferma_titolo": "Invalidate type",
     "invalida_conferma_msg": "The type will be made invalid and can no longer be assigned. Confirm?",
     "elimina_conferma_titolo": "Delete type",

@@ -179,6 +179,8 @@
       "elimina": "Elimina"
     },
     "tipo_assegnato_tooltip": "Non eliminabile: tipo già assegnato a dei clienti",
+    "elimina_non_consentito": "Non eliminabile: assegnato a {{count}} clienti (puoi invalidarlo).",
+    "elimina_errore": "Impossibile eliminare: tipo già assegnato a dei clienti.",
     "invalida_conferma_titolo": "Invalida tipo",
     "invalida_conferma_msg": "Il tipo verrà reso non valido e non sarà più assegnabile. Confermi?",
     "elimina_conferma_titolo": "Elimina tipo",
