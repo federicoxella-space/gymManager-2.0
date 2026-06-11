@@ -46,13 +46,14 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
   // Legge il cliente per lo snapshot intestatario
   const cliente = db
     .prepare(
-      'SELECT id, nome, cognome, codice_fiscale, data_nascita, via, civico, citta, provincia, cap,' +
+      'SELECT id, nome, cognome, codice_fiscale, data_nascita, stato, via, civico, citta, provincia, cap,' +
         ' tutore_nome, tutore_cognome, tutore_cf, tutore_via, tutore_civico, tutore_citta, tutore_provincia, tutore_cap' +
         ' FROM clienti WHERE id = ?'
     )
     .get(input.clienteId) as
     | {
         id: number
+        stato: 'attivo' | 'anonimizzato'
         nome: string
         cognome: string
         codice_fiscale: string
@@ -75,6 +76,32 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
 
   if (!cliente) {
     throw new Error(`Cliente con id ${input.clienteId} non trovato`)
+  }
+
+  // A10: nessuna nuova emissione a clienti anonimizzati (invariante 7).
+  if (cliente.stato !== 'attivo') {
+    throw new Error('CLIENTE_ANONIMIZZATO')
+  }
+
+  // A9: almeno una riga
+  if (!input.righe || input.righe.length === 0) {
+    throw new Error('RICEVUTA_SENZA_RIGHE')
+  }
+
+  // A9: ogni riga con riferimento a iscrizione/abbonamento deve appartenere a questo cliente
+  for (const riga of input.righe) {
+    if (riga.riferimentoId == null) continue
+    if (riga.tipo === 'iscrizione') {
+      const ok = db
+        .prepare('SELECT 1 FROM iscrizioni_cliente WHERE id = ? AND cliente_id = ?')
+        .get(riga.riferimentoId, input.clienteId)
+      if (!ok) throw new Error('RIFERIMENTO_NON_VALIDO')
+    } else if (riga.tipo === 'abbonamento') {
+      const ok = db
+        .prepare('SELECT 1 FROM abbonamenti_cliente WHERE id = ? AND cliente_id = ?')
+        .get(riga.riferimentoId, input.clienteId)
+      if (!ok) throw new Error('RIFERIMENTO_NON_VALIDO')
+    }
   }
 
   // Il tutore è intestatario solo se il cliente ha un tutore E è effettivamente minorenne

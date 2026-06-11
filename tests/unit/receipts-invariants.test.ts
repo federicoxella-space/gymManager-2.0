@@ -562,6 +562,56 @@ describe('listRicevute con filtri', () => {
 })
 
 // ---------------------------------------------------------------------------
+// WP2 — Validazioni creaRicevuta (A9/A10)
+// ---------------------------------------------------------------------------
+
+describe('creaRicevuta — validazioni (WP2: A9/A10)', () => {
+  it('A10: rifiuta l\'emissione per un cliente anonimizzato', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    db.prepare("UPDATE clienti SET stato = 'anonimizzato' WHERE id = ?").run(clienteId)
+
+    expect(() => creaRicevuta(buildInput(clienteId))).toThrow('CLIENTE_ANONIMIZZATO')
+  })
+
+  it('A9: rifiuta una ricevuta senza righe', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    expect(() => creaRicevuta(buildInput(clienteId, { righe: [] }))).toThrow('RICEVUTA_SENZA_RIGHE')
+  })
+
+  it('A9: rifiuta una riga il cui riferimentoId non appartiene al cliente', () => {
+    const db = _testDb!
+    const tipoIscId = creaTipoIscrizione(db)
+    const clienteA = creaCliente(db, 'RSSMRA85T10H501Z')
+    const clienteB = creaCliente(db, 'VRDLCU90A41H501B')
+    const iscB = assegnaIscrizione(db, clienteB, tipoIscId)
+
+    const input = buildInput(clienteA, {
+      righe: [
+        { tipo: 'iscrizione', riferimentoId: iscB, descrizione: 'Iscrizione', prezzo: 30 }
+      ]
+    })
+    expect(() => creaRicevuta(input)).toThrow('RIFERIMENTO_NON_VALIDO')
+  })
+
+  it('accetta una riga il cui riferimentoId appartiene al cliente', () => {
+    const db = _testDb!
+    const tipoIscId = creaTipoIscrizione(db)
+    const clienteA = creaCliente(db, 'RSSMRA85T10H501Z')
+    const iscA = assegnaIscrizione(db, clienteA, tipoIscId)
+
+    const input = buildInput(clienteA, {
+      righe: [
+        { tipo: 'iscrizione', riferimentoId: iscA, descrizione: 'Iscrizione', prezzo: 30 }
+      ]
+    })
+    const r = creaRicevuta(input)
+    expect(r.righe.length).toBe(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // Flusso end-to-end equivalente: transazione → ricevuta salvata → re-download
 // (criterio gate F3: "e2e transazione → ricevuta salvata → re-download stesso numero")
 // ---------------------------------------------------------------------------
