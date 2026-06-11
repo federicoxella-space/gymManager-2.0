@@ -126,4 +126,12 @@ describe('createCliente — numero_tessera (WP2: A8)', () => {
     createCliente({ numero_tessera: '50', nome: 'Mario', cognome: 'Rossi', codice_fiscale: 'RSSMRA85T10H501Z' })
     expect(getNextNumeroTessera()).toBe('51')
   })
+
+  it('A8: un codice_fiscale duplicato NON viene etichettato come NUMERO_TESSERA_DUPLICATO', () => {
+    createCliente({ nome: 'Mario', cognome: 'Rossi', codice_fiscale: 'RSSMRA85T10H501Z' })
+    // Stesso CF, tessera diversa (auto) → deve violare il UNIQUE su codice_fiscale, non su numero_tessera
+    expect(() =>
+      createCliente({ nome: 'Luigi', cognome: 'Bianchi', codice_fiscale: 'RSSMRA85T10H501Z' })
+    ).toThrow(/UNIQUE constraint failed: clienti\.codice_fiscale/i)
+  })
 })
