@@ -20,7 +20,7 @@ vi.mock('../../src/main/db/database', () => ({
 }))
 
 import { runMigrations } from '../../src/main/db/migrations'
-import { listClienti } from '../../src/main/db/clients-repository'
+import { listClienti, createCliente, getNextNumeroTessera } from '../../src/main/db/clients-repository'
 
 function creaCliente(db: Database.Database, cf: string): number {
   const info = db
@@ -104,5 +104,26 @@ describe('listClienti — filtro stato_iscrizione="scaduta" (WP1: A15a)', () => 
     const result = listClienti({ stato_iscrizione: 'scaduta' })
 
     expect(result.map((r) => r.id)).not.toContain(c)
+  })
+})
+
+describe('createCliente — numero_tessera (WP2: A8)', () => {
+  it('assegna numeri tessera progressivi quando non specificati', () => {
+    const a = createCliente({ nome: 'Mario', cognome: 'Rossi', codice_fiscale: 'RSSMRA85T10H501Z' })
+    const b = createCliente({ nome: 'Lucia', cognome: 'Verdi', codice_fiscale: 'VRDLCU90A41H501B' })
+    expect(a.numero_tessera).toBe('1')
+    expect(b.numero_tessera).toBe('2')
+  })
+
+  it('A8: un numero_tessera duplicato (override) lancia NUMERO_TESSERA_DUPLICATO', () => {
+    createCliente({ numero_tessera: '100', nome: 'Mario', cognome: 'Rossi', codice_fiscale: 'RSSMRA85T10H501Z' })
+    expect(() =>
+      createCliente({ numero_tessera: '100', nome: 'Lucia', cognome: 'Verdi', codice_fiscale: 'VRDLCU90A41H501B' })
+    ).toThrow('NUMERO_TESSERA_DUPLICATO')
+  })
+
+  it('getNextNumeroTessera tiene conto del massimo numerico esistente', () => {
+    createCliente({ numero_tessera: '50', nome: 'Mario', cognome: 'Rossi', codice_fiscale: 'RSSMRA85T10H501Z' })
+    expect(getNextNumeroTessera()).toBe('51')
   })
 })

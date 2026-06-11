@@ -21,53 +21,68 @@ export function getNextNumeroTessera(): string {
 export function createCliente(data: CreateClienteInput): ClienteRow {
   const db = getDatabase()
 
-  const numeroTessera = data.numero_tessera ?? getNextNumeroTessera()
+  let newId!: number
 
-  const stmt = db.prepare(`
-    INSERT INTO clienti (
-      numero_tessera, nome, cognome, codice_fiscale,
-      data_nascita, sesso, comune_nascita,
-      via, civico, citta, provincia, cap,
-      email, telefono, note,
-      tutore_nome, tutore_cognome, tutore_cf,
-      tutore_via, tutore_civico, tutore_citta, tutore_provincia, tutore_cap
-    ) VALUES (
-      @numero_tessera, @nome, @cognome, @codice_fiscale,
-      @data_nascita, @sesso, @comune_nascita,
-      @via, @civico, @citta, @provincia, @cap,
-      @email, @telefono, @note,
-      @tutore_nome, @tutore_cognome, @tutore_cf,
-      @tutore_via, @tutore_civico, @tutore_citta, @tutore_provincia, @tutore_cap
-    )
-  `)
+  const esegui = db.transaction(() => {
+    const numeroTessera = data.numero_tessera ?? getNextNumeroTessera()
 
-  const info = stmt.run({
-    numero_tessera: numeroTessera,
-    nome: data.nome,
-    cognome: data.cognome,
-    codice_fiscale: data.codice_fiscale,
-    data_nascita: data.data_nascita ?? null,
-    sesso: data.sesso ?? null,
-    comune_nascita: data.comune_nascita ?? null,
-    via: data.via ?? null,
-    civico: data.civico ?? null,
-    citta: data.citta ?? null,
-    provincia: data.provincia ?? null,
-    cap: data.cap ?? null,
-    email: data.email ?? null,
-    telefono: data.telefono ?? null,
-    note: data.note ?? null,
-    tutore_nome: data.tutore_nome ?? null,
-    tutore_cognome: data.tutore_cognome ?? null,
-    tutore_cf: data.tutore_cf ?? null,
-    tutore_via: data.tutore_via ?? null,
-    tutore_civico: data.tutore_civico ?? null,
-    tutore_citta: data.tutore_citta ?? null,
-    tutore_provincia: data.tutore_provincia ?? null,
-    tutore_cap: data.tutore_cap ?? null
+    const stmt = db.prepare(`
+      INSERT INTO clienti (
+        numero_tessera, nome, cognome, codice_fiscale,
+        data_nascita, sesso, comune_nascita,
+        via, civico, citta, provincia, cap,
+        email, telefono, note,
+        tutore_nome, tutore_cognome, tutore_cf,
+        tutore_via, tutore_civico, tutore_citta, tutore_provincia, tutore_cap
+      ) VALUES (
+        @numero_tessera, @nome, @cognome, @codice_fiscale,
+        @data_nascita, @sesso, @comune_nascita,
+        @via, @civico, @citta, @provincia, @cap,
+        @email, @telefono, @note,
+        @tutore_nome, @tutore_cognome, @tutore_cf,
+        @tutore_via, @tutore_civico, @tutore_citta, @tutore_provincia, @tutore_cap
+      )
+    `)
+
+    const info = stmt.run({
+      numero_tessera: numeroTessera,
+      nome: data.nome,
+      cognome: data.cognome,
+      codice_fiscale: data.codice_fiscale,
+      data_nascita: data.data_nascita ?? null,
+      sesso: data.sesso ?? null,
+      comune_nascita: data.comune_nascita ?? null,
+      via: data.via ?? null,
+      civico: data.civico ?? null,
+      citta: data.citta ?? null,
+      provincia: data.provincia ?? null,
+      cap: data.cap ?? null,
+      email: data.email ?? null,
+      telefono: data.telefono ?? null,
+      note: data.note ?? null,
+      tutore_nome: data.tutore_nome ?? null,
+      tutore_cognome: data.tutore_cognome ?? null,
+      tutore_cf: data.tutore_cf ?? null,
+      tutore_via: data.tutore_via ?? null,
+      tutore_civico: data.tutore_civico ?? null,
+      tutore_citta: data.tutore_citta ?? null,
+      tutore_provincia: data.tutore_provincia ?? null,
+      tutore_cap: data.tutore_cap ?? null
+    })
+
+    newId = info.lastInsertRowid as number
   })
 
-  const created = getCliente(info.lastInsertRowid as number)
+  try {
+    esegui.immediate()
+  } catch (err) {
+    if (err instanceof Error && /UNIQUE constraint failed:\s*clienti\.numero_tessera/i.test(err.message)) {
+      throw new Error('NUMERO_TESSERA_DUPLICATO')
+    }
+    throw err
+  }
+
+  const created = getCliente(newId)
   if (!created) {
     throw new Error('Errore durante la creazione del cliente: record non trovato dopo INSERT')
   }
