@@ -1,14 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
+  ClienteRow,
   CreaRigaInput,
   CreaRicevutaInput,
   RicevutaConRighe,
   VocePagabile,
 } from '../../../../types/shared'
+import { calcolaIntestatario, indirizzoIntestatarioCompleto } from '../../utils/dominio'
+import { apriPdfBase64 } from '../../utils/pdf'
 
 interface EmittiRicevutaFormProps {
   clienteId: number
+  cliente: ClienteRow
   onSuccess: (ricevuta: RicevutaConRighe) => void
   onCancel: () => void
 }
@@ -53,6 +57,7 @@ let rigaLibId = 0
 
 export default function EmittiRicevutaForm({
   clienteId,
+  cliente,
   onSuccess,
   onCancel,
 }: EmittiRicevutaFormProps): React.JSX.Element {
@@ -67,6 +72,11 @@ export default function EmittiRicevutaForm({
   const [statoPagamento, setStatoPagamento] = useState<'pagato' | 'da_incassare'>('pagato')
   const [dictPie, setDictPie] = useState('')
   const [validationError, setValidationError] = useState('')
+
+  const intestatario = calcolaIntestatario(cliente)
+  const indirizzoOk = indirizzoIntestatarioCompleto(cliente)
+  const [ricevutaEmessa, setRicevutaEmessa] = useState<RicevutaConRighe | null>(null)
+  const [pdfError, setPdfError] = useState(false)
 
   const loadVoci = useCallback(async (): Promise<void> => {
     setSubmitState('loading')
@@ -157,6 +167,11 @@ export default function EmittiRicevutaForm({
     e.preventDefault()
     if (!validate()) return
 
+    if (!indirizzoOk) {
+      setValidationError(t('ricevute.form.indirizzo_mancante'))
+      return
+    }
+
     setSubmitState('submitting')
     try {
       const righeVoci: CreaRigaInput[] = vociPagabili
@@ -186,10 +201,55 @@ export default function EmittiRicevutaForm({
       }
 
       const ricevuta = await window.api.ricevute.crea(input)
-      onSuccess(ricevuta)
+      setRicevutaEmessa(ricevuta)
     } catch {
       setSubmitState('error')
     }
+  }
+
+  if (ricevutaEmessa) {
+    const numeroFmt = `${ricevutaEmessa.anno}-${ricevutaEmessa.numero}`
+    const handleVisualizza = async (): Promise<void> => {
+      setPdfError(false)
+      try {
+        const base64 = await window.api.pdf.genera({ ricevutaId: ricevutaEmessa.id })
+        apriPdfBase64(base64)
+      } catch {
+        setPdfError(true)
+      }
+    }
+    return (
+      <div className="space-y-5">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-400"
+        >
+          {t('ricevute.form.emessa_ok', { numero: numeroFmt })}
+        </div>
+        {pdfError && (
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+            {t('ricevute.errore_caricamento')}
+          </p>
+        )}
+        <div className="flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => void handleVisualizza()}
+            className="px-4 py-2 text-sm font-medium rounded-lg border border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+          >
+            {t('ricevute.form.visualizza_pdf')}
+          </button>
+          <button
+            type="button"
+            onClick={() => onSuccess(ricevutaEmessa)}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+          >
+            {t('ricevute.form.chiudi')}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (submitState === 'loading') {
@@ -219,6 +279,24 @@ export default function EmittiRicevutaForm({
 
   return (
     <form onSubmit={(e) => void handleSubmit(e)} noValidate className="space-y-6">
+      {/* Intestatario */}
+      <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm">
+        <span className="text-gray-500 dark:text-gray-400">{t('ricevute.form.intestatario')}: </span>
+        <span className="font-medium text-gray-900 dark:text-gray-100">
+          {intestatario.nome} {intestatario.cognome}
+        </span>
+        {intestatario.isTutore && intestatario.assistitoCf && (
+          <span className="block text-xs text-gray-500 dark:text-gray-400">
+            {t('ricevute.form.tutore_di', { cf: intestatario.assistitoCf })}
+          </span>
+        )}
+        {!indirizzoOk && (
+          <p role="alert" className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+            {t('ricevute.form.indirizzo_mancante')}
+          </p>
+        )}
+      </div>
+
       {/* Errore di submit */}
       {submitState === 'error' && vociPagabili.length > 0 && (
         <div

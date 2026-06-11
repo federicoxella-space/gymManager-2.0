@@ -1145,18 +1145,21 @@ export default function ClientDetail({
       />
 
       {/* Modal emetti ricevuta */}
-      <Modal
-        isOpen={showEmittiRicevuta}
-        onClose={() => setShowEmittiRicevuta(false)}
-        title={t('ricevute.form.titolo')}
-        maxWidth="max-w-2xl"
-      >
-        <EmittiRicevutaForm
-          clienteId={clienteId}
-          onSuccess={handleRicevutaCreata}
-          onCancel={() => setShowEmittiRicevuta(false)}
-        />
-      </Modal>
+      {cliente && (
+        <Modal
+          isOpen={showEmittiRicevuta}
+          onClose={() => setShowEmittiRicevuta(false)}
+          title={t('ricevute.form.titolo')}
+          maxWidth="max-w-2xl"
+        >
+          <EmittiRicevutaForm
+            clienteId={clienteId}
+            cliente={cliente}
+            onSuccess={handleRicevutaCreata}
+            onCancel={() => setShowEmittiRicevuta(false)}
+          />
+        </Modal>
+      )}
 
       {/* Dialog annulla ricevuta — invariante 5 */}
       <ConfirmDialog

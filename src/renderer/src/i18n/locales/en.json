@@ -295,7 +295,13 @@
       "emetti": "Issue receipt",
       "errore_nessuna_voce": "Select at least one item or add a free line.",
       "errore_riga_libera": "Each free line must have a description and a valid amount (≥ 0).",
-      "errore_salvataggio": "Error issuing receipt. Please try again."
+      "errore_salvataggio": "Error issuing receipt. Please try again.",
+      "intestatario": "Recipient",
+      "tutore_di": "Guardian of {{cf}}",
+      "indirizzo_mancante": "Complete the recipient's address in the client profile before issuing the receipt.",
+      "emessa_ok": "Receipt {{numero}} issued.",
+      "visualizza_pdf": "View PDF",
+      "chiudi": "Close"
     },
     "filtri": {
       "anno": "Year",

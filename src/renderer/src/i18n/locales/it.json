@@ -295,7 +295,13 @@
       "emetti": "Emetti ricevuta",
       "errore_nessuna_voce": "Seleziona almeno una voce o aggiungi una riga libera.",
       "errore_riga_libera": "Ogni riga libera deve avere una descrizione e un importo valido (≥ 0).",
-      "errore_salvataggio": "Errore durante l'emissione della ricevuta. Riprova."
+      "errore_salvataggio": "Errore durante l'emissione della ricevuta. Riprova.",
+      "intestatario": "Intestatario",
+      "tutore_di": "Tutore di {{cf}}",
+      "indirizzo_mancante": "Completa l'indirizzo dell'intestatario nella scheda cliente prima di emettere la ricevuta.",
+      "emessa_ok": "Ricevuta {{numero}} emessa.",
+      "visualizza_pdf": "Visualizza PDF",
+      "chiudi": "Chiudi"
     },
     "filtri": {
       "anno": "Anno",
