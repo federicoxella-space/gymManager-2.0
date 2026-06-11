@@ -75,7 +75,7 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
     | undefined
 
   if (!cliente) {
-    throw new Error(`Cliente con id ${input.clienteId} non trovato`)
+    throw new Error('CLIENTE_NOT_FOUND')
   }
 
   // A10: nessuna nuova emissione a clienti anonimizzati (invariante 7).

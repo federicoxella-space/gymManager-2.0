@@ -624,6 +624,10 @@ describe('creaRicevuta — validazioni (WP2: A9/A10)', () => {
     const r = creaRicevuta(input)
     expect(r.righe.length).toBe(1)
   })
+
+  it('rifiuta un clienteId inesistente con CLIENTE_NOT_FOUND', () => {
+    expect(() => creaRicevuta(buildInput(99999))).toThrow('CLIENTE_NOT_FOUND')
+  })
 })
 
 // ---------------------------------------------------------------------------

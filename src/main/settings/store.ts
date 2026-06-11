@@ -100,7 +100,7 @@ export function applyAppSettingsToDb(db: Database.Database, settings: Partial<Ap
       }
     }
   })
-  esegui()
+  esegui.immediate()
 }
 
 /**

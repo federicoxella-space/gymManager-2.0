@@ -170,7 +170,7 @@ export function getIndicatori(
        FROM iscrizioni_cliente ic
        JOIN clienti c ON c.id = ic.cliente_id
        WHERE c.stato = 'attivo'
-         AND ic.stato != 'invalidata'
+         AND ic.stato = 'attiva'
          AND julianday(ic.data_scadenza) - julianday(:oggi) BETWEEN 0 AND :giorni`
     )
     .get({ oggi, giorni: giorniPreavvisoIsc }) as { cnt: number }
@@ -181,7 +181,7 @@ export function getIndicatori(
        FROM abbonamenti_cliente ac
        JOIN clienti c ON c.id = ac.cliente_id
        WHERE c.stato = 'attivo'
-         AND ac.stato != 'invalidato'
+         AND ac.stato = 'attivo'
          AND julianday(ac.data_scadenza) - julianday(:oggi) BETWEEN 0 AND :giorni`
     )
     .get({ oggi, giorni: giorniPreavvisoAbb }) as { cnt: number }
