@@ -13,6 +13,8 @@ interface ConfirmDialogProps {
   /** Usa variante danger per azioni distruttive */
   variant?: 'default' | 'danger'
   isLoading?: boolean
+  /** Messaggio d'errore da mostrare nel dialog senza chiuderlo (es. vincolo violato). */
+  errorMessage?: string | null
 }
 
 export default function ConfirmDialog({
@@ -25,6 +27,7 @@ export default function ConfirmDialog({
   cancelLabel,
   variant = 'default',
   isLoading = false,
+  errorMessage = null,
 }: ConfirmDialogProps): React.JSX.Element | null {
   const { t } = useTranslation()
 
@@ -32,6 +35,15 @@ export default function ConfirmDialog({
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-md">
       <div className="space-y-5">
         <p className="text-sm text-gray-600 dark:text-gray-300">{message}</p>
+
+        {errorMessage && (
+          <div
+            role="alert"
+            className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400"
+          >
+            {errorMessage}
+          </div>
+        )}
 
         <div className="flex justify-end gap-3">
           <button
