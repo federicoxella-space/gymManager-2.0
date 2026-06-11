@@ -44,7 +44,10 @@ export function updateTipoIscrizione(
 ): TipoIscrizioneRow {
   const db = getDatabase()
 
-  const fields = Object.keys(data) as (keyof UpdateTipoIscrizioneInput)[]
+  const COLONNE_ISCRIZIONE = ['nome', 'descrizione', 'durata_mesi', 'prezzo_default', 'stato'] as const
+  const fields = (Object.keys(data) as (keyof UpdateTipoIscrizioneInput)[]).filter((f) =>
+    (COLONNE_ISCRIZIONE as readonly string[]).includes(f as string)
+  )
   if (fields.length === 0) {
     const existing = getTipoIscrizione(id)
     if (!existing) throw new Error(`TipoIscrizione con id ${id} non trovato`)
@@ -140,7 +143,10 @@ export function updateTipoAbbonamento(
 ): TipoAbbonamentoRow {
   const db = getDatabase()
 
-  const fields = Object.keys(data) as (keyof UpdateTipoAbbonamentoInput)[]
+  const COLONNE_ABBONAMENTO = ['nome', 'descrizione', 'durata_mesi', 'prezzo_default', 'categoria', 'colore', 'stato'] as const
+  const fields = (Object.keys(data) as (keyof UpdateTipoAbbonamentoInput)[]).filter((f) =>
+    (COLONNE_ABBONAMENTO as readonly string[]).includes(f as string)
+  )
   if (fields.length === 0) {
     const existing = getTipoAbbonamento(id)
     if (!existing) throw new Error(`TipoAbbonamento con id ${id} non trovato`)

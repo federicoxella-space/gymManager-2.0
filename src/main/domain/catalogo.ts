@@ -50,6 +50,32 @@ export function validaTipoAbbonamento(input: CreateTipoAbbonamentoInput): Valida
   return validaTipoBase(input)
 }
 
+/**
+ * Validazione parziale per l'aggiornamento di un tipo (iscrizione o abbonamento):
+ * controlla solo i campi presenti nell'input.
+ */
+export function validaTipoUpdate(input: Partial<CreateTipoInput>): ValidationResult {
+  const errors: Array<{ field: string; message: string }> = []
+
+  if ('nome' in input) {
+    if (!input.nome || input.nome.trim().length === 0) {
+      errors.push({ field: 'nome', message: 'Il nome è obbligatorio.' })
+    }
+  }
+  if ('durata_mesi' in input) {
+    if (!Number.isFinite(input.durata_mesi as number) || (input.durata_mesi as number) < 1) {
+      errors.push({ field: 'durata_mesi', message: 'La durata deve essere di almeno 1 mese.' })
+    }
+  }
+  if ('prezzo_default' in input) {
+    if (!Number.isFinite(input.prezzo_default as number) || (input.prezzo_default as number) < 0) {
+      errors.push({ field: 'prezzo_default', message: 'Il prezzo non può essere negativo.' })
+    }
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
 // ---------------------------------------------------------------------------
 // Proposte di date
 // ---------------------------------------------------------------------------

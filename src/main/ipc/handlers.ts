@@ -67,6 +67,7 @@ import {
   getCompleanni
 } from '../db/dashboard-repository'
 import { validaCliente, validaClienteUpdate } from '../domain/cliente'
+import { validaTipoIscrizione, validaTipoAbbonamento, validaTipoUpdate } from '../domain/catalogo'
 import type {
   AppSettings,
   DbState,
@@ -364,6 +365,11 @@ export function registerIpcHandlers(): void {
     'catalogo:tipiIscrizione:create',
     (_event, data: CreateTipoIscrizioneInput): TipoIscrizioneRow => {
       try {
+        const validation = validaTipoIscrizione(data)
+        if (!validation.valid) {
+          const errorMsg = validation.errors.map((e) => `${e.field}: ${e.message}`).join('; ')
+          throw new Error(`VALIDATION_ERROR: ${errorMsg}`)
+        }
         return createTipoIscrizione(data)
       } catch (err) {
         log.error('[ipc] catalogo:tipiIscrizione:create errore:', err)
@@ -376,6 +382,11 @@ export function registerIpcHandlers(): void {
     'catalogo:tipiIscrizione:update',
     (_event, { id, data }: { id: number; data: UpdateTipoIscrizioneInput }): TipoIscrizioneRow => {
       try {
+        const validation = validaTipoUpdate(data)
+        if (!validation.valid) {
+          const errorMsg = validation.errors.map((e) => `${e.field}: ${e.message}`).join('; ')
+          throw new Error(`VALIDATION_ERROR: ${errorMsg}`)
+        }
         return updateTipoIscrizione(id, data)
       } catch (err) {
         log.error('[ipc] catalogo:tipiIscrizione:update errore:', err)
@@ -426,6 +437,11 @@ export function registerIpcHandlers(): void {
     'catalogo:tipiAbbonamento:create',
     (_event, data: CreateTipoAbbonamentoInput): TipoAbbonamentoRow => {
       try {
+        const validation = validaTipoAbbonamento(data)
+        if (!validation.valid) {
+          const errorMsg = validation.errors.map((e) => `${e.field}: ${e.message}`).join('; ')
+          throw new Error(`VALIDATION_ERROR: ${errorMsg}`)
+        }
         return createTipoAbbonamento(data)
       } catch (err) {
         log.error('[ipc] catalogo:tipiAbbonamento:create errore:', err)
@@ -438,6 +454,11 @@ export function registerIpcHandlers(): void {
     'catalogo:tipiAbbonamento:update',
     (_event, { id, data }: { id: number; data: UpdateTipoAbbonamentoInput }): TipoAbbonamentoRow => {
       try {
+        const validation = validaTipoUpdate(data)
+        if (!validation.valid) {
+          const errorMsg = validation.errors.map((e) => `${e.field}: ${e.message}`).join('; ')
+          throw new Error(`VALIDATION_ERROR: ${errorMsg}`)
+        }
         return updateTipoAbbonamento(id, data)
       } catch (err) {
         log.error('[ipc] catalogo:tipiAbbonamento:update errore:', err)

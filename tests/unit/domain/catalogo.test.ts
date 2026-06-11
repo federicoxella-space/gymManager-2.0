@@ -7,6 +7,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   validaTipoIscrizione,
   validaTipoAbbonamento,
+  validaTipoUpdate,
   proposteDate,
 } from '../../../src/main/domain/catalogo'
 
@@ -153,5 +154,33 @@ describe('proposteDate', () => {
 
     expect(dataInizio).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(dataInizio).toBe('2025-11-01')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// validaTipoUpdate (WP2: A12)
+// ---------------------------------------------------------------------------
+
+describe('validaTipoUpdate (WP2: A12)', () => {
+  it('accetta un input vuoto (nessun campo da validare)', () => {
+    expect(validaTipoUpdate({}).valid).toBe(true)
+  })
+  it('rifiuta nome vuoto se presente', () => {
+    const res = validaTipoUpdate({ nome: '   ' })
+    expect(res.valid).toBe(false)
+    expect(res.errors.some((e) => e.field === 'nome')).toBe(true)
+  })
+  it('rifiuta durata_mesi < 1 se presente', () => {
+    const res = validaTipoUpdate({ durata_mesi: 0 })
+    expect(res.valid).toBe(false)
+    expect(res.errors.some((e) => e.field === 'durata_mesi')).toBe(true)
+  })
+  it('rifiuta prezzo_default negativo se presente', () => {
+    const res = validaTipoUpdate({ prezzo_default: -1 })
+    expect(res.valid).toBe(false)
+    expect(res.errors.some((e) => e.field === 'prezzo_default')).toBe(true)
+  })
+  it('accetta valori validi', () => {
+    expect(validaTipoUpdate({ nome: 'Mensile', durata_mesi: 1, prezzo_default: 40 }).valid).toBe(true)
   })
 })
