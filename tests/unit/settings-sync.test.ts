@@ -59,4 +59,15 @@ describe('applyAppSettingsToDb (WP2: A14)', () => {
     const r = db.prepare(`SELECT value FROM app_settings WHERE key = 'ragione_sociale'`).get()
     expect(r).toBeUndefined()
   })
+
+  it('coerce backup_on_close booleano in stringa', () => {
+    const db = _testDb!
+    applyAppSettingsToDb(db, { backup_on_close: false })
+    const f = db.prepare(`SELECT value FROM app_settings WHERE key = 'backup_on_close'`).get() as { value: string }
+    expect(f.value).toBe('false')
+
+    applyAppSettingsToDb(db, { backup_on_close: true })
+    const t = db.prepare(`SELECT value FROM app_settings WHERE key = 'backup_on_close'`).get() as { value: string }
+    expect(t.value).toBe('true')
+  })
 })

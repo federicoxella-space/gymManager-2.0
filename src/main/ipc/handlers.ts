@@ -215,6 +215,8 @@ export function registerIpcHandlers(): void {
           applyAppSettingsToDb(getDatabase(), settings)
         }
 
+        // JSON è la sorgente autorevole per le letture (loadSettings). Se saveSettings fallisce,
+        // il DB resta avanti di un passo ma viene riallineato al successivo settings:set riuscito.
         // Solo dopo il successo SQLite, persiste il file JSON.
         saveSettings(updated)
       } catch (err) {
