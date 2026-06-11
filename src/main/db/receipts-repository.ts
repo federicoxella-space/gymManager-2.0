@@ -88,19 +88,25 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
     throw new Error('RICEVUTA_SENZA_RIGHE')
   }
 
-  // A9: ogni riga con riferimento a iscrizione/abbonamento deve appartenere a questo cliente
+  // A9: ogni riga con riferimento a iscrizione/abbonamento deve appartenere a questo cliente.
+  // Le righe di tipo 'libera' non hanno un riferimento strutturato: anche se riferimentoId
+  // fosse impostato, non corrisponde a un'entità validabile e viene ignorato.
+  const checkIscrizione = db.prepare(
+    'SELECT 1 FROM iscrizioni_cliente WHERE id = ? AND cliente_id = ?'
+  )
+  const checkAbbonamento = db.prepare(
+    'SELECT 1 FROM abbonamenti_cliente WHERE id = ? AND cliente_id = ?'
+  )
   for (const riga of input.righe) {
     if (riga.riferimentoId == null) continue
     if (riga.tipo === 'iscrizione') {
-      const ok = db
-        .prepare('SELECT 1 FROM iscrizioni_cliente WHERE id = ? AND cliente_id = ?')
-        .get(riga.riferimentoId, input.clienteId)
-      if (!ok) throw new Error('RIFERIMENTO_NON_VALIDO')
+      if (!checkIscrizione.get(riga.riferimentoId, input.clienteId)) {
+        throw new Error('RIFERIMENTO_NON_VALIDO')
+      }
     } else if (riga.tipo === 'abbonamento') {
-      const ok = db
-        .prepare('SELECT 1 FROM abbonamenti_cliente WHERE id = ? AND cliente_id = ?')
-        .get(riga.riferimentoId, input.clienteId)
-      if (!ok) throw new Error('RIFERIMENTO_NON_VALIDO')
+      if (!checkAbbonamento.get(riga.riferimentoId, input.clienteId)) {
+        throw new Error('RIFERIMENTO_NON_VALIDO')
+      }
     }
   }
 

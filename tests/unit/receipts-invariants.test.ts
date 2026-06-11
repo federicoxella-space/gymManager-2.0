@@ -595,6 +595,21 @@ describe('creaRicevuta — validazioni (WP2: A9/A10)', () => {
     expect(() => creaRicevuta(input)).toThrow('RIFERIMENTO_NON_VALIDO')
   })
 
+  it('A9: rifiuta una riga abbonamento il cui riferimentoId non appartiene al cliente', () => {
+    const db = _testDb!
+    const tipoAbbId = creaTipoAbbonamento(db)
+    const clienteA = creaCliente(db, 'RSSMRA85T10H501Z')
+    const clienteB = creaCliente(db, 'VRDLCU90A41H501B')
+    const abbB = assegnaAbbonamento(db, clienteB, tipoAbbId)
+
+    const input = buildInput(clienteA, {
+      righe: [
+        { tipo: 'abbonamento', riferimentoId: abbB, descrizione: 'Abbonamento', prezzo: 40 }
+      ]
+    })
+    expect(() => creaRicevuta(input)).toThrow('RIFERIMENTO_NON_VALIDO')
+  })
+
   it('accetta una riga il cui riferimentoId appartiene al cliente', () => {
     const db = _testDb!
     const tipoIscId = creaTipoIscrizione(db)
