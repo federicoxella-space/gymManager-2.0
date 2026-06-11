@@ -178,7 +178,6 @@
       "invalida": "Invalida",
       "elimina": "Elimina"
     },
-    "tipo_assegnato_tooltip": "Non eliminabile: tipo già assegnato a dei clienti",
     "elimina_non_consentito": "Non eliminabile: assegnato a {{count}} clienti (puoi invalidarlo).",
     "elimina_errore": "Impossibile eliminare: tipo già assegnato a dei clienti.",
     "invalida_conferma_titolo": "Invalida tipo",
