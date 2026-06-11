@@ -16,7 +16,7 @@ import { getDatabase } from '../db/database'
 import type { ImpostazioniAttivitaSnapshot } from '../domain/ricevuta'
 import log from 'electron-log'
 import { checkFirstRun, openDatabase, isDatabaseOpen } from '../db/database'
-import { loadSettings, saveSettings } from '../settings/store'
+import { loadSettings, saveSettings, applyAppSettingsToDb } from '../settings/store'
 import {
   createCliente,
   getCliente,
@@ -209,29 +209,14 @@ export function registerIpcHandlers(): void {
       try {
         const current = loadSettings()
         const updated: AppSettings = { ...current, ...settings }
-        saveSettings(updated)
 
-        // Sincronizza i campi che vivono anche nella tabella SQLite app_settings
+        // A14: SQLite per primo, in transazione (atomico). Se fallisce, il file NON viene scritto.
         if (isDatabaseOpen()) {
-          const db = getDatabase()
-          const upsert = db.prepare(
-            `INSERT INTO app_settings (key, value, updated_at)
-             VALUES (?, ?, datetime('now'))
-             ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
-          )
-          if (settings.receipt_start_number !== undefined) {
-            upsert.run('receipt_start_number', String(settings.receipt_start_number))
-          }
-          if (settings.dicitura_pie !== undefined) {
-            upsert.run('dicitura_pie', settings.dicitura_pie)
-          }
-          const fieldsToSync = ['ragione_sociale', 'indirizzo_attivita', 'codice_fiscale_piva', 'logo_base64', 'backup_on_close'] as const
-          for (const field of fieldsToSync) {
-            if (settings[field] !== undefined) {
-              upsert.run(field, String(settings[field]))
-            }
-          }
+          applyAppSettingsToDb(getDatabase(), settings)
         }
+
+        // Solo dopo il successo SQLite, persiste il file JSON.
+        saveSettings(updated)
       } catch (err) {
         log.error('[ipc] settings:set errore:', err)
         throw new Error('Impossibile salvare le impostazioni')

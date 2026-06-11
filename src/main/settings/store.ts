@@ -2,6 +2,7 @@ import { join } from 'path'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { app } from 'electron'
 import log from 'electron-log'
+import type Database from 'better-sqlite3-multiple-ciphers'
 import type { AppSettings } from '../../types/shared'
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -70,6 +71,36 @@ export function loadSettings(): AppSettings {
     log.error('[settings] Errore lettura impostazioni, uso defaults:', err)
     return { ...DEFAULT_SETTINGS }
   }
+}
+
+/**
+ * Sincronizza i campi condivisi di AppSettings nella tabella SQLite app_settings,
+ * in un'unica transazione (atomica). Scrive solo i campi presenti in `settings`.
+ */
+export function applyAppSettingsToDb(db: Database.Database, settings: Partial<AppSettings>): void {
+  const upsert = db.prepare(
+    `INSERT INTO app_settings (key, value, updated_at)
+     VALUES (?, ?, datetime('now'))
+     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+  )
+  const campi = [
+    'receipt_start_number',
+    'dicitura_pie',
+    'ragione_sociale',
+    'indirizzo_attivita',
+    'codice_fiscale_piva',
+    'logo_base64',
+    'backup_on_close'
+  ] as const
+  const esegui = db.transaction(() => {
+    for (const key of campi) {
+      const v = settings[key]
+      if (v !== undefined) {
+        upsert.run(key, String(v))
+      }
+    }
+  })
+  esegui()
 }
 
 /**
