@@ -148,3 +148,17 @@ describe('calcolaCF — struttura e validità', () => {
     expect(isCodiceFiscaleValid(cf)).toBe(true)
   })
 })
+
+// Fonte del CF di riferimento: CF reale fornito dal committente (Federico Xella).
+describe('codice-fiscale — verifica contro CF reale (A7b)', () => {
+  const CF_REALE = 'XLLFRC91A06E730O'
+
+  it('isCodiceFiscaleValid accetta il CF reale di riferimento', () => {
+    expect(isCodiceFiscaleValid(CF_REALE)).toBe(true)
+  })
+
+  it('calcolaCF riproduce il CF reale dai dati anagrafici', () => {
+    const cf = calcolaCF('Federico', 'Xella', '1991-01-06', 'M', 'E730')
+    expect(cf).toBe(CF_REALE)
+  })
+})
