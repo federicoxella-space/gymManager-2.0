@@ -7,7 +7,10 @@
 // Tabelle dell'algoritmo CF
 // ---------------------------------------------------------------------------
 
-/** Valori per i caratteri in posizione PARI (0-based: 1,3,5,...) */
+/**
+ * Valori per i caratteri in posizione PARI secondo la specifica ufficiale (1-indexed: 2°,4°,6°...),
+ * che corrispondono agli indici 0-based 1,3,5,... usati nel ciclo di calcolaCarattereControllo.
+ */
 const VALORI_PARI: Record<string, number> = {
   '0': 0, '1': 1, '2': 2, '3': 3, '4': 4,
   '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
@@ -19,7 +22,10 @@ const VALORI_PARI: Record<string, number> = {
   Z: 25,
 }
 
-/** Valori per i caratteri in posizione DISPARI (0-based: 0,2,4,...) */
+/**
+ * Valori per i caratteri in posizione DISPARI secondo la specifica ufficiale (1-indexed: 1°,3°,5°...),
+ * che corrispondono agli indici 0-based 0,2,4,... usati nel ciclo di calcolaCarattereControllo.
+ */
 const VALORI_DISPARI: Record<string, number> = {
   '0': 1,  '1': 0,  '2': 5,  '3': 7,  '4': 9,
   '5': 13, '6': 15, '7': 17, '8': 19, '9': 21,
