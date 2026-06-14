@@ -7,6 +7,8 @@ import { registerIpcHandlers } from './ipc/handlers'
 import { loadSettings } from './settings/store'
 import { backupAutomatico } from './backup/backup-service'
 import { initAutoUpdater } from './updater/auto-updater'
+import { initSyncService, upload as syncUpload } from './sync/sync-service'
+import { loadSyncState, isLocalDirty } from './sync/sync-state'
 
 function createWindow(): BrowserWindow {
   const preloadPath = join(__dirname, '../preload/index.js')
@@ -33,6 +35,8 @@ function createWindow(): BrowserWindow {
     mainWindow.show()
     // Inizializza l'auto-updater dopo che la finestra è visibile
     initAutoUpdater(mainWindow)
+    // Inizializza il servizio di sincronizzazione Drive (riferimento finestra per gli eventi)
+    initSyncService(mainWindow)
   })
 
   // Apri i link esterni nel browser di sistema invece che in Electron
@@ -89,6 +93,21 @@ app.on('window-all-closed', () => {
       }
     } catch (err) {
       log.warn('[main] Errore lettura settings per backup chiusura:', err)
+    }
+
+    // Upload best-effort del sync alla chiusura, se abilitato e con modifiche locali.
+    // NB: stesso pattern best-effort del backup-on-close: il promise non è atteso, quindi
+    // la chiusura non viene rallentata. La garanzia di upload è data da "Sincronizza ora"
+    // e dal polling; questo è solo un tentativo opportunistico.
+    try {
+      const syncState = loadSyncState()
+      if (syncState.enabled && isLocalDirty(syncState)) {
+        syncUpload()
+          .then(() => log.info('[main] Upload sync alla chiusura completato'))
+          .catch((err) => log.warn('[main] Upload sync alla chiusura fallito (non bloccante):', err))
+      }
+    } catch (err) {
+      log.warn('[main] Errore valutazione sync per chiusura:', err)
     }
   }
 

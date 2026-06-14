@@ -16,6 +16,7 @@ import type { BackupManifest, DriveBackupItem, SyncStatus } from '../../types/sh
 import {
   getStatus as syncGetStatus,
   upload as syncUpload,
+  syncOnOpen,
   checkRemote as syncCheckRemote,
   resolveConflict as syncResolveConflict,
   enableSync as syncEnable,
@@ -180,6 +181,8 @@ export function registerIpcHandlers(): void {
         aggiornaStatoIscrizioni()
         aggiornaStatoAbbonamenti()
         log.info('[ipc] db:unlock completato')
+        // Verifica sync non bloccante: non deve ritardare la risposta dell'unlock.
+        void syncOnOpen().catch((err) => log.warn('[sync] open check fallito:', err))
       } catch (err) {
         log.error('[ipc] db:unlock errore:', err)
         if (err instanceof Error && err.message === 'PASSWORD_WRONG') {
