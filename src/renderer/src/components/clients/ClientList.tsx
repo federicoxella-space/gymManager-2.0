@@ -34,7 +34,7 @@ function IscrizioneBadge({ stato, scadenza }: IscrizioneBadgeProps): React.JSX.E
       <span className="flex flex-col gap-0.5">
         <Badge variant="success">{t('iscrizioni.stato.attiva')}</Badge>
         {formatted && (
-          <span className="text-xs text-gray-400 dark:text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
             {t('iscrizioni.scadenza_breve', { data: formatted })}
           </span>
         )}

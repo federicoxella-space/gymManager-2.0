@@ -93,7 +93,7 @@ export default function ScadenzeWidget({
                     <span className="text-sm text-gray-900 dark:text-gray-100 truncate">
                       {voce.nome} {voce.cognome}
                     </span>
-                    <span className="text-sm text-gray-400 dark:text-gray-500 truncate hidden sm:inline">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 truncate hidden sm:inline">
                       {voce.nome_tipo}
                     </span>
                   </div>

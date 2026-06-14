@@ -1195,7 +1195,7 @@ export default function SettingsPage(): React.JSX.Element {
               {t('aggiornamento.errore_verifica')}
             </p>
             {updateErrorMsg !== null && (
-              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500 font-mono break-all">
+              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 font-mono break-all">
                 {updateErrorMsg}
               </p>
             )}
