@@ -11,6 +11,7 @@ import {
 import { join, dirname } from 'path'
 import log from 'electron-log'
 import { DB_PATH, getDatabase, isDatabaseOpen } from '../db/database'
+import { loadSettings } from '../settings/store'
 
 export interface BackupManifest {
   /** Versione schema DB al momento del backup (PRAGMA user_version). */
@@ -22,9 +23,6 @@ export interface BackupManifest {
   /** Percorso originale del file DB (per info). */
   dbPath: string
 }
-
-/** Numero massimo di backup automatici da conservare. */
-const MAX_AUTO_BACKUPS = 5
 
 /**
  * Legge PRAGMA user_version dal DB aperto.
@@ -75,49 +73,62 @@ export async function backupLocale(destinazionePath: string): Promise<BackupMani
   return manifest
 }
 
+/** Default di retention se le impostazioni non sono risolvibili. */
+const DEFAULT_RETENTION = 10
+
 /**
- * Esegue un backup automatico nella cartella di default
- * (`userData/backups/backup_YYYYMMDD_HHMMSS.db`).
+ * Risolve la cartella di backup: usa `backupDir` se valorizzata, altrimenti `defaultDir`.
+ * Funzione pura (nessun side effect), testabile senza filesystem.
+ */
+export function risolviCartellaBackup(backupDir: string, defaultDir: string): string {
+  return backupDir.trim().length > 0 ? backupDir.trim() : defaultDir
+}
+
+/**
+ * Esegue un backup nella cartella configurata (o quella di default),
+ * con nome `backup_YYYYMMDD_HHMMSS.db`. Mantiene gli ultimi `retention` backup
+ * (prefisso `backup_`: manuali e automatici condividono la rotazione).
  *
- * Mantiene al massimo MAX_AUTO_BACKUPS backup automatici,
- * cancellando i più vecchi in eccesso.
- *
+ * Se `opts` non fornisce `dir`/`retention`, vengono letti dalle impostazioni.
  * @returns Il percorso del file di backup creato
  */
-export async function backupAutomatico(): Promise<string> {
-  const backupDir = join(app.getPath('userData'), 'backups')
-  mkdirSync(backupDir, { recursive: true })
+export async function backupAutomatico(opts?: { dir?: string; retention?: number }): Promise<string> {
+  const defaultDir = join(app.getPath('userData'), 'backups')
+  let backupDir = opts?.dir
+  let retention = opts?.retention
+  if (backupDir === undefined || retention === undefined) {
+    const settings = loadSettings()
+    backupDir = backupDir ?? risolviCartellaBackup(settings.backup_dir, defaultDir)
+    retention = retention ?? settings.backup_retention
+  }
+  const targetDir = backupDir
+  const keep = Number.isFinite(retention) && retention > 0 ? Math.floor(retention) : DEFAULT_RETENTION
 
-  // Nome file: backup_YYYYMMDD_HHMMSS.db
+  mkdirSync(targetDir, { recursive: true })
+
   const now = new Date()
   const pad = (n: number): string => String(n).padStart(2, '0')
   const datePart =
     `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}` +
     `_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`
-  const backupPath = join(backupDir, `backup_${datePart}.db`)
+  const backupPath = join(targetDir, `backup_${datePart}.db`)
 
   await backupLocale(backupPath)
-  log.info(`[backup] Backup automatico creato: ${backupPath}`)
+  log.info(`[backup] Backup creato: ${backupPath}`)
 
-  // Rimuovi i backup automatici in eccesso (i più vecchi prima)
-  const files = readdirSync(backupDir)
+  const files = readdirSync(targetDir)
     .filter((f) => f.startsWith('backup_') && f.endsWith('.db'))
-    .map((f) => ({
-      name: f,
-      path: join(backupDir, f),
-      mtime: statSync(join(backupDir, f)).mtimeMs
-    }))
-    .sort((a, b) => a.mtime - b.mtime) // più vecchi prima
+    .map((f) => ({ name: f, path: join(targetDir, f), mtime: statSync(join(targetDir, f)).mtimeMs }))
+    .sort((a, b) => a.mtime - b.mtime)
 
-  if (files.length > MAX_AUTO_BACKUPS) {
-    const toDelete = files.slice(0, files.length - MAX_AUTO_BACKUPS)
+  if (files.length > keep) {
+    const toDelete = files.slice(0, files.length - keep)
     for (const file of toDelete) {
       try {
         unlinkSync(file.path)
-        // Rimuovi anche il manifest se esiste
         const manifestPath = file.path + '.manifest.json'
         if (existsSync(manifestPath)) unlinkSync(manifestPath)
-        log.info(`[backup] Backup automatico rimosso (eccesso): ${file.name}`)
+        log.info(`[backup] Backup rimosso (eccesso): ${file.name}`)
       } catch (err) {
         log.warn(`[backup] Impossibile rimuovere backup obsoleto ${file.name}:`, err)
       }

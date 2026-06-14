@@ -65,7 +65,7 @@ const TEST_USER_DATA = join(tmpdir(), `gymmanager-backup-test-${process.pid}`)
 // Import DOPO i mock
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { backupLocale, backupAutomatico } from '../../src/main/backup/backup-service'
+import { backupLocale, backupAutomatico, risolviCartellaBackup } from '../../src/main/backup/backup-service'
 import { verificaBackup, ripristinaBackup, resetDatabase } from '../../src/main/backup/restore-service'
 import {
   connectDrive,
@@ -271,7 +271,7 @@ describe('backupAutomatico', () => {
     }
   })
 
-  it('mantiene al massimo 5 backup automatici', async () => {
+  it('mantiene al massimo 5 backup automatici (retention esplicita)', async () => {
     creaDbDiTest(DB_PATH)
     const backupDir = join(TEST_USER_DATA, 'backups')
     mkdirSync(backupDir, { recursive: true })
@@ -285,7 +285,8 @@ describe('backupAutomatico', () => {
       fakeFiles.push(fakePath)
     }
 
-    const backupPath = await backupAutomatico()
+    // Passa retention: 5 esplicitamente per non dipendere da MAX_AUTO_BACKUPS rimosso
+    const backupPath = await backupAutomatico({ dir: backupDir, retention: 5 })
 
     try {
       const files = readdirSync(backupDir).filter(
@@ -536,3 +537,43 @@ describe('round-trip integrazione: backup → restore → DB apribile', () => {
   })
 })
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Suite 8: risolviCartellaBackup
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('risolviCartellaBackup', () => {
+  it('ritorna il default se la cartella è vuota o whitespace', () => {
+    expect(risolviCartellaBackup('', '/def')).toBe('/def')
+    expect(risolviCartellaBackup('   ', '/def')).toBe('/def')
+  })
+  it('ritorna la cartella configurata se valorizzata', () => {
+    expect(risolviCartellaBackup('/custom', '/def')).toBe('/custom')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Suite 9: backupAutomatico — cartella e retention parametriche
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('backupAutomatico — cartella e retention parametriche', () => {
+  it('scrive nella cartella passata in opts', async () => {
+    const dir = join(TEST_USER_DATA, 'custom-bk')
+    creaDbDiTest(DB_PATH)
+    const p = await backupAutomatico({ dir, retention: 10 })
+    expect(p.startsWith(dir)).toBe(true)
+    expect(existsSync(p)).toBe(true)
+  })
+
+  it('ruota mantenendo esattamente `retention` file', async () => {
+    const dir = join(TEST_USER_DATA, 'rot-bk')
+    mkdirSync(dir, { recursive: true })
+    for (let i = 0; i < 6; i++) {
+      const f = join(dir, `backup_2026010${i}_000000.db`)
+      writeFileSync(f, 'x')
+    }
+    creaDbDiTest(DB_PATH)
+    await backupAutomatico({ dir, retention: 3 })
+    const rimasti = readdirSync(dir).filter((f) => f.startsWith('backup_') && f.endsWith('.db'))
+    expect(rimasti.length).toBe(3)
+  })
+})
