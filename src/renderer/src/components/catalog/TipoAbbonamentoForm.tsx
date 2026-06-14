@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
   TipoAbbonamentoRow,
@@ -45,6 +45,10 @@ export default function TipoAbbonamentoForm({
 }: TipoAbbonamentoFormProps): React.JSX.Element {
   const { t } = useTranslation()
   const isEdit = initialData !== undefined
+
+  const nomeErrId = useId()
+  const durataErrId = useId()
+  const prezzoErrId = useId()
 
   const [nome, setNome] = useState(initialData?.nome ?? '')
   const [descrizione, setDescrizione] = useState(initialData?.descrizione ?? '')
@@ -144,11 +148,13 @@ export default function TipoAbbonamentoForm({
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           disabled={isSubmitting}
+          aria-invalid={nomeError ? true : undefined}
+          aria-describedby={nomeError ? nomeErrId : undefined}
           className={inputClass}
           autoFocus
         />
         {nomeError && (
-          <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+          <p id={nomeErrId} role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
             {nomeError}
           </p>
         )}
@@ -183,10 +189,12 @@ export default function TipoAbbonamentoForm({
             value={durataMesi}
             onChange={(e) => setDurataMesi(e.target.value)}
             disabled={isSubmitting}
+            aria-invalid={durataError ? true : undefined}
+            aria-describedby={durataError ? durataErrId : undefined}
             className={inputClass}
           />
           {durataError && (
-            <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+            <p id={durataErrId} role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
               {durataError}
             </p>
           )}
@@ -203,10 +211,12 @@ export default function TipoAbbonamentoForm({
             value={prezzoDefault}
             onChange={(e) => setPrezzoDefault(e.target.value)}
             disabled={isSubmitting}
+            aria-invalid={prezzoError ? true : undefined}
+            aria-describedby={prezzoError ? prezzoErrId : undefined}
             className={inputClass}
           />
           {prezzoError && (
-            <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+            <p id={prezzoErrId} role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
               {prezzoError}
             </p>
           )}

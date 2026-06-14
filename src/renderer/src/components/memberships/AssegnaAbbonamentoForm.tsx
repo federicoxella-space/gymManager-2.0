@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AbbonamentoClienteRow, IscrizioneClienteRow, TipoAbbonamentoRow } from '../../../../types/shared'
 
@@ -50,6 +50,11 @@ export default function AssegnaAbbonamentoForm({
   onCancel,
 }: AssegnaAbbonamentoFormProps): React.JSX.Element {
   const { t } = useTranslation()
+
+  const tipoErrId = useId()
+  const dataInizioErrId = useId()
+  const dataScadenzaErrId = useId()
+  const prezzoErrId = useId()
 
   const tipiAttivi = tipiDisponibili.filter((tp) => tp.stato === 'attivo')
 
@@ -211,6 +216,8 @@ export default function AssegnaAbbonamentoForm({
           value={tipoId}
           onChange={(e) => setTipoId(e.target.value)}
           disabled={isSubmitting}
+          aria-invalid={tipoError ? true : undefined}
+          aria-describedby={tipoError ? tipoErrId : undefined}
           className={inputClass}
         >
           <option value="">{t('abbonamenti.form.tipo_seleziona')}</option>
@@ -223,7 +230,7 @@ export default function AssegnaAbbonamentoForm({
           ))}
         </select>
         {tipoError && (
-          <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+          <p id={tipoErrId} role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
             {tipoError}
           </p>
         )}
@@ -242,10 +249,12 @@ export default function AssegnaAbbonamentoForm({
             value={dataInizio}
             onChange={(e) => setDataInizio(e.target.value)}
             disabled={isSubmitting}
+            aria-invalid={dataIniziError ? true : undefined}
+            aria-describedby={dataIniziError ? dataInizioErrId : undefined}
             className={inputClass}
           />
           {dataIniziError && (
-            <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+            <p id={dataInizioErrId} role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
               {dataIniziError}
             </p>
           )}
@@ -261,10 +270,12 @@ export default function AssegnaAbbonamentoForm({
             value={dataScadenza}
             onChange={(e) => setDataScadenza(e.target.value)}
             disabled={isSubmitting}
+            aria-invalid={dataScadenzaError ? true : undefined}
+            aria-describedby={dataScadenzaError ? dataScadenzaErrId : undefined}
             className={inputClass}
           />
           {dataScadenzaError && (
-            <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+            <p id={dataScadenzaErrId} role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
               {dataScadenzaError}
             </p>
           )}
@@ -284,10 +295,12 @@ export default function AssegnaAbbonamentoForm({
           value={prezzo}
           onChange={(e) => setPrezzo(e.target.value)}
           disabled={isSubmitting}
+          aria-invalid={prezzoError ? true : undefined}
+          aria-describedby={prezzoError ? prezzoErrId : undefined}
           className={inputClass}
         />
         {prezzoError && (
-          <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
+          <p id={prezzoErrId} role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">
             {prezzoError}
           </p>
         )}
