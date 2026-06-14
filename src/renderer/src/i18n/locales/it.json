@@ -482,7 +482,15 @@
     "cambia_password_errore_conferma": "Le password non coincidono.",
     "cambia_password_errore_generico": "Errore durante il cambio password. Riprova.",
     "cambia_password_completato": "Password aggiornata con successo.",
-    "cambia_password_hint": "Minimo 8 caratteri."
+    "cambia_password_hint": "Minimo 8 caratteri.",
+    "drive_ripristina_titolo": "Ripristino da Google Drive",
+    "drive_ripristina_pulsante": "Ripristina da Drive…",
+    "drive_lista_vuota": "Nessun backup trovato su Drive.",
+    "drive_lista_caricamento": "Caricamento backup…",
+    "drive_lista_errore": "Errore nel caricamento dei backup da Drive.",
+    "drive_ripristina_scegli": "Seleziona il backup da ripristinare",
+    "drive_ripristina_completato": "Ripristino da Drive completato. L'app verrà riavviata.",
+    "drive_ripristina_errore": "Errore durante il ripristino da Drive. Verifica la password."
   },
   "abbonamenti": {
     "assegna": "Assegna abbonamento",
