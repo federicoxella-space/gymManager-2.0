@@ -37,6 +37,13 @@ export type DbState = 'firstRun' | 'locked' | 'ready'
 
 export type StatoCertificato = 'valido' | 'in_scadenza' | 'scaduto'
 
+export interface ComuneInfo {
+  nome: string
+  codiceCatastale: string
+  sigla: string
+  provincia: string
+}
+
 export type { ValidationResult, ValidationError } from '../main/domain/cliente'
 export type { CertificatoConStato } from '../main/domain/certificato-medico'
 
@@ -512,6 +519,10 @@ export interface ElectronAPI {
       list: () => Promise<DriveBackupItem[]>
       restore: (args: { fileId: string; password: string }) => Promise<void>
     }
+  }
+  cf: {
+    cercaComuni: (query: string) => Promise<ComuneInfo[]>
+    calcola: (input: { nome: string; cognome: string; dataNascita: string; sesso: 'M' | 'F'; codiceComune: string }) => Promise<string>
   }
   dialog: {
     showOpenDialog: (options?: {

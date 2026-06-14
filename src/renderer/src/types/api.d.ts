@@ -307,6 +307,15 @@ interface CreaRicevutaInput {
   righe: CreaRigaInput[]
 }
 
+// ── Codice Fiscale ────────────────────────────────────────────────────────────
+
+interface ComuneInfo {
+  nome: string
+  codiceCatastale: string
+  sigla: string
+  provincia: string
+}
+
 // ── Backup ────────────────────────────────────────────────────────────────────
 
 interface BackupManifest {
@@ -413,6 +422,10 @@ interface ElectronAPI {
       list: () => Promise<DriveBackupItem[]>
       restore: (args: { fileId: string; password: string }) => Promise<void>
     }
+  }
+  cf: {
+    cercaComuni: (query: string) => Promise<ComuneInfo[]>
+    calcola: (input: { nome: string; cognome: string; dataNascita: string; sesso: 'M' | 'F'; codiceComune: string }) => Promise<string>
   }
   dialog: {
     showOpenDialog: (options?: {

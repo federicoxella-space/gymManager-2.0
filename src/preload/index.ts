@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { exposeElectronAPI } from '@electron-toolkit/preload'
 import type {
   AppSettings,
+  ComuneInfo,
   ElectronAPI,
   DbState,
   ClienteRow,
@@ -269,6 +270,21 @@ const api: ElectronAPI = {
     }
   },
 
+  cf: {
+    cercaComuni(query: string): Promise<ComuneInfo[]> {
+      return ipcRenderer.invoke('cf:cercaComuni', query)
+    },
+    calcola(input: {
+      nome: string
+      cognome: string
+      dataNascita: string
+      sesso: 'M' | 'F'
+      codiceComune: string
+    }): Promise<string> {
+      return ipcRenderer.invoke('cf:calcola', input)
+    }
+  },
+
   dialog: {
     showOpenDialog(options?: {
       title?: string
@@ -307,6 +323,7 @@ contextBridge.exposeInMainWorld('api', api)
 // Re-esporta i tipi per l'uso nel renderer (tree-shaken in produzione)
 export type {
   AppSettings,
+  ComuneInfo,
   ElectronAPI,
   DbState,
   ClienteRow,

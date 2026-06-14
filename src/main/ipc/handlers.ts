@@ -69,10 +69,13 @@ import {
   getNuoviTesseramenti,
   getCompleanni
 } from '../db/dashboard-repository'
+import { cercaComuni } from '../domain/comuni'
+import { calcolaCF } from '../domain/codice-fiscale'
 import { validaCliente, validaClienteUpdate } from '../domain/cliente'
 import { validaTipoIscrizione, validaTipoAbbonamento, validaTipoUpdate } from '../domain/catalogo'
 import type {
   AppSettings,
+  ComuneInfo,
   DbState,
   ClienteRow,
   CreateClienteInput,
@@ -1025,6 +1028,41 @@ export function registerIpcHandlers(): void {
         if (existsSync(tempPath)) {
           try { unlinkSync(tempPath) } catch { /* ignore */ }
         }
+      }
+    }
+  )
+
+  // ── Codice Fiscale ────────────────────────────────────────────────────────
+
+  ipcMain.handle('cf:cercaComuni', (_event, query: string): ComuneInfo[] => {
+    try {
+      return cercaComuni(query, 20)
+    } catch (err) {
+      log.error('[ipc] cf:cercaComuni errore:', err)
+      throw err instanceof Error ? err : new Error('Errore nella ricerca comuni')
+    }
+  })
+
+  ipcMain.handle(
+    'cf:calcola',
+    (
+      _event,
+      {
+        nome,
+        cognome,
+        dataNascita,
+        sesso,
+        codiceComune
+      }: { nome: string; cognome: string; dataNascita: string; sesso: 'M' | 'F'; codiceComune: string }
+    ): string => {
+      try {
+        if (!nome?.trim() || !cognome?.trim() || !dataNascita || (sesso !== 'M' && sesso !== 'F') || !codiceComune?.trim()) {
+          throw new Error('VALIDATION_ERROR: dati insufficienti per il calcolo del CF')
+        }
+        return calcolaCF(nome, cognome, dataNascita, sesso, codiceComune)
+      } catch (err) {
+        log.error('[ipc] cf:calcola errore:', err)
+        throw err instanceof Error ? err : new Error('Errore nel calcolo del codice fiscale')
       }
     }
   )

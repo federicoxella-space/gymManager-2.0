@@ -1,11 +1,7 @@
 import comuniData from 'comuni-json/comuni.json'
+import type { ComuneInfo } from '../../types/shared'
 
-export interface ComuneInfo {
-  nome: string
-  codiceCatastale: string
-  sigla: string
-  provincia: string
-}
+export type { ComuneInfo }
 
 interface RawComune {
   nome: string
