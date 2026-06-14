@@ -15,6 +15,8 @@ interface EmittiRicevutaFormProps {
   cliente: ClienteRow
   onSuccess: (ricevuta: RicevutaConRighe) => void
   onCancel: () => void
+  /** Se passato, preseleziona la voce corrispondente (oltre a quelle da incassare). */
+  preselect?: { tipo: 'iscrizione' | 'abbonamento'; riferimentoId: number }
 }
 
 type SubmitState = 'idle' | 'loading' | 'submitting' | 'error'
@@ -60,6 +62,7 @@ export default function EmittiRicevutaForm({
   cliente,
   onSuccess,
   onCancel,
+  preselect,
 }: EmittiRicevutaFormProps): React.JSX.Element {
   const { t } = useTranslation()
 
@@ -90,7 +93,14 @@ export default function EmittiRicevutaForm({
       const idxDaIncassare = voci
         .map((v, idx) => (v.stato_pagamento === 'da_incassare' ? idx : -1))
         .filter((idx) => idx >= 0)
-      setVociSelezionate(new Set(idxDaIncassare))
+      const selezione = new Set(idxDaIncassare)
+      if (preselect) {
+        const idxPre = voci.findIndex(
+          (v) => v.tipo === preselect.tipo && v.riferimentoId === preselect.riferimentoId,
+        )
+        if (idxPre >= 0) selezione.add(idxPre)
+      }
+      setVociSelezionate(selezione)
       // Precarica dicitura dalle impostazioni se disponibile
       const diciaturaDefault = settings.dicitura_pie ?? ''
       setDictPie(diciaturaDefault)
@@ -98,7 +108,7 @@ export default function EmittiRicevutaForm({
     } catch {
       setSubmitState('error')
     }
-  }, [clienteId])
+  }, [clienteId, preselect])
 
   useEffect(() => {
     void loadVoci()
