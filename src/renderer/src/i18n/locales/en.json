@@ -57,7 +57,9 @@
     "tabella_abbonamenti": "Subscriptions list",
     "tabella_certificati": "Medical certificates list",
     "tabella_tipi_iscrizione": "Membership types",
-    "tabella_tipi_abbonamento": "Subscription types"
+    "tabella_tipi_abbonamento": "Subscription types",
+    "seleziona_periodo": "Select period",
+    "apre_nuova_finestra": "(opens in a new window)"
   },
   "clienti": {
     "titolo": "Clients",

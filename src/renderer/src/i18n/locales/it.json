@@ -57,7 +57,9 @@
     "tabella_abbonamenti": "Elenco abbonamenti",
     "tabella_certificati": "Elenco certificati medici",
     "tabella_tipi_iscrizione": "Tipi di iscrizione",
-    "tabella_tipi_abbonamento": "Tipi di abbonamento"
+    "tabella_tipi_abbonamento": "Tipi di abbonamento",
+    "seleziona_periodo": "Seleziona periodo",
+    "apre_nuova_finestra": "(apre in una nuova finestra)"
   },
   "clienti": {
     "titolo": "Clienti",

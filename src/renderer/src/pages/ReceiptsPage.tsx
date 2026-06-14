@@ -358,7 +358,7 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
                         disabled={pdfLoading === r.id}
                         title={t('ricevute.azioni.visualizza')}
                         className="p-1.5 rounded-md text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors disabled:opacity-50"
-                        aria-label={t('ricevute.azioni.visualizza')}
+                        aria-label={`${t('ricevute.azioni.visualizza')} ${t('common.apre_nuova_finestra')}`}
                       >
                         {pdfLoading === r.id ? (
                           <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />

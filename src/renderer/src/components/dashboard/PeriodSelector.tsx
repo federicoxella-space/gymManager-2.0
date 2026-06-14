@@ -69,8 +69,8 @@ export default function PeriodSelector({
       {/* Button group per il tipo di periodo */}
       <div
         className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
-        role="group"
-        aria-label={t('dashboard.titolo')}
+        role="radiogroup"
+        aria-label={t('common.seleziona_periodo')}
       >
         {OPZIONI.map((opzione) => {
           const isActive = periodo.tipo === opzione
@@ -78,8 +78,9 @@ export default function PeriodSelector({
             <button
               key={opzione}
               type="button"
+              role="radio"
+              aria-checked={isActive}
               onClick={() => handleTipoChange(opzione)}
-              aria-pressed={isActive}
               className={[
                 'px-3 py-1.5 text-sm font-medium transition-colors border-r border-gray-200 dark:border-gray-700 last:border-r-0',
                 isActive

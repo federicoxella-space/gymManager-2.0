@@ -998,7 +998,7 @@ export default function ClientDetail({
                               onClick={() => void handleVisualizzaPdf(r)}
                               disabled={pdfLoadingId === r.id}
                               title={t('ricevute.azioni.visualizza')}
-                              aria-label={t('ricevute.azioni.visualizza')}
+                              aria-label={`${t('ricevute.azioni.visualizza')} ${t('common.apre_nuova_finestra')}`}
                               className="p-1.5 rounded-md text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors disabled:opacity-50"
                             >
                               {pdfLoadingId === r.id ? (
