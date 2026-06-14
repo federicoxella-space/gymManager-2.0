@@ -296,7 +296,7 @@ function TipoIscrizioneRow({
         )}
       </td>
       <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-        {tipo.durata_mesi} {tipo.durata_mesi === 1 ? 'mese' : 'mesi'}
+        {tipo.durata_mesi} {tipo.durata_mesi === 1 ? t('common.mese') : t('common.mesi')}
       </td>
       <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
         {formatValuta(tipo.prezzo_default)}
@@ -598,7 +598,7 @@ function TipoAbbonamentoRow({
         {tipo.categoria ?? '—'}
       </td>
       <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-        {tipo.durata_mesi} {tipo.durata_mesi === 1 ? 'mese' : 'mesi'}
+        {tipo.durata_mesi} {tipo.durata_mesi === 1 ? t('common.mese') : t('common.mesi')}
       </td>
       <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
         {formatValuta(tipo.prezzo_default)}

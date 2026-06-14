@@ -188,7 +188,7 @@ export default function AssegnaIscrizioneForm({
           <option value="">{t('iscrizioni.form.tipo_seleziona')}</option>
           {tipiAttivi.map((tipo) => (
             <option key={tipo.id} value={String(tipo.id)}>
-              {tipo.nome} — {tipo.durata_mesi} {tipo.durata_mesi === 1 ? 'mese' : 'mesi'}
+              {tipo.nome} — {tipo.durata_mesi} {tipo.durata_mesi === 1 ? t('common.mese') : t('common.mesi')}
             </option>
           ))}
         </select>

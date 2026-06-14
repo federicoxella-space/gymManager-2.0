@@ -49,6 +49,8 @@
     "error_generic": "An error occurred. Please try again.",
     "riprova": "Retry",
     "actions": "Actions",
+    "mese": "month",
+    "mesi": "months",
     "coming_soon": "Available in subsequent phases",
     "campi_obbligatori": "Fields marked with * are required",
     "tabella_clienti": "Clients list",

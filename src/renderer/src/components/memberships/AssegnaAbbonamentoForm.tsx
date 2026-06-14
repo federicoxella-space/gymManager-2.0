@@ -225,7 +225,7 @@ export default function AssegnaAbbonamentoForm({
             <option key={tipo.id} value={String(tipo.id)}>
               {tipo.nome}
               {tipo.categoria ? ` (${tipo.categoria})` : ''} — {tipo.durata_mesi}{' '}
-              {tipo.durata_mesi === 1 ? 'mese' : 'mesi'}
+              {tipo.durata_mesi === 1 ? t('common.mese') : t('common.mesi')}
             </option>
           ))}
         </select>
