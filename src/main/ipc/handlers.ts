@@ -42,6 +42,7 @@ import {
 } from '../db/catalog-repository'
 import {
   assegnaIscrizione,
+  rinnovaIscrizione,
   getIscrizioneAttiva,
   listIscrizioni,
   updateIscrizioneDate,
@@ -519,6 +520,15 @@ export function registerIpcHandlers(): void {
       }
     }
   )
+
+  ipcMain.handle('iscrizioni:rinnova', (_event, args: { vecchiaId: number | null; data: AssegnaIscrizioneInput }) => {
+    try {
+      return rinnovaIscrizione(args.vecchiaId, args.data)
+    } catch (err) {
+      log.error('[ipc] iscrizioni:rinnova errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante il rinnovo iscrizione')
+    }
+  })
 
   ipcMain.handle(
     'iscrizioni:getAttiva',

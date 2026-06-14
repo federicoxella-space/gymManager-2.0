@@ -111,11 +111,7 @@ export default function AssegnaIscrizioneForm({
     if (!validate()) return
     setSubmitState('submitting')
     try {
-      // INVARIANTE 1: se esiste un'iscrizione attiva, la invalidiamo prima di assegnare la nuova
-      if (iscrizioneAttiva) {
-        await window.api.iscrizioni.invalida(iscrizioneAttiva.id)
-      }
-      const result = await window.api.iscrizioni.assegna({
+      const payload = {
         cliente_id: clienteId,
         tipo_iscrizione_id: Number(tipoId),
         data_inizio: dataInizio,
@@ -123,7 +119,10 @@ export default function AssegnaIscrizioneForm({
         prezzo: Number(prezzo),
         stato_pagamento: statoPagamento,
         metodo_pagamento: statoPagamento === 'pagato' ? metodoPagamento : undefined,
-      })
+      }
+      const result = iscrizioneAttiva
+        ? await window.api.iscrizioni.rinnova(iscrizioneAttiva.id, payload)
+        : await window.api.iscrizioni.assegna(payload)
       setSubmitState('idle')
       onSuccess(result, emettiRicevuta)
     } catch {

@@ -145,6 +145,9 @@ const api: ElectronAPI = {
     assegna(data: AssegnaIscrizioneInput): Promise<IscrizioneClienteRow> {
       return ipcRenderer.invoke('iscrizioni:assegna', data)
     },
+    rinnova(vecchiaId: number | null, data: AssegnaIscrizioneInput): Promise<IscrizioneClienteRow> {
+      return ipcRenderer.invoke('iscrizioni:rinnova', { vecchiaId, data })
+    },
     getAttiva(clienteId: number): Promise<IscrizioneClienteRow | null> {
       return ipcRenderer.invoke('iscrizioni:getAttiva', { clienteId })
     },

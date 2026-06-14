@@ -378,6 +378,7 @@ interface ElectronAPI {
   }
   iscrizioni: {
     assegna: (data: AssegnaIscrizioneInput) => Promise<IscrizioneClienteRow>
+    rinnova: (vecchiaId: number | null, data: AssegnaIscrizioneInput) => Promise<IscrizioneClienteRow>
     getAttiva: (clienteId: number) => Promise<IscrizioneClienteRow | null>
     list: (clienteId: number) => Promise<IscrizioneClienteRow[]>
     updateDate: (id: number, dataInizio: string, dataScadenza: string) => Promise<IscrizioneClienteRow>

@@ -145,6 +145,63 @@ export function updateIscrizioneDate(
 }
 
 /**
+ * Rinnova un'iscrizione in modo atomico: invalida l'iscrizione attiva corrente (se presente)
+ * e crea la nuova, in un'unica transazione immediate. Invariante 1 garantita: se al momento
+ * dell'inserimento esiste ancora un'altra iscrizione attiva, l'intera operazione fallisce.
+ */
+export function rinnovaIscrizione(
+  vecchiaId: number | null,
+  data: AssegnaIscrizioneInput,
+): IscrizioneClienteRow {
+  const db = getDatabase()
+  assertClienteAttivo(db, data.cliente_id)
+
+  const esegui = db.transaction((): IscrizioneClienteRow => {
+    if (vecchiaId !== null) {
+      const upd = db
+        .prepare("UPDATE iscrizioni_cliente SET stato = 'invalidata' WHERE id = ? AND cliente_id = ? AND stato = 'attiva'")
+        .run(vecchiaId, data.cliente_id)
+      if (upd.changes === 0) {
+        throw new Error('ISCRIZIONE_NON_ATTIVA')
+      }
+    }
+    const altraAttiva = db
+      .prepare("SELECT id FROM iscrizioni_cliente WHERE cliente_id = ? AND stato = 'attiva'")
+      .get(data.cliente_id)
+    if (altraAttiva) {
+      throw new Error('ISCRIZIONE_GIA_ATTIVA')
+    }
+    const info = db
+      .prepare(`
+        INSERT INTO iscrizioni_cliente (
+          cliente_id, tipo_iscrizione_id, data_inizio, data_scadenza,
+          prezzo, stato_pagamento, metodo_pagamento, note
+        ) VALUES (
+          @cliente_id, @tipo_iscrizione_id, @data_inizio, @data_scadenza,
+          @prezzo, @stato_pagamento, @metodo_pagamento, @note
+        )
+      `)
+      .run({
+        cliente_id: data.cliente_id,
+        tipo_iscrizione_id: data.tipo_iscrizione_id,
+        data_inizio: data.data_inizio,
+        data_scadenza: data.data_scadenza,
+        prezzo: data.prezzo,
+        stato_pagamento: data.stato_pagamento,
+        metodo_pagamento: data.metodo_pagamento ?? null,
+        note: data.note ?? null,
+      })
+    const created = db
+      .prepare('SELECT * FROM iscrizioni_cliente WHERE id = ?')
+      .get(info.lastInsertRowid) as IscrizioneClienteRow | undefined
+    if (!created) throw new Error('Errore durante il rinnovo: record non trovato dopo INSERT')
+    return created
+  })
+
+  return esegui.immediate()
+}
+
+/**
  * Porta l'iscrizione allo stato 'invalidata'.
  */
 export function invalidaIscrizione(id: number): IscrizioneClienteRow {

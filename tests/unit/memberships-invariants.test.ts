@@ -31,7 +31,9 @@ vi.mock('../../src/main/db/database', () => ({
 import { runMigrations } from '../../src/main/db/migrations'
 import {
   assegnaIscrizione,
+  rinnovaIscrizione,
   getIscrizioneAttiva,
+  listIscrizioni,
   invalidaIscrizione,
   assegnaAbbonamento,
   updateIscrizioneDate,
@@ -619,5 +621,78 @@ describe('aggiornaStatoIscrizioni / aggiornaStatoAbbonamenti (WP1: A2)', () => {
       .prepare('SELECT stato FROM abbonamenti_cliente WHERE id = ?')
       .get(id) as { stato: string }
     expect(row.stato).toBe('scaduto')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C12 — Rinnovo iscrizione atomico (rinnovaIscrizione)
+// ---------------------------------------------------------------------------
+
+describe('rinnovaIscrizione (C12: rinnovo atomico)', () => {
+  it('invalida la vecchia e crea la nuova atomicamente', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoId = creaTipoIscrizione(db)
+
+    const vecchia = assegnaIscrizione({
+      cliente_id: clienteId,
+      tipo_iscrizione_id: tipoId,
+      data_inizio: '2025-01-01',
+      data_scadenza: '2025-12-31',
+      prezzo: 100,
+      stato_pagamento: 'pagato',
+    })
+
+    const nuova = rinnovaIscrizione(vecchia.id, {
+      cliente_id: clienteId,
+      tipo_iscrizione_id: tipoId,
+      data_inizio: '2026-01-01',
+      data_scadenza: '2026-12-31',
+      prezzo: 120,
+      stato_pagamento: 'da_incassare',
+    })
+
+    expect(nuova.stato).toBe('attiva')
+    expect(getIscrizioneAttiva(clienteId)?.id).toBe(nuova.id)
+    const tutte = listIscrizioni(clienteId)
+    expect(tutte.find((i) => i.id === vecchia.id)?.stato).toBe('invalidata')
+  })
+
+  it('rinnovaIscrizione(null, ...) su cliente senza iscrizione attiva crea la nuova', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db, 'TSTRNV85T10H501Z')
+    const tipoId = creaTipoIscrizione(db)
+
+    const nuova = rinnovaIscrizione(null, {
+      cliente_id: clienteId,
+      tipo_iscrizione_id: tipoId,
+      data_inizio: '2026-01-01',
+      data_scadenza: '2026-12-31',
+      prezzo: 120,
+      stato_pagamento: 'da_incassare',
+    })
+
+    expect(nuova.stato).toBe('attiva')
+    expect(getIscrizioneAttiva(clienteId)?.id).toBe(nuova.id)
+  })
+
+  it('fallisce e non crea nulla se la vecchia non è attiva (id inesistente)', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db, 'TSTFLL85T10H501Z')
+    const tipoId = creaTipoIscrizione(db)
+    const prima = listIscrizioni(clienteId).length
+
+    expect(() =>
+      rinnovaIscrizione(99999, {
+        cliente_id: clienteId,
+        tipo_iscrizione_id: tipoId,
+        data_inizio: '2026-01-01',
+        data_scadenza: '2026-12-31',
+        prezzo: 120,
+        stato_pagamento: 'da_incassare',
+      })
+    ).toThrow('ISCRIZIONE_NON_ATTIVA')
+
+    expect(listIscrizioni(clienteId).length).toBe(prima)
   })
 })
