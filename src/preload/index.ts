@@ -232,20 +232,20 @@ const api: ElectronAPI = {
   },
 
   backup: {
-    locale(destinazionePath: string): Promise<BackupManifest> {
-      return ipcRenderer.invoke('backup:locale', { destinazionePath })
+    locale(args: { destinazionePath: string }): Promise<BackupManifest> {
+      return ipcRenderer.invoke('backup:locale', args)
     },
     automatico(): Promise<string> {
       return ipcRenderer.invoke('backup:automatico')
     },
-    verifica(backupPath: string): Promise<BackupManifest> {
-      return ipcRenderer.invoke('backup:verifica', { backupPath })
+    verifica(args: { backupPath: string }): Promise<BackupManifest> {
+      return ipcRenderer.invoke('backup:verifica', args)
     },
-    ripristina(backupPath: string, password: string): Promise<void> {
-      return ipcRenderer.invoke('backup:ripristina', { backupPath, password })
+    ripristina(args: { backupPath: string; password: string }): Promise<void> {
+      return ipcRenderer.invoke('backup:ripristina', args)
     },
-    reset(nuovaPassword: string): Promise<void> {
-      return ipcRenderer.invoke('backup:reset', { nuovaPassword })
+    reset(args: { nuovaPassword: string }): Promise<void> {
+      return ipcRenderer.invoke('backup:reset', args)
     },
     drive: {
       connect(): Promise<void> {
@@ -257,14 +257,14 @@ const api: ElectronAPI = {
       isConnected(): Promise<boolean> {
         return ipcRenderer.invoke('backup:drive:isConnected')
       },
-      backup(backupPath: string): Promise<string> {
-        return ipcRenderer.invoke('backup:drive:backup', { backupPath })
+      backup(args: { backupPath: string }): Promise<string> {
+        return ipcRenderer.invoke('backup:drive:backup', args)
       },
       list(): Promise<DriveBackupItem[]> {
         return ipcRenderer.invoke('backup:drive:list')
       },
-      restore(fileId: string, password: string): Promise<void> {
-        return ipcRenderer.invoke('backup:drive:restore', { fileId, password })
+      restore(args: { fileId: string; password: string }): Promise<void> {
+        return ipcRenderer.invoke('backup:drive:restore', args)
       }
     }
   },

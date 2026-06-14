@@ -499,18 +499,18 @@ export interface ElectronAPI {
     compleanni: (params: { dalGiorno: string; alGiorno: string }) => Promise<CompleannoDellaSett[]>
   }
   backup: {
-    locale: (destinazionePath: string) => Promise<BackupManifest>
+    locale: (args: { destinazionePath: string }) => Promise<BackupManifest>
     automatico: () => Promise<string>
-    verifica: (backupPath: string) => Promise<BackupManifest>
-    ripristina: (backupPath: string, password: string) => Promise<void>
-    reset: (nuovaPassword: string) => Promise<void>
+    verifica: (args: { backupPath: string }) => Promise<BackupManifest>
+    ripristina: (args: { backupPath: string; password: string }) => Promise<void>
+    reset: (args: { nuovaPassword: string }) => Promise<void>
     drive: {
       connect: () => Promise<void>
       disconnect: () => Promise<void>
       isConnected: () => Promise<boolean>
-      backup: (backupPath: string) => Promise<string>
+      backup: (args: { backupPath: string }) => Promise<string>
       list: () => Promise<DriveBackupItem[]>
-      restore: (fileId: string, password: string) => Promise<void>
+      restore: (args: { fileId: string; password: string }) => Promise<void>
     }
   }
   dialog: {
