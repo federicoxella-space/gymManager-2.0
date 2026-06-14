@@ -24,6 +24,8 @@ interface ModalProps {
   maxWidth?: string
   /** id dell'elemento che descrive il dialog (associato come aria-describedby) */
   describedById?: string
+  /** Dirty controllato dal parent: se true, la chiusura chiede conferma di scarto. */
+  isDirty?: boolean
 }
 
 const FOCUSABLE_SELECTOR = [
@@ -42,18 +44,19 @@ export default function Modal({
   children,
   maxWidth = 'max-w-lg',
   describedById,
+  isDirty = false,
 }: ModalProps): React.JSX.Element | null {
   const { t } = useTranslation()
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
   const previouslyFocused = useRef<HTMLElement | null>(null)
 
-  const [isDirty, setIsDirty] = useState(false)
+  const [childDirty, setChildDirty] = useState(false)
   const [showDiscard, setShowDiscard] = useState(false)
 
   const requestClose = useRef<() => void>(() => {})
   requestClose.current = () => {
-    if (isDirty) setShowDiscard(true)
+    if (isDirty || childDirty) setShowDiscard(true)
     else onClose()
   }
 
@@ -112,7 +115,7 @@ export default function Modal({
     } else {
       document.body.style.overflow = ''
       setShowDiscard(false)
-      setIsDirty(false)
+      setChildDirty(false)
     }
     return () => {
       document.body.style.overflow = ''
@@ -175,7 +178,7 @@ export default function Modal({
 
         {/* Corpo scrollabile */}
         <div className="overflow-y-auto flex-1 px-6 py-5">
-          <ModalDirtyContext.Provider value={{ setDirty: setIsDirty }}>
+          <ModalDirtyContext.Provider value={{ setDirty: setChildDirty }}>
             {children}
           </ModalDirtyContext.Provider>
         </div>

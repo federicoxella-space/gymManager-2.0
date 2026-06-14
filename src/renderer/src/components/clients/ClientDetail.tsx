@@ -1199,6 +1199,11 @@ export default function ClientDetail({
         isOpen={modificaDateAbbTarget !== null}
         onClose={() => setModificaDateAbbTarget(null)}
         title={t('abbonamenti.modifica_date')}
+        isDirty={
+          !!modificaDateAbbTarget &&
+          (editAbbDataInizio !== modificaDateAbbTarget.data_inizio ||
+            editAbbDataScadenza !== modificaDateAbbTarget.data_scadenza)
+        }
       >
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">

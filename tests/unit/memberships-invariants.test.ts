@@ -695,4 +695,34 @@ describe('rinnovaIscrizione (C12: rinnovo atomico)', () => {
 
     expect(listIscrizioni(clienteId).length).toBe(prima)
   })
+
+  it('rinnovaIscrizione(null, ...) con iscrizione attiva esistente lancia ISCRIZIONE_GIA_ATTIVA e non crea nulla', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db, 'TSTGIA85T10H501Z')
+    const tipoId = creaTipoIscrizione(db)
+
+    assegnaIscrizione({
+      cliente_id: clienteId,
+      tipo_iscrizione_id: tipoId,
+      data_inizio: '2025-01-01',
+      data_scadenza: '2025-12-31',
+      prezzo: 100,
+      stato_pagamento: 'pagato',
+    })
+
+    const prima = listIscrizioni(clienteId).length
+
+    expect(() =>
+      rinnovaIscrizione(null, {
+        cliente_id: clienteId,
+        tipo_iscrizione_id: tipoId,
+        data_inizio: '2026-01-01',
+        data_scadenza: '2026-12-31',
+        prezzo: 120,
+        stato_pagamento: 'da_incassare',
+      })
+    ).toThrow('ISCRIZIONE_GIA_ATTIVA')
+
+    expect(listIscrizioni(clienteId).length).toBe(prima)
+  })
 })
