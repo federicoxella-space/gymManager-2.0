@@ -36,7 +36,8 @@ import type {
   BackupManifest,
   DriveBackupItem,
   UpdateInfo,
-  UpdateProgress
+  UpdateProgress,
+  SyncStatus
 } from '../types/shared'
 
 // Espone le API standard di electron-toolkit su window.electron
@@ -306,6 +307,30 @@ const api: ElectronAPI = {
     }
   },
 
+  sync: {
+    status(): Promise<SyncStatus> {
+      return ipcRenderer.invoke('sync:status')
+    },
+    now(): Promise<void> {
+      return ipcRenderer.invoke('sync:now')
+    },
+    check(): Promise<void> {
+      return ipcRenderer.invoke('sync:check')
+    },
+    resolve(scelta: 'remoto' | 'locale' | 'copia'): Promise<void> {
+      return ipcRenderer.invoke('sync:resolve', { scelta })
+    },
+    enable(): Promise<void> {
+      return ipcRenderer.invoke('sync:enable')
+    },
+    disable(): Promise<void> {
+      return ipcRenderer.invoke('sync:disable')
+    },
+    setPolling(sec: number): Promise<void> {
+      return ipcRenderer.invoke('sync:setPolling', { sec })
+    }
+  },
+
   on(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]): void =>
       callback(...args)
@@ -360,5 +385,6 @@ export type {
   BackupManifest,
   DriveBackupItem,
   UpdateInfo,
-  UpdateProgress
+  UpdateProgress,
+  SyncStatus
 }

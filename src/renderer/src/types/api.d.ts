@@ -329,6 +329,16 @@ interface DriveBackupItem {
   size: number
 }
 
+// ── Sincronizzazione Drive ──────────────────────────────────────────────────────
+
+interface SyncStatus {
+  enabled: boolean
+  connected: boolean
+  lastSyncAt: string | null
+  dirty: boolean
+  conflict: boolean
+}
+
 // ── ElectronAPI ───────────────────────────────────────────────────────────────
 
 interface ElectronAPI {
@@ -434,6 +444,15 @@ interface ElectronAPI {
   updater: {
     check: () => Promise<void>
     install: () => Promise<void>
+  }
+  sync: {
+    status: () => Promise<SyncStatus>
+    now: () => Promise<void>
+    check: () => Promise<void>
+    resolve: (scelta: 'remoto' | 'locale' | 'copia') => Promise<void>
+    enable: () => Promise<void>
+    disable: () => Promise<void>
+    setPolling: (sec: number) => Promise<void>
   }
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void
   off: (channel: string, callback: (...args: unknown[]) => void) => void

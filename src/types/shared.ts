@@ -416,6 +416,22 @@ export interface DriveBackupItem {
   size: number
 }
 
+// ── Sincronizzazione Drive ──────────────────────────────────────────────────────
+
+/** Stato della sincronizzazione multi-dispositivo via Google Drive. */
+export interface SyncStatus {
+  /** Sincronizzazione abilitata dall'utente. */
+  enabled: boolean
+  /** Google Drive connesso (token presenti). */
+  connected: boolean
+  /** ISO datetime dell'ultimo sync riuscito, o null se mai sincronizzato. */
+  lastSyncAt: string | null
+  /** true se il DB locale ha modifiche non ancora caricate. */
+  dirty: boolean
+  /** true se c'è un conflitto pendente non ancora risolto. */
+  conflict: boolean
+}
+
 // ── ElectronAPI ───────────────────────────────────────────────────────────────
 
 export interface ElectronAPI {
@@ -531,6 +547,15 @@ export interface ElectronAPI {
   updater: {
     check: () => Promise<void>
     install: () => Promise<void>
+  }
+  sync: {
+    status: () => Promise<SyncStatus>
+    now: () => Promise<void>
+    check: () => Promise<void>
+    resolve: (scelta: 'remoto' | 'locale' | 'copia') => Promise<void>
+    enable: () => Promise<void>
+    disable: () => Promise<void>
+    setPolling: (sec: number) => Promise<void>
   }
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void
   off: (channel: string, callback: (...args: unknown[]) => void) => void

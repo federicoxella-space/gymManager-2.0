@@ -12,7 +12,16 @@ import {
   listBackupDrive,
   ripristinaDaDrive
 } from '../backup/drive-service'
-import type { BackupManifest, DriveBackupItem } from '../../types/shared'
+import type { BackupManifest, DriveBackupItem, SyncStatus } from '../../types/shared'
+import {
+  getStatus as syncGetStatus,
+  upload as syncUpload,
+  checkRemote as syncCheckRemote,
+  resolveConflict as syncResolveConflict,
+  enableSync as syncEnable,
+  disableSync as syncDisable,
+  setPolling as syncSetPolling
+} from '../sync/sync-service'
 import { generaHTMLRicevuta } from '../domain/ricevuta'
 import { generaPDFInElectron } from '../pdf/generator'
 import { getDatabase } from '../db/database'
@@ -1103,6 +1112,81 @@ export function registerIpcHandlers(): void {
     } catch (err) {
       log.error('[ipc] updater:install errore:', err)
       throw err instanceof Error ? err : new Error("Errore durante l'installazione dell'aggiornamento")
+    }
+  })
+
+  // ── Sincronizzazione Drive ─────────────────────────────────────────────────
+
+  /** Stato corrente della sincronizzazione (enabled/connected/lastSync/dirty/conflict). */
+  ipcMain.handle('sync:status', async (): Promise<SyncStatus> => {
+    try {
+      return await syncGetStatus()
+    } catch (err) {
+      log.error('[ipc] sync:status errore:', err)
+      throw err instanceof Error ? err : new Error('Errore nel recupero dello stato di sincronizzazione')
+    }
+  })
+
+  /** Sincronizzazione manuale (upload con guardia ottimistica). */
+  ipcMain.handle('sync:now', async (): Promise<void> => {
+    try {
+      await syncUpload()
+    } catch (err) {
+      log.error('[ipc] sync:now errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante la sincronizzazione')
+    }
+  })
+
+  /** Verifica non distruttiva dello stato remoto (polling). */
+  ipcMain.handle('sync:check', async (): Promise<void> => {
+    try {
+      await syncCheckRemote()
+    } catch (err) {
+      log.error('[ipc] sync:check errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante la verifica remota')
+    }
+  })
+
+  /** Risolve un conflitto secondo la scelta dell'utente. */
+  ipcMain.handle(
+    'sync:resolve',
+    async (_event, { scelta }: { scelta: 'remoto' | 'locale' | 'copia' }): Promise<void> => {
+      try {
+        await syncResolveConflict(scelta)
+      } catch (err) {
+        log.error('[ipc] sync:resolve errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante la risoluzione del conflitto')
+      }
+    }
+  )
+
+  /** Abilita la sincronizzazione. */
+  ipcMain.handle('sync:enable', async (): Promise<void> => {
+    try {
+      await syncEnable()
+    } catch (err) {
+      log.error('[ipc] sync:enable errore:', err)
+      throw err instanceof Error ? err : new Error("Errore durante l'abilitazione della sincronizzazione")
+    }
+  })
+
+  /** Disabilita la sincronizzazione. */
+  ipcMain.handle('sync:disable', async (): Promise<void> => {
+    try {
+      await syncDisable()
+    } catch (err) {
+      log.error('[ipc] sync:disable errore:', err)
+      throw err instanceof Error ? err : new Error('Errore durante la disabilitazione della sincronizzazione')
+    }
+  })
+
+  /** Aggiorna l'intervallo di polling (in secondi). */
+  ipcMain.handle('sync:setPolling', (_event, { sec }: { sec: number }): void => {
+    try {
+      syncSetPolling(sec)
+    } catch (err) {
+      log.error('[ipc] sync:setPolling errore:', err)
+      throw err instanceof Error ? err : new Error("Errore durante l'aggiornamento dell'intervallo di polling")
     }
   })
 
