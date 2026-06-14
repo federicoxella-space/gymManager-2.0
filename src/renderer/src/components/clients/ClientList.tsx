@@ -170,8 +170,7 @@ export default function ClientList({
                 return (
                   <tr
                     key={cliente.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
-                    onClick={() => onSelectCliente(cliente)}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                   >
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs whitespace-nowrap">
                       {cliente.numero_tessera ?? '—'}
@@ -196,10 +195,7 @@ export default function ClientList({
                     <td className="px-4 py-3 text-right">
                       <button
                         type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onSelectCliente(cliente)
-                        }}
+                        onClick={() => onSelectCliente(cliente)}
                         aria-label={t('clienti.dettaglio.vedi_dettaglio')}
                         className="inline-flex items-center justify-center p-1.5 rounded-md text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                       >
