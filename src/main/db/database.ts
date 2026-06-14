@@ -15,6 +15,7 @@ const KDF_KEYLEN = 32
 const KDF_DIGEST = 'sha256'
 
 let dbInstance: Database.Database | null = null
+let currentKey: string | null = null
 
 /**
  * Deriva la chiave SQLCipher dalla master password usando PBKDF2.
@@ -71,6 +72,7 @@ export function openDatabase(password: string): void {
 
   // Fase 2: migrazioni (errori qui → MIGRATION_FAILED, non PASSWORD_WRONG)
   dbInstance = db
+  currentKey = key
   try {
     runMigrations(dbInstance)
     log.info('[database] DB aperto e migrazioni applicate')
@@ -99,6 +101,7 @@ export function closeDatabase(): void {
     log.error('[database] Errore nella chiusura del DB:', err)
   } finally {
     dbInstance = null
+    currentKey = null
   }
 }
 
@@ -118,4 +121,26 @@ export function getDatabase(): Database.Database {
  */
 export function isDatabaseOpen(): boolean {
   return dbInstance !== null && dbInstance.open
+}
+
+/**
+ * Cambia la master password senza perdere i dati (rekey SQLCipher in-place).
+ * Verifica prima la vecchia password confrontando la chiave derivata con quella corrente.
+ * @throws Error('PASSWORD_WRONG') se la vecchia password non corrisponde.
+ */
+export function changePassword(oldPassword: string, newPassword: string): void {
+  if (dbInstance === null || currentKey === null) {
+    throw new Error('Database non aperto. Eseguire prima openDatabase().')
+  }
+  if (deriveKey(oldPassword) !== currentKey) {
+    throw new Error('PASSWORD_WRONG')
+  }
+  const newKey = deriveKey(newPassword)
+  // PRAGMA rekey non è supportato in WAL journal mode: si commuta temporaneamente
+  // in DELETE, si esegue il rekey, poi si ripristina WAL.
+  dbInstance.pragma('journal_mode = DELETE')
+  dbInstance.pragma(`rekey='${newKey}'`)
+  dbInstance.pragma('journal_mode = WAL')
+  currentKey = newKey
+  log.info('[database] Master password aggiornata (rekey)')
 }
