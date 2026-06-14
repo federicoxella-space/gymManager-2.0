@@ -444,7 +444,9 @@ export async function listBackupDrive(): Promise<DriveBackupItem[]> {
   const accessToken = await getValidToken()
   const folderId = await getOrCreateFolder(accessToken)
 
-  const q = `'${folderId}' in parents and trashed=false`
+  // Include SOLO i backup timestamped (gymmanager_backup_*); esclude il file di sync
+  // stabile (gymmanager_sync.db) e le copie di conflitto (gymmanager_conflict_*).
+  const q = `'${folderId}' in parents and trashed=false and name contains 'gymmanager_backup'`
   const url = `${GOOGLE_DRIVE_API}/files?q=${encodeURIComponent(q)}&orderBy=createdTime+desc&fields=files(id,name,createdTime,size)&pageSize=50`
 
   const res = await fetch(url, {

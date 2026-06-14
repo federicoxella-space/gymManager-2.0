@@ -90,6 +90,19 @@ export default function App(): React.JSX.Element {
 
     void initPolling()
 
+    // Ri-legge lo stato e riavvia il timer quando il sync viene abilitato/disabilitato
+    // o l'intervallo cambia da Impostazioni (evento emesso da SettingsPage).
+    const handleConfigChanged = (): void => {
+      window.api.sync.status().then((s) => {
+        if (s.enabled) {
+          startPolling(s.pollingSec ?? 60)
+        } else {
+          stopPolling()
+        }
+      }).catch(() => { /* non bloccante */ })
+    }
+    window.addEventListener('gm:sync-config-changed', handleConfigChanged)
+
     // check() su focus della finestra
     const handleWindowFocus = (): void => {
       window.api.sync.status().then((s) => {
@@ -101,6 +114,7 @@ export default function App(): React.JSX.Element {
     window.addEventListener('focus', handleWindowFocus)
 
     return () => {
+      window.removeEventListener('gm:sync-config-changed', handleConfigChanged)
       window.removeEventListener('focus', handleWindowFocus)
       stopPolling()
     }

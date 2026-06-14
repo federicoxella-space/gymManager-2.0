@@ -9,7 +9,6 @@
  * Nessun token/segreto passa al renderer: tutto resta nel processo main.
  */
 
-import { join } from 'node:path'
 import type { BrowserWindow } from 'electron'
 import log from 'electron-log'
 import type { SyncStatus } from '../../types/shared'
@@ -32,7 +31,7 @@ import {
 // ── Costanti ──────────────────────────────────────────────────────────────────
 
 /** Percorso temporaneo per il file scaricato prima del reload. */
-const TMP_DOWNLOAD = join(DB_PATH + '.sync-download.db')
+const TMP_DOWNLOAD = DB_PATH + '.sync-download.db'
 
 // ── Stato interno ─────────────────────────────────────────────────────────────
 

@@ -50,12 +50,22 @@ export default function SyncConflictDialog(): React.JSX.Element | null {
     }
   }
 
+  function handleClose(): void {
+    setOpen(false)
+    setIsResolving(false)
+    setErrorMsg(null)
+  }
+
   if (!open) return null
+
+  // La chiusura manuale è consentita SOLO dopo un errore di risoluzione,
+  // non durante il flusso normale (il dialog deve essere risolto).
+  const canClose = errorMsg !== null && !isResolving
 
   return (
     <Modal
       isOpen={open}
-      onClose={() => { /* dialog non chiudibile via X — deve essere risolta */ }}
+      onClose={() => { if (canClose) handleClose() }}
       title={t('sync.conflitto_titolo')}
       maxWidth="max-w-lg"
       describedById={messageId}
@@ -108,6 +118,18 @@ export default function SyncConflictDialog(): React.JSX.Element | null {
           <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
             {t('sync.sincronizzazione_in_corso')}
           </p>
+        )}
+
+        {canClose && (
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+            >
+              {t('common.close')}
+            </button>
+          </div>
         )}
       </div>
     </Modal>

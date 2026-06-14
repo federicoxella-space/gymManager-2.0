@@ -410,6 +410,7 @@ export default function SettingsPage(): React.JSX.Element {
       await window.api.sync.enable()
       const s = await window.api.sync.status()
       setSyncStatus(s)
+      window.dispatchEvent(new CustomEvent('gm:sync-config-changed'))
     } catch {
       // non bloccante
     }
@@ -420,6 +421,7 @@ export default function SettingsPage(): React.JSX.Element {
       await window.api.sync.disable()
       const s = await window.api.sync.status()
       setSyncStatus(s)
+      window.dispatchEvent(new CustomEvent('gm:sync-config-changed'))
     } catch {
       // non bloccante
     }
@@ -447,6 +449,7 @@ export default function SettingsPage(): React.JSX.Element {
       await window.api.sync.setPolling(sec)
       const s = await window.api.sync.status()
       setSyncStatus(s)
+      window.dispatchEvent(new CustomEvent('gm:sync-config-changed'))
     } catch {
       // non bloccante
     }
