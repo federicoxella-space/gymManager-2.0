@@ -470,7 +470,19 @@
     "reset_step2_conferma_btn": "Confirm and delete data",
     "reset_completato": "Reset completed. The app will restart.",
     "reset_errore_password_corta": "Password must be at least 8 characters.",
-    "reset_errore_password_mismatch": "Passwords do not match."
+    "reset_errore_password_mismatch": "Passwords do not match.",
+    "cambia_password_titolo": "Change master password",
+    "cambia_password_pulsante": "Change master password",
+    "cambia_password_descrizione": "Change the password keeping all data (safe, non-destructive).",
+    "cambia_password_vecchia": "Current password",
+    "cambia_password_nuova": "New password",
+    "cambia_password_conferma": "Confirm new password",
+    "cambia_password_errore_vecchia": "The current password is not correct.",
+    "cambia_password_errore_lunghezza": "The new password must be at least 8 characters.",
+    "cambia_password_errore_conferma": "Passwords do not match.",
+    "cambia_password_errore_generico": "Error changing password. Please try again.",
+    "cambia_password_completato": "Password updated successfully.",
+    "cambia_password_hint": "Minimum 8 characters."
   },
   "abbonamenti": {
     "assegna": "Assign subscription",

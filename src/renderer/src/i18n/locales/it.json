@@ -470,7 +470,19 @@
     "reset_step2_conferma_btn": "Conferma e cancella i dati",
     "reset_completato": "Reset completato. L'app si riavvierà.",
     "reset_errore_password_corta": "La password deve essere di almeno 8 caratteri.",
-    "reset_errore_password_mismatch": "Le password non corrispondono."
+    "reset_errore_password_mismatch": "Le password non corrispondono.",
+    "cambia_password_titolo": "Cambia master password",
+    "cambia_password_pulsante": "Cambia master password",
+    "cambia_password_descrizione": "Cambia la password mantenendo tutti i dati (operazione sicura, non distruttiva).",
+    "cambia_password_vecchia": "Password attuale",
+    "cambia_password_nuova": "Nuova password",
+    "cambia_password_conferma": "Conferma nuova password",
+    "cambia_password_errore_vecchia": "La password attuale non è corretta.",
+    "cambia_password_errore_lunghezza": "La nuova password deve avere almeno 8 caratteri.",
+    "cambia_password_errore_conferma": "Le password non coincidono.",
+    "cambia_password_errore_generico": "Errore durante il cambio password. Riprova.",
+    "cambia_password_completato": "Password aggiornata con successo.",
+    "cambia_password_hint": "Minimo 8 caratteri."
   },
   "abbonamenti": {
     "assegna": "Assegna abbonamento",

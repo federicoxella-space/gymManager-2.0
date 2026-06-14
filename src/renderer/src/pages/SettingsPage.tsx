@@ -6,6 +6,7 @@ import { useSettings } from '../context/SettingsContext'
 import type { AppSettings } from '../../../types/shared'
 import RestoreDialog from '../components/backup/RestoreDialog'
 import ResetPasswordDialog from '../components/backup/ResetPasswordDialog'
+import ChangePasswordDialog from '../components/backup/ChangePasswordDialog'
 
 // ── Colori preset ─────────────────────────────────────────────────────────────
 
@@ -123,6 +124,7 @@ export default function SettingsPage(): React.JSX.Element {
   const [isBackingUp, setIsBackingUp] = useState(false)
   const [showRestoreDialog, setShowRestoreDialog] = useState(false)
   const [showResetPasswordDialog, setShowResetPasswordDialog] = useState(false)
+  const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false)
   const backupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Drive OAuth state
@@ -1054,6 +1056,21 @@ export default function SettingsPage(): React.JSX.Element {
             )}
           </div>
 
+          {/* Sicurezza — Cambio password (non distruttivo) */}
+          <div className="mb-6">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              {t('backup.cambia_password_titolo')}
+            </h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('backup.cambia_password_descrizione')}</p>
+            <button
+              type="button"
+              onClick={() => setShowChangePasswordDialog(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
+              {t('backup.cambia_password_pulsante')}
+            </button>
+          </div>
+
           {/* Sicurezza — Reset password */}
           <div>
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -1157,6 +1174,10 @@ export default function SettingsPage(): React.JSX.Element {
       <ResetPasswordDialog
         isOpen={showResetPasswordDialog}
         onClose={() => setShowResetPasswordDialog(false)}
+      />
+      <ChangePasswordDialog
+        isOpen={showChangePasswordDialog}
+        onClose={() => setShowChangePasswordDialog(false)}
       />
     </div>
   )
