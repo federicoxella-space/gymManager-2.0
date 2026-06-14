@@ -3,6 +3,7 @@ import { join } from 'path'
 import { existsSync, unlinkSync } from 'fs'
 import { checkForUpdates, installUpdate } from '../updater/auto-updater'
 import { backupLocale, backupAutomatico } from '../backup/backup-service'
+import { initBackupScheduler, restartBackupScheduler } from '../backup/backup-scheduler'
 import { verificaBackup, ripristinaBackup, resetDatabase, eseguiRipristino } from '../backup/restore-service'
 import {
   connectDrive,
@@ -158,6 +159,7 @@ export function registerIpcHandlers(): void {
       aggiornaStatoIscrizioni()
       aggiornaStatoAbbonamenti()
       log.info('[ipc] db:setup completato')
+      initBackupScheduler()
     } catch (err) {
       log.error('[ipc] db:setup errore:', err)
       if (err instanceof Error && err.message === 'PASSWORD_WRONG') {
@@ -183,6 +185,7 @@ export function registerIpcHandlers(): void {
         log.info('[ipc] db:unlock completato')
         // Verifica sync non bloccante: non deve ritardare la risposta dell'unlock.
         void syncOnOpen().catch((err) => log.warn('[sync] open check fallito:', err))
+        initBackupScheduler()
       } catch (err) {
         log.error('[ipc] db:unlock errore:', err)
         if (err instanceof Error && err.message === 'PASSWORD_WRONG') {
@@ -260,6 +263,8 @@ export function registerIpcHandlers(): void {
         // il DB resta avanti di un passo ma viene riallineato al successivo settings:set riuscito.
         // Solo dopo il successo SQLite, persiste il file JSON.
         saveSettings(updated)
+        // Le impostazioni di backup periodico possono essere cambiate: riallinea il timer.
+        restartBackupScheduler()
       } catch (err) {
         log.error('[ipc] settings:set errore:', err)
         throw new Error('Impossibile salvare le impostazioni')
