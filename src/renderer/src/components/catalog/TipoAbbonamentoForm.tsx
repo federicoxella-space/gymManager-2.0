@@ -70,21 +70,21 @@ export default function TipoAbbonamentoForm({
   function validate(): boolean {
     let ok = true
     if (!nome.trim()) {
-      setNomeError(t('common.error_generic'))
+      setNomeError(t('validazione.obbligatorio'))
       ok = false
     } else {
       setNomeError('')
     }
     const dur = Number(durataMesi)
     if (!durataMesi || isNaN(dur) || dur < 1 || !Number.isInteger(dur)) {
-      setDurataError(t('common.error_generic'))
+      setDurataError(t('validazione.durata_non_valida'))
       ok = false
     } else {
       setDurataError('')
     }
     const pr = Number(prezzoDefault)
     if (prezzoDefault === '' || isNaN(pr) || pr < 0) {
-      setPrezzoError(t('common.error_generic'))
+      setPrezzoError(t('validazione.prezzo_non_valido'))
       ok = false
     } else {
       setPrezzoError('')

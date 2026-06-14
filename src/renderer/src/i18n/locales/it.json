@@ -38,6 +38,13 @@
       "description": "L'applicazione è configurata e pronta. Le funzionalità saranno disponibili nelle fasi successive."
     }
   },
+  "validazione": {
+    "obbligatorio": "Campo obbligatorio",
+    "prezzo_non_valido": "Inserire un prezzo valido (≥ 0)",
+    "data_obbligatoria": "Data obbligatoria",
+    "durata_non_valida": "Inserire una durata valida (≥ 1 mese)",
+    "selezione_obbligatoria": "Selezione obbligatoria"
+  },
   "common": {
     "save": "Salva",
     "cancel": "Annulla",

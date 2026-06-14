@@ -38,6 +38,13 @@
       "description": "The application is configured and ready. Features will be available in subsequent phases."
     }
   },
+  "validazione": {
+    "obbligatorio": "Required field",
+    "prezzo_non_valido": "Enter a valid price (≥ 0)",
+    "data_obbligatoria": "Date required",
+    "durata_non_valida": "Enter a valid duration (≥ 1 month)",
+    "selezione_obbligatoria": "Selection required"
+  },
   "common": {
     "save": "Save",
     "cancel": "Cancel",

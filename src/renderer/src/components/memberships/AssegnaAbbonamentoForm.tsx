@@ -101,31 +101,11 @@ export default function AssegnaAbbonamentoForm({
 
   function validate(): boolean {
     let ok = true
-    if (!tipoId) {
-      setTipoError(t('common.error_generic'))
-      ok = false
-    } else {
-      setTipoError('')
-    }
-    if (!dataInizio) {
-      setDataIniziError(t('common.error_generic'))
-      ok = false
-    } else {
-      setDataIniziError('')
-    }
-    if (!dataScadenza) {
-      setDataScadenzaError(t('common.error_generic'))
-      ok = false
-    } else {
-      setDataScadenzaError('')
-    }
+    if (!tipoId) { setTipoError(t('validazione.selezione_obbligatoria')); ok = false } else setTipoError('')
+    if (!dataInizio) { setDataIniziError(t('validazione.data_obbligatoria')); ok = false } else setDataIniziError('')
+    if (!dataScadenza) { setDataScadenzaError(t('validazione.data_obbligatoria')); ok = false } else setDataScadenzaError('')
     const pr = Number(prezzo)
-    if (prezzo === '' || isNaN(pr) || pr < 0) {
-      setPrezzoError(t('common.error_generic'))
-      ok = false
-    } else {
-      setPrezzoError('')
-    }
+    if (prezzo === '' || isNaN(pr) || pr < 0) { setPrezzoError(t('validazione.prezzo_non_valido')); ok = false } else setPrezzoError('')
     return ok
   }
 

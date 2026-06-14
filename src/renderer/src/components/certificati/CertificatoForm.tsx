@@ -42,13 +42,13 @@ export default function CertificatoForm({
     // Validazione locale
     let valid = true
     if (!tipo) {
-      setTipoError(t('clienti.certificato.tipo_label') + ' ' + t('common.error_generic'))
+      setTipoError(t('validazione.selezione_obbligatoria'))
       valid = false
     } else {
       setTipoError('')
     }
     if (!dataScadenza) {
-      setDataError(t('clienti.certificato.scadenza_label') + ' ' + t('common.error_generic'))
+      setDataError(t('validazione.data_obbligatoria'))
       valid = false
     } else {
       setDataError('')
