@@ -552,7 +552,16 @@
     "drive_backup_ora": "Backup su Drive",
     "drive_backup_in_corso": "Backup in corso…",
     "drive_backup_completato": "Backup caricato su Google Drive.",
-    "drive_backup_errore": "Errore durante il backup su Drive."
+    "drive_backup_errore": "Errore durante il backup su Drive.",
+    "cartella_label": "Cartella backup",
+    "cartella_sfoglia": "Sfoglia…",
+    "cartella_help": "Lascia vuoto per usare la cartella predefinita dell'applicazione.",
+    "cartella_predefinita": "(cartella predefinita)",
+    "periodico_label": "Backup periodico mentre l'app è aperta",
+    "periodico_ogni": "ogni",
+    "periodico_ore": "ore",
+    "retention_label": "Conserva gli ultimi backup",
+    "retention_unita": "backup"
   },
   "abbonamenti": {
     "assegna": "Assegna abbonamento",

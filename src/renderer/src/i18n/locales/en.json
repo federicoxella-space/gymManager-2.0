@@ -552,7 +552,16 @@
     "drive_backup_ora": "Back up to Drive",
     "drive_backup_in_corso": "Backing up…",
     "drive_backup_completato": "Backup uploaded to Google Drive.",
-    "drive_backup_errore": "Error backing up to Drive."
+    "drive_backup_errore": "Error backing up to Drive.",
+    "cartella_label": "Backup folder",
+    "cartella_sfoglia": "Browse…",
+    "cartella_help": "Leave empty to use the application's default folder.",
+    "cartella_predefinita": "(default folder)",
+    "periodico_label": "Periodic backup while the app is open",
+    "periodico_ogni": "every",
+    "periodico_ore": "hours",
+    "retention_label": "Keep the latest backups",
+    "retention_unita": "backups"
   },
   "abbonamenti": {
     "assegna": "Assign subscription",
