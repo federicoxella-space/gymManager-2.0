@@ -89,6 +89,10 @@ interface FormState {
   codice_fiscale_piva: string
   logo_base64: string
   backup_on_close: boolean
+  backup_dir: string
+  backup_periodic_enabled: boolean
+  backup_periodic_hours: number
+  backup_retention: number
 }
 
 interface FormErrors {
@@ -163,6 +167,10 @@ export default function SettingsPage(): React.JSX.Element {
     codice_fiscale_piva: '',
     logo_base64: '',
     backup_on_close: true,
+    backup_dir: '',
+    backup_periodic_enabled: false,
+    backup_periodic_hours: 6,
+    backup_retention: 10,
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -224,6 +232,10 @@ export default function SettingsPage(): React.JSX.Element {
           codice_fiscale_piva: s.codice_fiscale_piva ?? '',
           logo_base64: s.logo_base64 ?? '',
           backup_on_close: s.backup_on_close ?? true,
+          backup_dir: s.backup_dir ?? '',
+          backup_periodic_enabled: s.backup_periodic_enabled ?? false,
+          backup_periodic_hours: s.backup_periodic_hours ?? 6,
+          backup_retention: s.backup_retention ?? 10,
         })
       })
       .catch(() => {
@@ -498,6 +510,10 @@ export default function SettingsPage(): React.JSX.Element {
         codice_fiscale_piva: form.codice_fiscale_piva,
         logo_base64: form.logo_base64,
         backup_on_close: form.backup_on_close,
+        backup_dir: form.backup_dir,
+        backup_periodic_enabled: form.backup_periodic_enabled,
+        backup_periodic_hours: form.backup_periodic_hours,
+        backup_retention: form.backup_retention,
       }
       await window.api.settings.set(payload)
       // Applica immediatamente il cambio lingua senza riavvio
@@ -523,6 +539,16 @@ export default function SettingsPage(): React.JSX.Element {
       setSaveError(t('common.error_generic'))
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function handleSfogliaCartella(): Promise<void> {
+    const res = await window.api.dialog.showOpenDialog({
+      title: t('backup.cartella_label'),
+      properties: ['openDirectory'],
+    })
+    if (!res.canceled && res.filePaths.length > 0) {
+      setForm((prev) => ({ ...prev, backup_dir: res.filePaths[0] }))
     }
   }
 
@@ -1022,6 +1048,36 @@ export default function SettingsPage(): React.JSX.Element {
               {t('backup.locale_descrizione')}
             </p>
 
+            {/* Cartella di destinazione */}
+            <div className="mb-4">
+              <label
+                htmlFor="settings-backup-dir"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+              >
+                {t('backup.cartella_label')}
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  id="settings-backup-dir"
+                  type="text"
+                  readOnly
+                  value={form.backup_dir}
+                  placeholder={t('backup.cartella_predefinita')}
+                  className="block flex-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => { void handleSfogliaCartella() }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                >
+                  {t('backup.cartella_sfoglia')}
+                </button>
+              </div>
+              <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                {t('backup.cartella_help')}
+              </p>
+            </div>
+
             {/* Backup automatico alla chiusura */}
             <label className="flex items-center gap-3 mb-4 cursor-pointer">
               <input
@@ -1034,6 +1090,73 @@ export default function SettingsPage(): React.JSX.Element {
                 {t('impostazioni.backup_on_close')}
               </span>
             </label>
+
+            {/* Backup periodico */}
+            <label className="flex items-center gap-3 mb-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.backup_periodic_enabled}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, backup_periodic_enabled: e.target.checked }))
+                }
+                className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 focus:ring-2 cursor-pointer"
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300 select-none">
+                {t('backup.periodico_label')}
+              </span>
+            </label>
+            {form.backup_periodic_enabled && (
+              <div className="flex items-center gap-2 mb-4 ml-7">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {t('backup.periodico_ogni')}
+                </span>
+                <input
+                  type="number"
+                  min={1}
+                  max={168}
+                  step={1}
+                  value={form.backup_periodic_hours}
+                  onChange={(e) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      backup_periodic_hours: Math.min(168, Math.max(1, Number(e.target.value) || 1)),
+                    }))
+                  }
+                  className="block w-24 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {t('backup.periodico_ore')}
+                </span>
+              </div>
+            )}
+
+            {/* Retention */}
+            <div className="flex items-center gap-2 mb-4">
+              <label
+                htmlFor="settings-backup-retention"
+                className="text-sm text-gray-700 dark:text-gray-300"
+              >
+                {t('backup.retention_label')}
+              </label>
+              <input
+                id="settings-backup-retention"
+                type="number"
+                min={1}
+                max={100}
+                step={1}
+                value={form.backup_retention}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    backup_retention: Math.min(100, Math.max(1, Number(e.target.value) || 1)),
+                  }))
+                }
+                className="block w-24 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {t('backup.retention_unita')}
+              </span>
+            </div>
 
             {/* Feedback backup */}
             {backupStatus !== null && (
