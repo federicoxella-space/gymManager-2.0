@@ -124,6 +124,60 @@ export function isDatabaseOpen(): boolean {
 }
 
 /**
+ * Ritorna la chiave SQLCipher corrente (hex 64) o null se il DB non è aperto.
+ * Uso interno (sync/reload): non esporre al renderer.
+ */
+export function getCurrentKey(): string | null {
+  return currentKey
+}
+
+/**
+ * Apre il DB con una chiave già derivata (hex 64).
+ * Usata dal reload sync per non ri-derivare la password.
+ * Replica fedelmente le fasi di openDatabase (fase 1: verifica chiave;
+ * fase 2: WAL + foreign_keys + migrazioni).
+ *
+ * Lancia Error('PASSWORD_WRONG') se la chiave non corrisponde.
+ * Lancia Error('MIGRATION_FAILED: …') se le migrazioni falliscono.
+ */
+export function openDatabaseWithKey(key: string): void {
+  if (dbInstance !== null) {
+    log.info('[database] DB già aperto, skip')
+    return
+  }
+
+  const dbPath = DB_PATH
+  let db: Database.Database | null = null
+
+  // Fase 1: apertura e verifica chiave (errori qui → PASSWORD_WRONG)
+  try {
+    db = new Database(dbPath)
+    db.pragma(`key='${key}'`)
+    // Stessa verifica di openDatabase: user_version + WAL + foreign_keys
+    db.pragma('user_version')
+    db.pragma('journal_mode = WAL')
+    db.pragma('foreign_keys = ON')
+  } catch (err) {
+    if (db && db.open) db.close()
+    const message = err instanceof Error ? err.message : String(err)
+    log.error('[database] Errore apertura/verifica DB (openDatabaseWithKey):', message)
+    throw new Error('PASSWORD_WRONG')
+  }
+
+  // Fase 2: migrazioni (errori qui → MIGRATION_FAILED)
+  dbInstance = db
+  currentKey = key
+  try {
+    runMigrations(dbInstance)
+    log.info('[database] DB aperto con chiave esistente (reload sync)')
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    log.error('[database] Errore migrazioni (openDatabaseWithKey):', message)
+    throw new Error(`MIGRATION_FAILED: ${message}`)
+  }
+}
+
+/**
  * Cambia la master password senza perdere i dati (rekey SQLCipher in-place).
  * Verifica prima la vecchia password confrontando la chiave derivata con quella corrente.
  * @throws Error('PASSWORD_WRONG') se la vecchia password non corrisponde.

@@ -52,11 +52,13 @@ const TEST_USER_DATA = join(tmpdir(), `gymmanager-test-${process.pid}`)
 // Import DOPO le mock (Vitest le hoista comunque, ma è buona pratica)
 import {
   openDatabase,
+  openDatabaseWithKey,
+  getCurrentKey,
   closeDatabase,
   isDatabaseOpen,
   checkFirstRun,
   deriveKey,
-  DB_PATH
+  DB_PATH,
 } from '../../src/main/db/database'
 
 // ---------------------------------------------------------------------------
@@ -259,4 +261,80 @@ describe('checkFirstRun', () => {
     expect(existsSync(DB_PATH)).toBe(true)
     expect(checkFirstRun()).toBe(false)
   })
+})
+
+// ---------------------------------------------------------------------------
+// Suite: openDatabaseWithKey / getCurrentKey
+// ---------------------------------------------------------------------------
+
+describe('openDatabaseWithKey / getCurrentKey', () => {
+  beforeEach(() => {
+    if (isDatabaseOpen()) closeDatabase()
+    if (existsSync(DB_PATH)) unlinkSync(DB_PATH)
+  })
+
+  afterEach(() => {
+    if (isDatabaseOpen()) closeDatabase()
+    if (existsSync(DB_PATH)) unlinkSync(DB_PATH)
+    const wal = DB_PATH + '-wal'
+    const shm = DB_PATH + '-shm'
+    if (existsSync(wal)) unlinkSync(wal)
+    if (existsSync(shm)) unlinkSync(shm)
+  })
+
+  it('getCurrentKey() ritorna null quando il DB non è aperto', () => {
+    expect(getCurrentKey()).toBeNull()
+  })
+
+  it('getCurrentKey() ritorna la chiave derivata dopo openDatabase', () => {
+    const password = 'password123'
+    openDatabase(password)
+    const key = getCurrentKey()
+    expect(key).toBe(deriveKey(password))
+    expect(key).toMatch(/^[0-9a-f]{64}$/)
+  })
+
+  it('getCurrentKey() ritorna null dopo closeDatabase', () => {
+    openDatabase('password123')
+    expect(getCurrentKey()).not.toBeNull()
+    closeDatabase()
+    expect(getCurrentKey()).toBeNull()
+  })
+
+  it('round-trip: openDatabaseWithKey riapre un DB creato da openDatabase e preserva i dati', () => {
+    const password = 'mypass-roundtrip'
+    const key = deriveKey(password)
+
+    // Crea il DB con openDatabase e inserisce dati
+    openDatabase(password)
+    // Verifica che il DB sia aperto e funzionante
+    expect(isDatabaseOpen()).toBe(true)
+    closeDatabase()
+
+    // Riapri con openDatabaseWithKey usando la chiave derivata
+    openDatabaseWithKey(key)
+    expect(isDatabaseOpen()).toBe(true)
+    expect(getCurrentKey()).toBe(key)
+  })
+
+  it('openDatabaseWithKey è idempotente: se il DB è già aperto non lancia', () => {
+    const key = deriveKey('password123')
+    openDatabase('password123')
+    expect(() => openDatabaseWithKey(key)).not.toThrow()
+    expect(isDatabaseOpen()).toBe(true)
+  })
+
+  it.skipIf(!CIPHER_ENABLED)(
+    '[CIPHER] chiave errata → lancia Error("PASSWORD_WRONG")',
+    () => {
+      // Crea DB con password A
+      openDatabase('passwordA')
+      closeDatabase()
+
+      // Tenta di aprire con la chiave derivata da una password diversa
+      const wrongKey = deriveKey('passwordB')
+      expect(() => openDatabaseWithKey(wrongKey)).toThrow('PASSWORD_WRONG')
+      expect(isDatabaseOpen()).toBe(false)
+    }
+  )
 })

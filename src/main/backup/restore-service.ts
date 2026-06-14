@@ -1,6 +1,13 @@
 import { existsSync, copyFileSync, unlinkSync, readFileSync } from 'fs'
 import log from 'electron-log'
-import { DB_PATH, openDatabase, closeDatabase, isDatabaseOpen } from '../db/database'
+import {
+  DB_PATH,
+  openDatabase,
+  openDatabaseWithKey,
+  getCurrentKey,
+  closeDatabase,
+  isDatabaseOpen,
+} from '../db/database'
 import type { BackupManifest } from './backup-service'
 
 /**
@@ -165,6 +172,67 @@ export async function resetDatabase(nuovaPassword: string): Promise<void> {
   // 3. Crea un nuovo DB con la nuova password (openDatabase lo crea da zero con migrazioni)
   openDatabase(nuovaPassword)
   log.info('[reset] Nuovo DB creato con nuova password e migrazioni applicate')
+}
+
+/**
+ * Reload sync: sostituisce il DB locale con `nuovoPath` e riapre con la chiave
+ * CORRENTE in memoria (stessa master password tra dispositivi).
+ * Non richiede la password in chiaro.
+ *
+ * Su fallimento (chiave incompatibile) ripristina il DB precedente e lancia
+ * Error('SYNC_PASSWORD_MISMATCH').
+ *
+ * ATTENZIONE: cattura la chiave PRIMA di closeDatabase(), che la azzera.
+ *
+ * @param nuovoPath - Percorso del file .db da installare come DB attivo
+ */
+export async function eseguiRipristinoConChiaveCorrente(nuovoPath: string): Promise<void> {
+  // Cattura la chiave prima di chiudere (closeDatabase la azzera)
+  const key = getCurrentKey()
+  if (key === null) throw new Error('DB_NON_APERTO')
+
+  const safetyPath = DB_PATH + '.sync-safety.db'
+  let hasSafety = false
+
+  if (isDatabaseOpen()) {
+    closeDatabase()
+    log.info('[sync-restore] DB corrente chiuso per reload sync')
+  }
+
+  if (existsSync(DB_PATH)) {
+    copyFileSync(DB_PATH, safetyPath)
+    hasSafety = true
+    log.info(`[sync-restore] Backup di sicurezza creato: ${safetyPath}`)
+  }
+
+  try {
+    copyFileSync(nuovoPath, DB_PATH)
+    log.info(`[sync-restore] File sync copiato su: ${DB_PATH}`)
+    openDatabaseWithKey(key)
+    log.info('[sync-restore] Reload completato con chiave corrente')
+  } catch (err) {
+    log.error('[sync-restore] Reload fallito, ripristino DB precedente', err)
+    if (isDatabaseOpen()) closeDatabase()
+    if (hasSafety) {
+      copyFileSync(safetyPath, DB_PATH)
+      // Riapri con la stessa chiave per lasciare il DB in stato coerente
+      try {
+        openDatabaseWithKey(key)
+        log.info('[sync-restore] DB precedente ripristinato e riaperto')
+      } catch (reopenErr) {
+        log.error('[sync-restore] Impossibile riaprire il DB di sicurezza', reopenErr)
+      }
+    }
+    throw new Error('SYNC_PASSWORD_MISMATCH')
+  } finally {
+    if (hasSafety && existsSync(safetyPath)) {
+      try {
+        unlinkSync(safetyPath)
+      } catch {
+        log.warn(`[sync-restore] Impossibile rimuovere backup di sicurezza: ${safetyPath}`)
+      }
+    }
+  }
 }
 
 export type { BackupManifest }
