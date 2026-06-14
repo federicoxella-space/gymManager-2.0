@@ -65,8 +65,10 @@ export function isMinorenne(
  * - `nome` non vuoto
  * - `cognome` non vuoto
  * - `codice_fiscale` formalmente valido (algoritmo standard italiano)
- * - Se il cliente è minorenne (derivato da `data_nascita`):
- *   nome, cognome e CF del tutore sono obbligatori; il CF deve essere valido.
+ * - Il tutore NON è obbligatorio al salvataggio, neanche per i minorenni: un
+ *   minore può essere salvato senza tutore. Il vincolo del tutore (B7) è
+ *   verificato solo al momento dell'emissione della ricevuta (TUTORE_RICHIESTO
+ *   in creaRicevuta), non qui.
  * - L'indirizzo NON è obbligatorio al salvataggio; è richiesto solo al momento
  *   dell'emissione della ricevuta (validazione di competenza del layer ricevute).
  */
@@ -94,17 +96,9 @@ export function validaCliente(input: CreateClienteInput): ValidationResult {
     })
   }
 
-  // B7: per i minorenni il tutore deve essere collegato tramite tutore_id (FK a clienti).
-  // La validazione che il tutore esista nel DB è delegata al repository (validaTutore).
-  // Qui si verifica solo che tutore_id sia fornito se il cliente è minorenne.
-  if (isMinorenne(input.data_nascita ?? null)) {
-    if (input.tutore_id == null) {
-      errors.push({
-        field: 'tutore_id',
-        message: 'Il tutore è obbligatorio per i clienti minorenni.',
-      })
-    }
-  }
+  // B7: il tutore NON è obbligatorio al salvataggio, neanche per i minorenni.
+  // Il blocco avviene solo all'emissione della ricevuta (TUTORE_RICHIESTO in
+  // creaRicevuta). Qui non si valida tutore_id.
 
   return { valid: errors.length === 0, errors }
 }
@@ -115,10 +109,8 @@ export function validaCliente(input: CreateClienteInput): ValidationResult {
  * - se `nome` è fornito, non deve essere vuoto
  * - se `cognome` è fornito, non deve essere vuoto
  * - se `codice_fiscale` è fornito, deve essere formalmente valido
- * - se `data_nascita` indica un minorenne, i campi tutore (nome, cognome, CF)
- *   devono essere presenti nell'input oppure già valorizzati (il chiamante è
- *   responsabile di passare i valori correnti se non li sta modificando);
- *   questa funzione controlla solo ciò che è presente in `input`.
+ * - il tutore NON è obbligatorio al salvataggio, neanche per i minorenni:
+ *   il vincolo del tutore (B7) è verificato solo all'emissione della ricevuta.
  */
 export function validaClienteUpdate(input: Partial<CreateClienteInput>): ValidationResult {
   const errors: ValidationError[] = []
@@ -149,16 +141,9 @@ export function validaClienteUpdate(input: Partial<CreateClienteInput>): Validat
     }
   }
 
-  // B7: se data_nascita viene aggiornata e indica un minorenne, e tutore_id
-  // è esplicitamente passato come null/undefined, segnala l'obbligo.
-  if ('data_nascita' in input && isMinorenne(input.data_nascita ?? null)) {
-    if ('tutore_id' in input && input.tutore_id == null) {
-      errors.push({
-        field: 'tutore_id',
-        message: 'Il tutore è obbligatorio per i clienti minorenni.',
-      })
-    }
-  }
+  // B7: il tutore NON è obbligatorio al salvataggio, neanche per i minorenni.
+  // Il blocco avviene solo all'emissione della ricevuta (TUTORE_RICHIESTO in
+  // creaRicevuta). Qui non si valida tutore_id.
 
   return { valid: errors.length === 0, errors }
 }

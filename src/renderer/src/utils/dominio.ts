@@ -79,7 +79,7 @@ export interface IntestatarioCalcolato {
 
 /** Replica lato renderer della logica intestatario di creaRicevuta (receipts-repository.ts). */
 export function calcolaIntestatario(cliente: ClienteRow): IntestatarioCalcolato {
-  const haTutore = Boolean(cliente.tutore_cf) && isMinorenne(cliente.data_nascita)
+  const haTutore = cliente.tutore_id != null && isMinorenne(cliente.data_nascita)
   if (haTutore) {
     return {
       nome: cliente.tutore_nome ?? '',
@@ -114,7 +114,7 @@ export function minoreSenzaTutore(cliente: ClienteRow): boolean {
  * tutore_* quando il cliente è minore con tutore, altrimenti i campi del cliente.
  */
 export function indirizzoIntestatarioCompleto(cliente: ClienteRow): boolean {
-  const haTutore = Boolean(cliente.tutore_cf) && isMinorenne(cliente.data_nascita)
+  const haTutore = cliente.tutore_id != null && isMinorenne(cliente.data_nascita)
   const via = haTutore ? cliente.tutore_via : cliente.via
   const citta = haTutore ? cliente.tutore_citta : cliente.citta
   const cap = haTutore ? cliente.tutore_cap : cliente.cap

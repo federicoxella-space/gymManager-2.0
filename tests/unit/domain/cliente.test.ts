@@ -149,7 +149,7 @@ describe('validaCliente', () => {
   })
 
   describe('minorenne — validazione tutore', () => {
-    it('B7: richiede tutore_id per un minorenne senza tutore collegato', () => {
+    it('B7: un minorenne senza tutore collegato è salvabile (nessun errore tutore)', () => {
       const input: CreateClienteInput = {
         nome: 'Luca',
         cognome: 'Verdi',
@@ -157,8 +157,9 @@ describe('validaCliente', () => {
         data_nascita: '2012-01-01', // minorenne nel 2026
       }
       const result = validaCliente(input)
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(true)
+      // Il tutore è obbligatorio solo all'emissione della ricevuta, non al salvataggio.
+      expect(result.valid).toBe(true)
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(false)
     })
 
     it('B7: accetta un minorenne con tutore_id valorizzato', () => {
@@ -174,7 +175,7 @@ describe('validaCliente', () => {
       expect(result.errors).toHaveLength(0)
     })
 
-    it('B7: minorenne con tutore_id null produce errore tutore_id', () => {
+    it('B7: un minorenne con tutore_id null resta salvabile (nessun errore tutore)', () => {
       const input: CreateClienteInput = {
         nome: 'Luca',
         cognome: 'Verdi',
@@ -183,8 +184,8 @@ describe('validaCliente', () => {
         tutore_id: null,
       }
       const result = validaCliente(input)
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(true)
+      expect(result.valid).toBe(true)
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(false)
     })
 
     it('non richiede tutore per un adulto', () => {
@@ -235,10 +236,10 @@ describe('validaClienteUpdate', () => {
   })
 
   describe('minorenne — data_nascita aggiornata', () => {
-    it('B7: rifiuta tutore_id null esplicito quando data_nascita diventa minorenne', () => {
+    it('B7: tutore_id null esplicito su update minorenne resta valido (blocco solo in ricevuta)', () => {
       const result = validaClienteUpdate({ data_nascita: '2015-01-01', tutore_id: null })
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(true)
+      expect(result.valid).toBe(true)
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(false)
     })
 
     it('B7: non aggiunge errori tutore se tutore_id non è nel payload (update parziale)', () => {

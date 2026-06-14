@@ -143,7 +143,9 @@ export default function ClientForm({
   const [tutoreRisultati, setTutoreRisultati] = useState<ClienteRow[]>([])
   const [tutoreAvvisoMinorenne, setTutoreAvvisoMinorenne] = useState(false)
 
-  const isDirty = JSON.stringify(formData) !== JSON.stringify(buildInitialData(initialData))
+  const isDirty =
+    JSON.stringify(formData) !== JSON.stringify(buildInitialData(initialData)) ||
+    tutoreId !== (initialData?.tutore_id ?? null)
   useModalDirty(isDirty)
 
   const minorenneFlag = isMinorenne(formData.data_nascita)
