@@ -890,8 +890,8 @@ export function registerIpcHandlers(): void {
   )
 
   /**
-   * Esegue il backup automatico nella cartella di default.
-   * Restituisce il percorso del file creato.
+   * Esegue un backup nella cartella configurata (o quella di default se non impostata),
+   * applicando la retention configurata. Restituisce il percorso del file creato.
    */
   ipcMain.handle('backup:automatico', async (): Promise<string> => {
     try {

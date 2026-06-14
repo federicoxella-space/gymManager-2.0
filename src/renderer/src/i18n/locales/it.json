@@ -557,6 +557,7 @@
     "cartella_sfoglia": "Sfoglia…",
     "cartella_help": "Lascia vuoto per usare la cartella predefinita dell'applicazione.",
     "cartella_predefinita": "(cartella predefinita)",
+    "cartella_reset": "Ripristina predefinita",
     "periodico_label": "Backup periodico mentre l'app è aperta",
     "periodico_ogni": "ogni",
     "periodico_ore": "ore",

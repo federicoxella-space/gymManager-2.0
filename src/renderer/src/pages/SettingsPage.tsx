@@ -1072,6 +1072,15 @@ export default function SettingsPage(): React.JSX.Element {
                 >
                   {t('backup.cartella_sfoglia')}
                 </button>
+                {form.backup_dir.trim().length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setForm((prev) => ({ ...prev, backup_dir: '' }))}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                  >
+                    {t('backup.cartella_reset')}
+                  </button>
+                )}
               </div>
               <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
                 {t('backup.cartella_help')}

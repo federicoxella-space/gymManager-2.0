@@ -6,6 +6,7 @@ import { closeDatabase, isDatabaseOpen } from './db/database'
 import { registerIpcHandlers } from './ipc/handlers'
 import { loadSettings } from './settings/store'
 import { backupAutomatico } from './backup/backup-service'
+import { stopBackupScheduler } from './backup/backup-scheduler'
 import { initAutoUpdater } from './updater/auto-updater'
 import { initSyncService, upload as syncUpload } from './sync/sync-service'
 import { loadSyncState, isLocalDirty } from './sync/sync-state'
@@ -80,6 +81,9 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   log.info('[main] Tutte le finestre chiuse')
+
+  // Ferma il timer periodico: evita che un tick parta mentre il DB si sta chiudendo.
+  stopBackupScheduler()
 
   // Backup automatico alla chiusura se settings.backup_on_close === 'true' e DB aperto
   if (isDatabaseOpen()) {

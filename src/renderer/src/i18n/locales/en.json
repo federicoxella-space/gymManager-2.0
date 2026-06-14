@@ -557,6 +557,7 @@
     "cartella_sfoglia": "Browse…",
     "cartella_help": "Leave empty to use the application's default folder.",
     "cartella_predefinita": "(default folder)",
+    "cartella_reset": "Reset to default",
     "periodico_label": "Periodic backup while the app is open",
     "periodico_ogni": "every",
     "periodico_ore": "hours",
