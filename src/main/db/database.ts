@@ -136,11 +136,14 @@ export function changePassword(oldPassword: string, newPassword: string): void {
     throw new Error('PASSWORD_WRONG')
   }
   const newKey = deriveKey(newPassword)
-  // PRAGMA rekey non è supportato in WAL journal mode: si commuta temporaneamente
-  // in DELETE, si esegue il rekey, poi si ripristina WAL.
+  // PRAGMA rekey non è supportato in WAL: si commuta in DELETE, si esegue il rekey,
+  // e si ripristina WAL in ogni caso (anche su errore).
   dbInstance.pragma('journal_mode = DELETE')
-  dbInstance.pragma(`rekey='${newKey}'`)
-  dbInstance.pragma('journal_mode = WAL')
+  try {
+    dbInstance.pragma(`rekey='${newKey}'`)
+  } finally {
+    dbInstance.pragma('journal_mode = WAL')
+  }
   currentKey = newKey
   log.info('[database] Master password aggiornata (rekey)')
 }
