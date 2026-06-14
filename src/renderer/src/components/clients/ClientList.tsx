@@ -5,6 +5,7 @@ import { useSettings } from '../../context/SettingsContext'
 import SearchInput from '../ui/SearchInput'
 import Badge from '../ui/Badge'
 import ClientBadge, { getStatoCert } from './ClientBadge'
+import { formatNomeCliente } from '../../utils/dominio'
 
 interface ClientListProps {
   clienti: ClienteRow[]
@@ -177,7 +178,7 @@ export default function ClientList({
                     </td>
                     <td className="px-4 py-3">
                       <span className="font-medium text-gray-900 dark:text-gray-100">
-                        {cliente.cognome} {cliente.nome}
+                        {formatNomeCliente(cliente)}
                       </span>
                     </td>
                     <td className="px-4 py-3">

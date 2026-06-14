@@ -98,6 +98,11 @@ export function calcolaIntestatario(cliente: ClienteRow): IntestatarioCalcolato 
   }
 }
 
+/** Nome cliente formattato in modo coerente: "Cognome Nome". */
+export function formatNomeCliente(c: { nome: string; cognome: string }): string {
+  return `${c.cognome} ${c.nome}`.trim()
+}
+
 /**
  * true se l'indirizzo che finirà sulla ricevuta (via + città + cap) è completo.
  * Controlla gli stessi campi che creaRicevuta scrive come intestatario:

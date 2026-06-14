@@ -11,7 +11,7 @@ import type {
   TipoIscrizioneRow,
 } from '../../../../types/shared'
 import { useSettings } from '../../context/SettingsContext'
-import { isMinorenne } from '../../utils/dominio'
+import { isMinorenne, formatNomeCliente } from '../../utils/dominio'
 import Badge from '../ui/Badge'
 import Modal from '../ui/Modal'
 import ConfirmDialog from '../ui/ConfirmDialog'
@@ -414,7 +414,7 @@ export default function ClientDetail({
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              {anonimizzato ? '*** ***' : `${cliente.cognome} ${cliente.nome}`}
+              {anonimizzato ? '*** ***' : formatNomeCliente(cliente)}
             </h2>
             {minorenne && !anonimizzato && (
               <Badge variant="info">{t('clienti.dettaglio.minorenne')}</Badge>

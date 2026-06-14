@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ClienteInScadenza } from '../../../../types/shared'
 import Badge from '../ui/Badge'
+import { formatNomeCliente } from '../../utils/dominio'
 
 interface ScadenzeWidgetProps {
   voci: ClienteInScadenza[]
@@ -91,7 +92,7 @@ export default function ScadenzeWidget({
                       {etichettaTipo(voce.tipo)}
                     </Badge>
                     <span className="text-sm text-gray-900 dark:text-gray-100 truncate">
-                      {voce.nome} {voce.cognome}
+                      {formatNomeCliente(voce)}
                     </span>
                     <span className="text-sm text-gray-600 dark:text-gray-400 truncate hidden sm:inline">
                       {voce.nome_tipo}
