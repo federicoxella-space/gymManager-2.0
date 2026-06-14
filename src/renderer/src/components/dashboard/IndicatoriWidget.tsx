@@ -34,7 +34,7 @@ function StatCard({
   ].join(' ')
 
   const interactiveClasses = onClick
-    ? 'cursor-pointer hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
+    ? 'cursor-pointer hover:shadow-md transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary-500'
     : ''
 
   const content = (

@@ -124,7 +124,7 @@ export default function UpdateNotification(): React.JSX.Element | null {
             <button
               type="button"
               onClick={handleInstall}
-              className="shrink-0 bg-white text-green-700 font-semibold text-xs px-3 py-1.5 rounded-md hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-white transition-colors"
+              className="shrink-0 bg-white text-green-700 font-semibold text-xs px-3 py-1.5 rounded-md hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors"
             >
               {t('aggiornamento.installa')}
             </button>

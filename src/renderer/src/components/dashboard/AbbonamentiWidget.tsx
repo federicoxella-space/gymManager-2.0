@@ -59,7 +59,7 @@ export default function AbbonamentiWidget({
                   <button
                     type="button"
                     onClick={() => onNavigatePerTipo(riga.tipo_abbonamento_id)}
-                    className="w-full text-left focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-md group"
+                    className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded-md group"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <span

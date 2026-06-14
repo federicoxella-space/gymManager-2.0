@@ -84,7 +84,7 @@ export default function ScadenzeWidget({
                 <button
                   type="button"
                   onClick={() => onNavigateCliente(voce.cliente_id)}
-                  className="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                  className="w-full flex items-center justify-between px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <Badge variant={varianteTipo(voce.tipo)}>
@@ -124,7 +124,7 @@ export default function ScadenzeWidget({
               <button
                 type="button"
                 onClick={() => setMostraTutti(true)}
-                className="text-sm text-primary-600 dark:text-primary-400 hover:underline focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
               >
                 {t('dashboard.scadenze.vedi_tutti')} ({voci.length})
               </button>

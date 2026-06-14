@@ -53,7 +53,7 @@ export default function CompleanniBadge({
                 <button
                   type="button"
                   onClick={() => onNavigateCliente(cliente.cliente_id)}
-                  className="w-full flex items-center justify-between py-1 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 rounded text-left"
+                  className="w-full flex items-center justify-between py-1 text-sm hover:text-primary-600 dark:hover:text-primary-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded text-left"
                 >
                   <span className="text-gray-900 dark:text-gray-100">
                     {cliente.nome} {cliente.cognome}
