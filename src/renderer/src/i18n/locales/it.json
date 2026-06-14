@@ -80,6 +80,8 @@
     "cerca": "Cerca per nome, cognome o C.F.",
     "nessuno_trovato": "Nessun cliente trovato",
     "nessuno_trovato_desc": "Prova a modificare i criteri di ricerca o aggiungi un nuovo cliente.",
+    "nessun_risultato_filtro": "Nessun cliente corrisponde ai filtri",
+    "nessun_risultato_filtro_desc": "Prova a modificare o azzerare la ricerca.",
     "errore_caricamento": "Errore durante il caricamento dei clienti.",
     "colonne": {
       "tessera": "N° Tessera",

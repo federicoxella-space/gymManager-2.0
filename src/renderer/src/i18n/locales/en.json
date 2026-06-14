@@ -80,6 +80,8 @@
     "cerca": "Search by name, surname or tax code",
     "nessuno_trovato": "No clients found",
     "nessuno_trovato_desc": "Try changing the search criteria or add a new client.",
+    "nessun_risultato_filtro": "No clients match the filters",
+    "nessun_risultato_filtro_desc": "Try changing or clearing the search.",
     "errore_caricamento": "Error loading clients.",
     "colonne": {
       "tessera": "Membership N°",

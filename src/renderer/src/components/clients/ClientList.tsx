@@ -158,10 +158,10 @@ export default function ClientList({
               <tr>
                 <td colSpan={6} className="px-4 py-12 text-center">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {t('clienti.nessuno_trovato')}
+                    {searchValue.trim() ? t('clienti.nessun_risultato_filtro') : t('clienti.nessuno_trovato')}
                   </p>
                   <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {t('clienti.nessuno_trovato_desc')}
+                    {searchValue.trim() ? t('clienti.nessun_risultato_filtro_desc') : t('clienti.nessuno_trovato_desc')}
                   </p>
                 </td>
               </tr>

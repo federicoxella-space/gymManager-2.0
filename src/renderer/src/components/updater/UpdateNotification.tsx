@@ -132,9 +132,9 @@ export default function UpdateNotification(): React.JSX.Element | null {
         )}
 
         {stato.fase === 'errore' && (
-          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-xs px-3 py-2 rounded-md shadow-sm">
+          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs px-3 py-2 rounded-md shadow-sm">
             <ExclamationIcon />
-            <span>{t('aggiornamento.errore')}</span>
+            <span>{stato.messaggio ?? t('aggiornamento.errore')}</span>
           </div>
         )}
       </div>
