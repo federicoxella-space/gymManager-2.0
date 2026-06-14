@@ -147,8 +147,8 @@ export default function ClientList({
             {isLoading ? (
               <tr>
                 <td colSpan={6} className="px-4 py-10 text-center">
-                  <div className="flex items-center justify-center gap-2 text-gray-400">
-                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+                  <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-400" role="status" aria-live="polite">
+                    <div className="w-5 h-5 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" aria-hidden="true" />
                     <span>{t('common.loading')}</span>
                   </div>
                 </td>

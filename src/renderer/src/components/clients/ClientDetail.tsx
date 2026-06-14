@@ -355,8 +355,8 @@ export default function ClientDetail({
 
   if (isLoadingCliente) {
     return (
-      <div className="flex items-center justify-center py-24 gap-3 text-gray-400">
-        <div className="w-6 h-6 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+      <div className="flex items-center justify-center py-24 gap-3 text-gray-600 dark:text-gray-400" role="status" aria-live="polite">
+        <div className="w-6 h-6 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" aria-hidden="true" />
         <span className="text-sm">{t('common.loading')}</span>
       </div>
     )
@@ -564,8 +564,8 @@ export default function ClientDetail({
       <Section title={t('clienti.dettaglio.sezione_iscrizione')} data-testid="tab-iscrizioni">
 
         {isLoadingIscrizione ? (
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm" role="status" aria-live="polite">
+            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" aria-hidden="true" />
             {t('common.loading')}
           </div>
         ) : iscrizioneAttiva ? (
@@ -771,8 +771,8 @@ export default function ClientDetail({
       {/* Sezione Abbonamenti */}
       <Section title={t('clienti.dettaglio.sezione_abbonamenti')} data-testid="tab-abbonamenti">
         {isLoadingAbbonamenti ? (
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm" role="status" aria-live="polite">
+            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" aria-hidden="true" />
             {t('common.loading')}
           </div>
         ) : (
@@ -919,8 +919,8 @@ export default function ClientDetail({
       {/* Sezione Ricevute */}
       <Section title={t('clienti.dettaglio.sezione_ricevute')} data-testid="tab-ricevute">
         {isLoadingRicevute ? (
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+          <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 text-sm" role="status" aria-live="polite">
+            <div className="w-4 h-4 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" aria-hidden="true" />
             {t('common.loading')}
           </div>
         ) : (

@@ -242,8 +242,8 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
 
       {/* Stati loading / error / empty */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-20 gap-3 text-gray-400">
-          <div className="w-6 h-6 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" />
+        <div className="flex items-center justify-center py-20 gap-3 text-gray-600 dark:text-gray-400" role="status" aria-live="polite">
+          <div className="w-6 h-6 rounded-full border-2 border-gray-300 border-t-primary-600 animate-spin" aria-hidden="true" />
           <span className="text-sm">{t('common.loading')}</span>
         </div>
       ) : loadError ? (
