@@ -337,6 +337,8 @@ interface SyncStatus {
   lastSyncAt: string | null
   dirty: boolean
   conflict: boolean
+  /** Intervallo di polling in secondi (default 60). */
+  pollingSec: number
 }
 
 // ── ElectronAPI ───────────────────────────────────────────────────────────────

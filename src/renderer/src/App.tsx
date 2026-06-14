@@ -1,16 +1,38 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import i18n from './i18n'
 import { applyTheme, applyPrimaryColor } from './theme'
 import SetupPage from './pages/Setup'
 import UnlockPage from './pages/Unlock'
 import ShellPage from './pages/Shell'
+import SyncBanner from './components/sync/SyncBanner'
+import SyncConflictDialog from './components/sync/SyncConflictDialog'
 
 type AppState = 'loading' | 'firstRun' | 'locked' | 'ready'
 
 export default function App(): React.JSX.Element {
   const { t } = useTranslation()
   const [appState, setAppState] = useState<AppState>('loading')
+  const pollingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  /** Avvia o riavvia il timer di polling (solo se sync abilitato). */
+  function startPolling(pollingSec: number): void {
+    if (pollingTimerRef.current !== null) {
+      clearInterval(pollingTimerRef.current)
+      pollingTimerRef.current = null
+    }
+    if (pollingSec <= 0) return
+    pollingTimerRef.current = setInterval(() => {
+      void window.api.sync.check().catch(() => { /* non bloccante */ })
+    }, pollingSec * 1000)
+  }
+
+  function stopPolling(): void {
+    if (pollingTimerRef.current !== null) {
+      clearInterval(pollingTimerRef.current)
+      pollingTimerRef.current = null
+    }
+  }
 
   useEffect(() => {
     async function init(): Promise<void> {
@@ -51,6 +73,39 @@ export default function App(): React.JSX.Element {
     }
   }, [])
 
+  // Avvia il polling sync una volta che l'app è pronta
+  useEffect(() => {
+    if (appState !== 'ready') return
+
+    async function initPolling(): Promise<void> {
+      try {
+        const status = await window.api.sync.status()
+        if (status.enabled) {
+          startPolling(status.pollingSec ?? 60)
+        }
+      } catch {
+        // non bloccante
+      }
+    }
+
+    void initPolling()
+
+    // check() su focus della finestra
+    const handleWindowFocus = (): void => {
+      window.api.sync.status().then((s) => {
+        if (s.enabled) {
+          void window.api.sync.check().catch(() => { /* non bloccante */ })
+        }
+      }).catch(() => { /* non bloccante */ })
+    }
+    window.addEventListener('focus', handleWindowFocus)
+
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus)
+      stopPolling()
+    }
+  }, [appState])
+
   if (appState === 'loading') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-surface gap-4">
@@ -72,5 +127,11 @@ export default function App(): React.JSX.Element {
     return <UnlockPage onReady={() => setAppState('ready')} />
   }
 
-  return <ShellPage />
+  return (
+    <>
+      <ShellPage />
+      <SyncBanner />
+      <SyncConflictDialog />
+    </>
+  )
 }

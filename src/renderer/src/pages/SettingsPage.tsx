@@ -142,6 +142,12 @@ export default function SettingsPage(): React.JSX.Element {
   const [updateCheckResult, setUpdateCheckResult] = useState<'idle' | 'aggiornato' | 'errore'>('idle')
   const [updateErrorMsg, setUpdateErrorMsg] = useState<string | null>(null)
 
+  // Sync state — il tipo è inferito come SyncStatus (dalla firma del preload) con pollingSec aggiunto
+  const [syncStatus, setSyncStatus] = useState<ReturnType<typeof window.api.sync.status> extends Promise<infer T> ? T | null : never>(null)
+  const [isSyncNow, setIsSyncNow] = useState(false)
+  const [syncNowResult, setSyncNowResult] = useState<'idle' | 'ok' | 'errore'>('idle')
+  const syncNowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const [form, setForm] = useState<FormState>({
     theme: 'system',
     language: 'it',
@@ -191,6 +197,7 @@ export default function SettingsPage(): React.JSX.Element {
     setIsLoading(true)
     void window.api.backup.drive.isConnected().then(c => setDriveConnected(c)).catch(() => {})
     void window.api.app.getVersion().then(v => setAppVersion(v)).catch(() => {})
+    void window.api.sync.status().then(s => setSyncStatus(s)).catch(() => {})
     window.api.settings
       .get()
       .then((s: AppSettings) => {
@@ -232,6 +239,9 @@ export default function SettingsPage(): React.JSX.Element {
       }
       if (backupTimerRef.current !== null) {
         clearTimeout(backupTimerRef.current)
+      }
+      if (syncNowTimerRef.current !== null) {
+        clearTimeout(syncNowTimerRef.current)
       }
     }
   }, [t])
@@ -392,6 +402,53 @@ export default function SettingsPage(): React.JSX.Element {
       setDriveBackupMsg(t('backup.drive_backup_errore'))
     } finally {
       setIsDriveBacking(false)
+    }
+  }
+
+  async function handleSyncEnable(): Promise<void> {
+    try {
+      await window.api.sync.enable()
+      const s = await window.api.sync.status()
+      setSyncStatus(s)
+    } catch {
+      // non bloccante
+    }
+  }
+
+  async function handleSyncDisable(): Promise<void> {
+    try {
+      await window.api.sync.disable()
+      const s = await window.api.sync.status()
+      setSyncStatus(s)
+    } catch {
+      // non bloccante
+    }
+  }
+
+  async function handleSyncNow(): Promise<void> {
+    setSyncNowResult('idle')
+    setIsSyncNow(true)
+    try {
+      await window.api.sync.now()
+      const s = await window.api.sync.status()
+      setSyncStatus(s)
+      setSyncNowResult('ok')
+    } catch {
+      setSyncNowResult('errore')
+    } finally {
+      setIsSyncNow(false)
+      if (syncNowTimerRef.current !== null) clearTimeout(syncNowTimerRef.current)
+      syncNowTimerRef.current = setTimeout(() => setSyncNowResult('idle'), 4000)
+    }
+  }
+
+  async function handleSyncSetPolling(sec: number): Promise<void> {
+    try {
+      await window.api.sync.setPolling(sec)
+      const s = await window.api.sync.status()
+      setSyncStatus(s)
+    } catch {
+      // non bloccante
     }
   }
 
@@ -1121,6 +1178,123 @@ export default function SettingsPage(): React.JSX.Element {
               {t('backup.reset_pulsante')}
             </button>
           </div>
+        </section>
+
+        {/* ── Sezione Sincronizzazione ─────────────────────────────────────── */}
+        <section className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+            {t('sync.titolo')}
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-5">
+            {t('sync.descrizione')}
+          </p>
+
+          {!driveConnected ? (
+            <p className="text-sm text-amber-600 dark:text-amber-400">
+              {t('sync.drive_non_connesso')}
+            </p>
+          ) : (
+            <div className="space-y-5">
+              {/* Toggle abilita / disabilita */}
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {syncStatus?.enabled ? t('sync.disabilita') : t('sync.abilita')}
+                  </p>
+                  {syncStatus !== null && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {syncStatus.lastSyncAt !== null
+                        ? t('sync.ultimo_sync', {
+                            data: new Intl.DateTimeFormat('it-IT', {
+                              dateStyle: 'short',
+                              timeStyle: 'short',
+                            }).format(new Date(syncStatus.lastSyncAt)),
+                          })
+                        : t('sync.stato_aggiornato')}
+                    </p>
+                  )}
+                  {syncStatus?.dirty === true && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+                      {t('sync.stato_modifiche_locali')}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (syncStatus?.enabled) {
+                      void handleSyncDisable()
+                    } else {
+                      void handleSyncEnable()
+                    }
+                  }}
+                  className={[
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
+                    syncStatus?.enabled
+                      ? 'bg-primary-600'
+                      : 'bg-gray-200 dark:bg-gray-700',
+                  ].join(' ')}
+                  role="switch"
+                  aria-checked={syncStatus?.enabled ?? false}
+                  aria-label={syncStatus?.enabled ? t('sync.disabilita') : t('sync.abilita')}
+                >
+                  <span
+                    className={[
+                      'inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform',
+                      syncStatus?.enabled ? 'translate-x-6' : 'translate-x-1',
+                    ].join(' ')}
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
+
+              {syncStatus?.enabled && (
+                <>
+                  {/* Pulsante Sincronizza ora */}
+                  <div>
+                    {syncNowResult === 'ok' && (
+                      <p className="mb-2 text-sm text-green-600 dark:text-green-400">
+                        {t('sync.sincronizza_ok')}
+                      </p>
+                    )}
+                    {syncNowResult === 'errore' && (
+                      <p className="mb-2 text-sm text-red-600 dark:text-red-400">
+                        {t('sync.sincronizza_errore')}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { void handleSyncNow() }}
+                      disabled={isSyncNow}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                    >
+                      {isSyncNow ? t('sync.sincronizzazione_in_corso') : t('sync.sincronizza_ora')}
+                    </button>
+                  </div>
+
+                  {/* Selettore intervallo polling */}
+                  <div>
+                    <label
+                      htmlFor="settings-sync-polling"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                    >
+                      {t('sync.intervallo_polling')}
+                    </label>
+                    <select
+                      id="settings-sync-polling"
+                      value={syncStatus.pollingSec ?? 60}
+                      onChange={(e) => { void handleSyncSetPolling(parseInt(e.target.value, 10)) }}
+                      className="block w-48 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value={30}>30 {t('sync.secondi')}</option>
+                      <option value={60}>60 {t('sync.secondi')}</option>
+                      <option value={300}>300 {t('sync.secondi')}</option>
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </section>
 
         {/* ── Feedback globale e submit ─────────────────────────────────────── */}
