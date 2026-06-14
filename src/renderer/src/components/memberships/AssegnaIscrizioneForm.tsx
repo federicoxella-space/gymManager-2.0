@@ -6,7 +6,7 @@ interface AssegnaIscrizioneFormProps {
   clienteId: number
   tipiDisponibili: TipoIscrizioneRow[]
   iscrizioneAttiva: IscrizioneClienteRow | null
-  onSuccess: (iscrizione: IscrizioneClienteRow) => void
+  onSuccess: (iscrizione: IscrizioneClienteRow, emettiRicevuta: boolean) => void
   onCancel: () => void
 }
 
@@ -67,6 +67,7 @@ export default function AssegnaIscrizioneForm({
 
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const isSubmitting = submitState === 'submitting'
+  const [emettiRicevuta, setEmettiRicevuta] = useState(false)
 
   // Quando cambia il tipo selezionato, aggiorna prezzo e scadenza
   useEffect(() => {
@@ -136,7 +137,7 @@ export default function AssegnaIscrizioneForm({
         metodo_pagamento: statoPagamento === 'pagato' ? metodoPagamento : undefined,
       })
       setSubmitState('idle')
-      onSuccess(result)
+      onSuccess(result, emettiRicevuta)
     } catch {
       setSubmitState('error')
     }
@@ -292,20 +293,17 @@ export default function AssegnaIscrizioneForm({
         </div>
       )}
 
-      {/* Checkbox emetti ricevuta — disabilitato, placeholder F3 */}
+      {/* Checkbox emetti ricevuta ora (B1) */}
       <div className="flex items-center gap-2">
         <input
           type="checkbox"
           id="assegna-iscr-ricevuta"
-          disabled
-          className="w-4 h-4 rounded border-gray-300 text-primary-600 opacity-50 cursor-not-allowed"
+          checked={emettiRicevuta}
+          onChange={(e) => setEmettiRicevuta(e.target.checked)}
+          className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
         />
-        <label
-          htmlFor="assegna-iscr-ricevuta"
-          className="text-sm text-gray-400 dark:text-gray-500 cursor-not-allowed"
-          title={t('iscrizioni.form.ricevuta_placeholder')}
-        >
-          {t('iscrizioni.form.ricevuta_placeholder')}
+        <label htmlFor="assegna-iscr-ricevuta" className="text-sm text-gray-700 dark:text-gray-300">
+          {t('iscrizioni.form.emetti_ricevuta')}
         </label>
       </div>
 

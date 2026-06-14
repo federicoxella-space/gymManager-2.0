@@ -248,7 +248,7 @@
       "stato_pagamento": "Payment status",
       "metodo_pagamento": "Payment method",
       "nota_rinnovo": "Renewal: the new membership will replace the active one upon saving",
-      "ricevuta_placeholder": "Issue receipt (available in F3)"
+      "emetti_ricevuta": "Issue receipt now"
     }
   },
   "ricevute": {

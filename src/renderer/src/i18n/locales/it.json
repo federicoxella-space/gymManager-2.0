@@ -248,7 +248,7 @@
       "stato_pagamento": "Stato pagamento",
       "metodo_pagamento": "Metodo di pagamento",
       "nota_rinnovo": "Rinnovo: la nuova iscrizione sostituirà quella attiva al salvataggio",
-      "ricevuta_placeholder": "Emetti ricevuta (disponibile in F3)"
+      "emetti_ricevuta": "Emetti ricevuta ora"
     }
   },
   "ricevute": {
