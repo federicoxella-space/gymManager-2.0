@@ -501,7 +501,8 @@
       "data_scadenza": "Expiry date",
       "prezzo": "Price (€)",
       "stato_pagamento": "Payment status",
-      "metodo_pagamento": "Payment method"
+      "metodo_pagamento": "Payment method",
+      "emetti_ricevuta": "Issue receipt now"
     }
   }
 }

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { IscrizioneClienteRow, TipoAbbonamentoRow } from '../../../../types/shared'
+import type { AbbonamentoClienteRow, IscrizioneClienteRow, TipoAbbonamentoRow } from '../../../../types/shared'
 
 interface AssegnaAbbonamentoFormProps {
   clienteId: number
   tipiDisponibili: TipoAbbonamentoRow[]
   iscrizioneAttiva: IscrizioneClienteRow | null
-  onSuccess: () => void
+  onSuccess: (abbonamento: AbbonamentoClienteRow, emettiRicevuta: boolean) => void
   onCancel: () => void
 }
 
@@ -67,6 +67,7 @@ export default function AssegnaAbbonamentoForm({
 
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const isSubmitting = submitState === 'submitting'
+  const [emettiRicevuta, setEmettiRicevuta] = useState(false)
 
   // INVARIANTE 3: controlla se la scadenza abbonamento supera quella dell'iscrizione
   const superaIscrizione: boolean =
@@ -130,7 +131,7 @@ export default function AssegnaAbbonamentoForm({
     if (!validate()) return
     setSubmitState('submitting')
     try {
-      await window.api.abbonamenti.assegna({
+      const result = await window.api.abbonamenti.assegna({
         cliente_id: clienteId,
         tipo_abbonamento_id: Number(tipoId),
         data_inizio: dataInizio,
@@ -140,7 +141,7 @@ export default function AssegnaAbbonamentoForm({
         metodo_pagamento: statoPagamento === 'pagato' ? metodoPagamento : undefined,
       })
       setSubmitState('idle')
-      onSuccess()
+      onSuccess(result, emettiRicevuta)
     } catch {
       setSubmitState('error')
     }
@@ -328,6 +329,20 @@ export default function AssegnaAbbonamentoForm({
           </select>
         </div>
       )}
+
+      {/* Checkbox emetti ricevuta ora (B1) */}
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="assegna-abb-ricevuta"
+          checked={emettiRicevuta}
+          onChange={(e) => setEmettiRicevuta(e.target.checked)}
+          className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+        />
+        <label htmlFor="assegna-abb-ricevuta" className="text-sm text-gray-700 dark:text-gray-300">
+          {t('abbonamenti.form.emetti_ricevuta')}
+        </label>
+      </div>
 
       {/* Azioni */}
       <div className="flex justify-end gap-3 pt-2">
