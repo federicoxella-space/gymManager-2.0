@@ -781,6 +781,7 @@ export default function ClientDetail({
             {!iscrizioneAttiva && !isLoadingIscrizione && (
               <div
                 data-testid="errore-no-iscrizione"
+                id="errore-no-iscrizione-msg"
                 className="px-4 py-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-300"
               >
                 {t('iscrizioni.assegna_prima')}
@@ -898,9 +899,9 @@ export default function ClientDetail({
                 <button
                   data-testid="btn-nuovo-abbonamento"
                   type="button"
-                  onClick={() => setShowAssegnaAbbonamento(true)}
-                  disabled={!iscrizioneAttiva}
-                  title={!iscrizioneAttiva ? t('abbonamenti.no_iscrizione_attiva') : undefined}
+                  onClick={() => { if (iscrizioneAttiva) setShowAssegnaAbbonamento(true) }}
+                  aria-disabled={!iscrizioneAttiva}
+                  aria-describedby={!iscrizioneAttiva ? 'errore-no-iscrizione-msg' : undefined}
                   className={[
                     'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors',
                     iscrizioneAttiva
