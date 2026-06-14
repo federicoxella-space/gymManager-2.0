@@ -1,6 +1,7 @@
 import React, { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { CertificatoRow } from '../../../../types/shared'
+import { useModalDirty } from '../ui/Modal'
 
 interface CertificatoFormProps {
   clienteId: number
@@ -35,6 +36,9 @@ export default function CertificatoForm({
   const [dataError, setDataError] = useState('')
 
   const isSubmitting = submitState === 'submitting'
+
+  const isDirty = tipo !== '' || dataScadenza !== ''
+  useModalDirty(isDirty)
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()

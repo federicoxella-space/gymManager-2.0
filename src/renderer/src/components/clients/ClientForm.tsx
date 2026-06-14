@@ -2,6 +2,7 @@ import React, { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ClienteRow, ComuneInfo, CreateClienteInput, ValidationError } from '../../../../types/shared'
 import { isMinorenne, decodeCFBasic } from '../../utils/dominio'
+import { useModalDirty } from '../ui/Modal'
 
 interface ClientFormProps {
   mode: 'create' | 'edit'
@@ -126,6 +127,9 @@ export default function ClientForm({
   const [comuneSuggerimenti, setComuneSuggerimenti] = useState<ComuneInfo[]>([])
   const [codiceComune, setCodiceComune] = useState('')
   const [cfError, setCfError] = useState<string | null>(null)
+
+  const isDirty = JSON.stringify(formData) !== JSON.stringify(buildInitialData(initialData))
+  useModalDirty(isDirty)
 
   const minorenneFlag = isMinorenne(formData.data_nascita)
   const isSubmitting = submitState === 'submitting'

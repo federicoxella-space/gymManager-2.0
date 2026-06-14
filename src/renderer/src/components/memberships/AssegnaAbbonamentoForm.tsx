@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AbbonamentoClienteRow, IscrizioneClienteRow, TipoAbbonamentoRow } from '../../../../types/shared'
+import { useModalDirty } from '../ui/Modal'
 
 interface AssegnaAbbonamentoFormProps {
   clienteId: number
@@ -73,6 +74,8 @@ export default function AssegnaAbbonamentoForm({
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const isSubmitting = submitState === 'submitting'
   const [emettiRicevuta, setEmettiRicevuta] = useState(false)
+  const [touched, setTouched] = useState(false)
+  useModalDirty(touched)
 
   // INVARIANTE 3: controlla se la scadenza abbonamento supera quella dell'iscrizione
   const superaIscrizione: boolean =
@@ -194,7 +197,7 @@ export default function AssegnaAbbonamentoForm({
           id="assegna-abb-tipo"
           data-testid="select-tipo-abbonamento"
           value={tipoId}
-          onChange={(e) => setTipoId(e.target.value)}
+          onChange={(e) => { setTipoId(e.target.value); setTouched(true) }}
           disabled={isSubmitting}
           aria-invalid={tipoError ? true : undefined}
           aria-describedby={tipoError ? tipoErrId : undefined}
@@ -227,7 +230,7 @@ export default function AssegnaAbbonamentoForm({
             data-testid="campo-data-inizio-abb"
             type="date"
             value={dataInizio}
-            onChange={(e) => setDataInizio(e.target.value)}
+            onChange={(e) => { setDataInizio(e.target.value); setTouched(true) }}
             disabled={isSubmitting}
             aria-invalid={dataIniziError ? true : undefined}
             aria-describedby={dataIniziError ? dataInizioErrId : undefined}
@@ -248,7 +251,7 @@ export default function AssegnaAbbonamentoForm({
             data-testid="campo-data-scadenza-abb"
             type="date"
             value={dataScadenza}
-            onChange={(e) => setDataScadenza(e.target.value)}
+            onChange={(e) => { setDataScadenza(e.target.value); setTouched(true) }}
             disabled={isSubmitting}
             aria-invalid={dataScadenzaError ? true : undefined}
             aria-describedby={dataScadenzaError ? dataScadenzaErrId : undefined}
@@ -273,7 +276,7 @@ export default function AssegnaAbbonamentoForm({
           min={0}
           step={0.01}
           value={prezzo}
-          onChange={(e) => setPrezzo(e.target.value)}
+          onChange={(e) => { setPrezzo(e.target.value); setTouched(true) }}
           disabled={isSubmitting}
           aria-invalid={prezzoError ? true : undefined}
           aria-describedby={prezzoError ? prezzoErrId : undefined}
@@ -294,7 +297,7 @@ export default function AssegnaAbbonamentoForm({
         <select
           id="assegna-abb-stato-pag"
           value={statoPagamento}
-          onChange={(e) => setStatoPagamento(e.target.value as 'da_incassare' | 'pagato')}
+          onChange={(e) => { setStatoPagamento(e.target.value as 'da_incassare' | 'pagato'); setTouched(true) }}
           disabled={isSubmitting}
           className={inputClass}
         >
@@ -312,7 +315,7 @@ export default function AssegnaAbbonamentoForm({
           <select
             id="assegna-abb-metodo"
             value={metodoPagamento}
-            onChange={(e) => setMetodoPagamento(e.target.value)}
+            onChange={(e) => { setMetodoPagamento(e.target.value); setTouched(true) }}
             disabled={isSubmitting}
             className={inputClass}
           >
@@ -329,7 +332,7 @@ export default function AssegnaAbbonamentoForm({
           type="checkbox"
           id="assegna-abb-ricevuta"
           checked={emettiRicevuta}
-          onChange={(e) => setEmettiRicevuta(e.target.checked)}
+          onChange={(e) => { setEmettiRicevuta(e.target.checked); setTouched(true) }}
           className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
         />
         <label htmlFor="assegna-abb-ricevuta" className="text-sm text-gray-700 dark:text-gray-300">

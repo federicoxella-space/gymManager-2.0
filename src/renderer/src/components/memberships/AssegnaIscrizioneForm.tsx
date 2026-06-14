@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { IscrizioneClienteRow, TipoIscrizioneRow } from '../../../../types/shared'
+import { useModalDirty } from '../ui/Modal'
 
 interface AssegnaIscrizioneFormProps {
   clienteId: number
@@ -73,6 +74,8 @@ export default function AssegnaIscrizioneForm({
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const isSubmitting = submitState === 'submitting'
   const [emettiRicevuta, setEmettiRicevuta] = useState(false)
+  const [touched, setTouched] = useState(false)
+  useModalDirty(touched)
 
   // Quando cambia il tipo selezionato, aggiorna prezzo e scadenza
   useEffect(() => {
@@ -159,7 +162,7 @@ export default function AssegnaIscrizioneForm({
           id="assegna-iscr-tipo"
           data-testid="select-tipo-iscrizione"
           value={tipoId}
-          onChange={(e) => setTipoId(e.target.value)}
+          onChange={(e) => { setTipoId(e.target.value); setTouched(true) }}
           disabled={isSubmitting}
           aria-invalid={tipoError ? true : undefined}
           aria-describedby={tipoError ? tipoErrId : undefined}
@@ -190,7 +193,7 @@ export default function AssegnaIscrizioneForm({
             data-testid="campo-data-inizio-isc"
             type="date"
             value={dataInizio}
-            onChange={(e) => setDataInizio(e.target.value)}
+            onChange={(e) => { setDataInizio(e.target.value); setTouched(true) }}
             disabled={isSubmitting}
             aria-invalid={dataIniziError ? true : undefined}
             aria-describedby={dataIniziError ? dataInizioErrId : undefined}
@@ -211,7 +214,7 @@ export default function AssegnaIscrizioneForm({
             data-testid="campo-data-scadenza-isc"
             type="date"
             value={dataScadenza}
-            onChange={(e) => setDataScadenza(e.target.value)}
+            onChange={(e) => { setDataScadenza(e.target.value); setTouched(true) }}
             disabled={isSubmitting}
             aria-invalid={dataScadenzaError ? true : undefined}
             aria-describedby={dataScadenzaError ? dataScadenzaErrId : undefined}
@@ -236,7 +239,7 @@ export default function AssegnaIscrizioneForm({
           min={0}
           step={0.01}
           value={prezzo}
-          onChange={(e) => setPrezzo(e.target.value)}
+          onChange={(e) => { setPrezzo(e.target.value); setTouched(true) }}
           disabled={isSubmitting}
           aria-invalid={prezzoError ? true : undefined}
           aria-describedby={prezzoError ? prezzoErrId : undefined}
@@ -257,7 +260,7 @@ export default function AssegnaIscrizioneForm({
         <select
           id="assegna-iscr-stato-pag"
           value={statoPagamento}
-          onChange={(e) => setStatoPagamento(e.target.value as 'da_incassare' | 'pagato')}
+          onChange={(e) => { setStatoPagamento(e.target.value as 'da_incassare' | 'pagato'); setTouched(true) }}
           disabled={isSubmitting}
           className={inputClass}
         >
@@ -275,7 +278,7 @@ export default function AssegnaIscrizioneForm({
           <select
             id="assegna-iscr-metodo"
             value={metodoPagamento}
-            onChange={(e) => setMetodoPagamento(e.target.value)}
+            onChange={(e) => { setMetodoPagamento(e.target.value); setTouched(true) }}
             disabled={isSubmitting}
             className={inputClass}
           >
@@ -292,7 +295,7 @@ export default function AssegnaIscrizioneForm({
           type="checkbox"
           id="assegna-iscr-ricevuta"
           checked={emettiRicevuta}
-          onChange={(e) => setEmettiRicevuta(e.target.checked)}
+          onChange={(e) => { setEmettiRicevuta(e.target.checked); setTouched(true) }}
           className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
         />
         <label htmlFor="assegna-iscr-ricevuta" className="text-sm text-gray-700 dark:text-gray-300">

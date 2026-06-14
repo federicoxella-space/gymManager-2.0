@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useModalDirty } from '../ui/Modal'
 import type {
   ClienteRow,
   CreaRigaInput,
@@ -75,6 +76,8 @@ export default function EmittiRicevutaForm({
   const [statoPagamento, setStatoPagamento] = useState<'pagato' | 'da_incassare'>('pagato')
   const [dictPie, setDictPie] = useState('')
   const [validationError, setValidationError] = useState('')
+  const [touched, setTouched] = useState(false)
+  useModalDirty(touched)
 
   const intestatario = calcolaIntestatario(cliente)
   const indirizzoOk = indirizzoIntestatarioCompleto(cliente)
@@ -125,19 +128,23 @@ export default function EmittiRicevutaForm({
       return next
     })
     setValidationError('')
+    setTouched(true)
   }
 
   function aggiungiRigaLibera(): void {
     setRigheLibere((prev) => [...prev, { id: ++rigaLibId, descrizione: '', prezzo: '' }])
+    setTouched(true)
   }
 
   function rimuoviRigaLibera(id: number): void {
     setRigheLibere((prev) => prev.filter((r) => r.id !== id))
+    setTouched(true)
   }
 
   function aggiornaRigaLibera(id: number, campo: 'descrizione' | 'prezzo', valore: string): void {
     setRigheLibere((prev) => prev.map((r) => (r.id === id ? { ...r, [campo]: valore } : r)))
     setValidationError('')
+    setTouched(true)
   }
 
   // Calcolo totale
@@ -461,7 +468,7 @@ export default function EmittiRicevutaForm({
           data-testid="campo-data-emissione"
           type="date"
           value={dataEmissione}
-          onChange={(e) => setDataEmissione(e.target.value)}
+          onChange={(e) => { setDataEmissione(e.target.value); setTouched(true) }}
           disabled={submitState === 'submitting'}
           className={inputClass}
         />
@@ -476,7 +483,7 @@ export default function EmittiRicevutaForm({
           id="ricevuta-metodo"
           data-testid="select-metodo-pagamento"
           value={metodoPagamento}
-          onChange={(e) => setMetodoPagamento(e.target.value as 'contanti' | 'pos' | 'bonifico')}
+          onChange={(e) => { setMetodoPagamento(e.target.value as 'contanti' | 'pos' | 'bonifico'); setTouched(true) }}
           disabled={submitState === 'submitting'}
           className={inputClass}
         >
@@ -494,7 +501,7 @@ export default function EmittiRicevutaForm({
         <select
           id="ricevuta-stato-pag"
           value={statoPagamento}
-          onChange={(e) => setStatoPagamento(e.target.value as 'pagato' | 'da_incassare')}
+          onChange={(e) => { setStatoPagamento(e.target.value as 'pagato' | 'da_incassare'); setTouched(true) }}
           disabled={submitState === 'submitting'}
           className={inputClass}
         >
@@ -511,7 +518,7 @@ export default function EmittiRicevutaForm({
         <textarea
           id="ricevuta-pie"
           value={dictPie}
-          onChange={(e) => setDictPie(e.target.value)}
+          onChange={(e) => { setDictPie(e.target.value); setTouched(true) }}
           disabled={submitState === 'submitting'}
           rows={3}
           className={[inputClass, 'resize-y'].join(' ')}

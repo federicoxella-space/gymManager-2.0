@@ -1,5 +1,19 @@
-import React, { useEffect, useId, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+
+interface ModalDirtyContextValue {
+  setDirty: (dirty: boolean) => void
+}
+const ModalDirtyContext = createContext<ModalDirtyContextValue | null>(null)
+
+/** Da chiamare dentro un form renderizzato in un Modal per abilitare la conferma di scarto su chiusura. */
+export function useModalDirty(dirty: boolean): void {
+  const ctx = useContext(ModalDirtyContext)
+  useEffect(() => {
+    ctx?.setDirty(dirty)
+    return () => ctx?.setDirty(false)
+  }, [ctx, dirty])
+}
 
 interface ModalProps {
   isOpen: boolean
@@ -34,12 +48,21 @@ export default function Modal({
   const panelRef = useRef<HTMLDivElement>(null)
   const previouslyFocused = useRef<HTMLElement | null>(null)
 
+  const [isDirty, setIsDirty] = useState(false)
+  const [showDiscard, setShowDiscard] = useState(false)
+
+  const requestClose = useRef<() => void>(() => {})
+  requestClose.current = () => {
+    if (isDirty) setShowDiscard(true)
+    else onClose()
+  }
+
   // Escape per chiudere + focus-trap sul Tab
   useEffect(() => {
     if (!isOpen) return
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
-        onClose()
+        requestClose.current()
         return
       }
       if (e.key !== 'Tab') return
@@ -66,7 +89,7 @@ export default function Modal({
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  }, [isOpen])
 
   // Sposta il focus nel dialog all'apertura, lo ripristina alla chiusura
   useEffect(() => {
@@ -82,12 +105,14 @@ export default function Modal({
     }
   }, [isOpen])
 
-  // Blocca scroll quando il modale è aperto
+  // Blocca scroll quando il modale è aperto; resetta dirty/discard alla chiusura
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
+      setShowDiscard(false)
+      setIsDirty(false)
     }
     return () => {
       document.body.style.overflow = ''
@@ -107,7 +132,7 @@ export default function Modal({
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50 dark:bg-black/70"
-        onClick={onClose}
+        onClick={() => requestClose.current()}
         aria-hidden="true"
       />
 
@@ -131,7 +156,7 @@ export default function Modal({
           </h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => requestClose.current()}
             aria-label={t('common.close')}
             className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           >
@@ -149,7 +174,28 @@ export default function Modal({
         </div>
 
         {/* Corpo scrollabile */}
-        <div className="overflow-y-auto flex-1 px-6 py-5">{children}</div>
+        <div className="overflow-y-auto flex-1 px-6 py-5">
+          <ModalDirtyContext.Provider value={{ setDirty: setIsDirty }}>
+            {children}
+          </ModalDirtyContext.Provider>
+        </div>
+
+        {showDiscard && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 rounded-xl p-4">
+            <div role="alertdialog" aria-modal="true" className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-sm w-full p-5 space-y-4">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('common.modifiche_non_salvate')}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{t('common.scarta_modifiche_msg')}</p>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setShowDiscard(false)} className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
+                  {t('common.continua_modifica')}
+                </button>
+                <button type="button" onClick={() => { setShowDiscard(false); onClose() }} className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 hover:bg-red-700 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
+                  {t('common.scarta')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

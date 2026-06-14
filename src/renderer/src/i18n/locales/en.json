@@ -68,7 +68,11 @@
     "tabella_tipi_iscrizione": "Membership types",
     "tabella_tipi_abbonamento": "Subscription types",
     "seleziona_periodo": "Select period",
-    "apre_nuova_finestra": "(opens in a new window)"
+    "apre_nuova_finestra": "(opens in a new window)",
+    "scarta": "Discard",
+    "modifiche_non_salvate": "Unsaved changes",
+    "scarta_modifiche_msg": "You have unsaved changes. Discard them?",
+    "continua_modifica": "Keep editing"
   },
   "clienti": {
     "titolo": "Clients",
