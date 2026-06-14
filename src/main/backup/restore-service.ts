@@ -43,19 +43,14 @@ export async function verificaBackup(backupPath: string): Promise<BackupManifest
 }
 
 /**
- * Ripristina un backup nel DB corrente.
- *
- * Operazione distruttiva: sovrascrive il DB attivo.
- * Prima di sovrascrivere, crea un backup di sicurezza del DB corrente.
- * Se l'apertura con la nuova password fallisce, ripristina il backup di sicurezza.
+ * Core del ripristino (senza verifica manifest): chiude il DB, fa una copia di
+ * sicurezza, sovrascrive il DB con il file fornito e riapre con la password data.
+ * Su fallimento ripristina la copia di sicurezza.
  *
  * @param backupPath - Percorso del file .db di backup
  * @param nuovaPassword - La master password con cui il backup è stato creato
  */
-export async function ripristinaBackup(backupPath: string, nuovaPassword: string): Promise<void> {
-  // 1. Verifica il backup
-  await verificaBackup(backupPath)
-
+export async function eseguiRipristino(backupPath: string, nuovaPassword: string): Promise<void> {
   // 2. Chiudi il DB corrente
   if (isDatabaseOpen()) {
     closeDatabase()
@@ -122,6 +117,21 @@ export async function ripristinaBackup(backupPath: string, nuovaPassword: string
       }
     }
   }
+}
+
+/**
+ * Ripristina un backup nel DB corrente.
+ *
+ * Operazione distruttiva: sovrascrive il DB attivo.
+ * Prima di sovrascrivere, crea un backup di sicurezza del DB corrente.
+ * Se l'apertura con la nuova password fallisce, ripristina il backup di sicurezza.
+ *
+ * @param backupPath - Percorso del file .db di backup
+ * @param nuovaPassword - La master password con cui il backup è stato creato
+ */
+export async function ripristinaBackup(backupPath: string, nuovaPassword: string): Promise<void> {
+  await verificaBackup(backupPath)
+  await eseguiRipristino(backupPath, nuovaPassword)
 }
 
 /**
