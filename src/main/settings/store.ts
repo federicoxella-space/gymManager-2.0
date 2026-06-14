@@ -19,7 +19,11 @@ const DEFAULT_SETTINGS: AppSettings = {
   indirizzo_attivita: '',
   codice_fiscale_piva: '',
   logo_base64: '',
-  backup_on_close: true
+  backup_on_close: true,
+  backup_dir: '',
+  backup_periodic_enabled: false,
+  backup_periodic_hours: 6,
+  backup_retention: 10
 }
 
 export function getSettingsPath(): string {
@@ -65,7 +69,12 @@ export function loadSettings(): AppSettings {
       indirizzo_attivita: parsed.indirizzo_attivita ?? DEFAULT_SETTINGS.indirizzo_attivita,
       codice_fiscale_piva: parsed.codice_fiscale_piva ?? DEFAULT_SETTINGS.codice_fiscale_piva,
       logo_base64: parsed.logo_base64 ?? DEFAULT_SETTINGS.logo_base64,
-      backup_on_close: parsed.backup_on_close ?? DEFAULT_SETTINGS.backup_on_close
+      backup_on_close: parsed.backup_on_close ?? DEFAULT_SETTINGS.backup_on_close,
+      backup_dir: parsed.backup_dir ?? DEFAULT_SETTINGS.backup_dir,
+      backup_periodic_enabled:
+        parsed.backup_periodic_enabled ?? DEFAULT_SETTINGS.backup_periodic_enabled,
+      backup_periodic_hours: parsed.backup_periodic_hours ?? DEFAULT_SETTINGS.backup_periodic_hours,
+      backup_retention: parsed.backup_retention ?? DEFAULT_SETTINGS.backup_retention
     }
   } catch (err) {
     log.error('[settings] Errore lettura impostazioni, uso defaults:', err)

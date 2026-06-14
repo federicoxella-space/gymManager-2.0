@@ -29,6 +29,14 @@ export interface AppSettings {
   logo_base64: string
   /** Esegui backup automatico alla chiusura dell'app. */
   backup_on_close: boolean
+  /** Cartella di destinazione dei backup locali; vuoto = cartella predefinita (userData/backups). */
+  backup_dir: string
+  /** Abilita il backup periodico automatico mentre l'app è aperta. */
+  backup_periodic_enabled: boolean
+  /** Intervallo del backup periodico, in ore (1–168). */
+  backup_periodic_hours: number
+  /** Numero di backup da conservare nella cartella (rotazione, 1–100). */
+  backup_retention: number
 }
 
 export type DbState = 'firstRun' | 'locked' | 'ready'
