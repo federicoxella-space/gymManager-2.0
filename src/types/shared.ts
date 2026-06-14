@@ -430,6 +430,8 @@ export interface SyncStatus {
   dirty: boolean
   /** true se c'è un conflitto pendente non ancora risolto. */
   conflict: boolean
+  /** Intervallo di polling in secondi (default 60). */
+  pollingSec: number
 }
 
 // ── ElectronAPI ───────────────────────────────────────────────────────────────

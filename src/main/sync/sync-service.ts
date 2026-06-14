@@ -12,6 +12,7 @@
 import { join } from 'node:path'
 import type { BrowserWindow } from 'electron'
 import log from 'electron-log'
+import type { SyncStatus } from '../../types/shared'
 import { DB_PATH } from '../db/database'
 import { eseguiRipristinoConChiaveCorrente } from '../backup/restore-service'
 import * as drive from '../backup/drive-service'
@@ -59,13 +60,7 @@ function emit(channel: string, payload?: unknown): void {
 
 // ── Interfacce pubbliche ──────────────────────────────────────────────────────
 
-export interface SyncStatus {
-  enabled: boolean
-  connected: boolean       // drive.isDriveConnected()
-  lastSyncAt: string | null
-  dirty: boolean           // isLocalDirty
-  conflict: boolean        // conflitto pendente non risolto
-}
+export type { SyncStatus }
 
 // ── getStatus ─────────────────────────────────────────────────────────────────
 
@@ -93,6 +88,7 @@ export async function getStatus(): Promise<SyncStatus> {
     lastSyncAt: st.lastSyncAt,
     dirty,
     conflict: conflictPending,
+    pollingSec: st.pollingSec,
   }
 }
 
