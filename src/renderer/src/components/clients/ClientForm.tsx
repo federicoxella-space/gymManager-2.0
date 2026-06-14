@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ClienteRow, ComuneInfo, CreateClienteInput, ValidationError } from '../../../../types/shared'
 import { isMinorenne, decodeCFBasic } from '../../utils/dominio'
@@ -71,15 +71,28 @@ interface FieldProps {
 }
 
 function Field({ label, error, children, required }: FieldProps): React.JSX.Element {
+  const id = useId()
+  const errorId = `${id}-error`
+  const childArray = React.Children.toArray(children)
+  const enhanced = childArray.map((child, i) =>
+    i === 0 && React.isValidElement(child)
+      ? React.cloneElement(child as React.ReactElement<React.HTMLAttributes<HTMLElement>>, {
+          id,
+          'aria-required': required ? true : undefined,
+          'aria-invalid': error ? true : undefined,
+          'aria-describedby': error ? errorId : undefined,
+        })
+      : child,
+  )
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label htmlFor={id} className="text-sm font-medium text-gray-700 dark:text-gray-300">
         {label}
-        {required && <span className="text-red-500 ml-0.5">*</span>}
+        {required && <span aria-hidden="true" className="text-red-500 ml-0.5">*</span>}
       </label>
-      {children}
+      {enhanced}
       {error && (
-        <p className="text-xs text-red-600 dark:text-red-400" role="alert">
+        <p id={errorId} className="text-xs text-red-600 dark:text-red-400" role="alert">
           {error}
         </p>
       )}
@@ -232,6 +245,7 @@ export default function ClientForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
+      <p className="text-xs text-gray-500 dark:text-gray-400">{t('common.campi_obbligatori')}</p>
       {/* Errore generico */}
       {submitState === 'error' && (
         <div
