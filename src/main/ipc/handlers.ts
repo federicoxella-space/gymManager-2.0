@@ -15,7 +15,7 @@ import { generaPDFInElectron } from '../pdf/generator'
 import { getDatabase } from '../db/database'
 import type { ImpostazioniAttivitaSnapshot } from '../domain/ricevuta'
 import log from 'electron-log'
-import { checkFirstRun, openDatabase, isDatabaseOpen } from '../db/database'
+import { checkFirstRun, openDatabase, isDatabaseOpen, changePassword } from '../db/database'
 import { loadSettings, saveSettings, applyAppSettingsToDb } from '../settings/store'
 import {
   createCliente,
@@ -175,6 +175,28 @@ export function registerIpcHandlers(): void {
           throw new Error('MIGRATION_FAILED')
         }
         throw err instanceof Error ? err : new Error('Errore durante lo sblocco del database')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'db:changePassword',
+    async (
+      _event,
+      { oldPassword, newPassword }: { oldPassword: string; newPassword: string }
+    ): Promise<void> => {
+      try {
+        if (!newPassword || newPassword.length < 8) {
+          throw new Error('VALIDATION_ERROR: newPassword: minimo 8 caratteri')
+        }
+        changePassword(oldPassword, newPassword)
+        log.info('[ipc] db:changePassword completato')
+      } catch (err) {
+        log.error('[ipc] db:changePassword errore:', err)
+        if (err instanceof Error && err.message === 'PASSWORD_WRONG') {
+          throw new Error('PASSWORD_WRONG')
+        }
+        throw err instanceof Error ? err : new Error('Errore durante il cambio password')
       }
     }
   )

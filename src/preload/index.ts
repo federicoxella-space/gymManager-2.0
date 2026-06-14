@@ -55,6 +55,9 @@ const api: ElectronAPI = {
     },
     isOpen(): Promise<boolean> {
       return ipcRenderer.invoke('db:isOpen')
+    },
+    changePassword(oldPassword: string, newPassword: string): Promise<void> {
+      return ipcRenderer.invoke('db:changePassword', { oldPassword, newPassword })
     }
   },
 

@@ -420,6 +420,7 @@ export interface ElectronAPI {
     setup: (password: string) => Promise<void>
     unlock: (password: string) => Promise<void>
     isOpen: () => Promise<boolean>
+    changePassword: (oldPassword: string, newPassword: string) => Promise<void>
   }
   settings: {
     get: () => Promise<AppSettings>
