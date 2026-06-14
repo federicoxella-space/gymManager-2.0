@@ -27,9 +27,12 @@ type FormData = {
   email: string
   telefono: string
   note: string
-  tutore_nome: string
-  tutore_cognome: string
-  tutore_cf: string
+}
+
+type TutoreInfo = {
+  nome: string
+  cognome: string
+  codice_fiscale: string
 }
 
 type SubmitState = 'idle' | 'submitting' | 'error'
@@ -58,9 +61,6 @@ function buildInitialData(initialData?: ClienteRow): FormData {
     email: initialData?.email ?? '',
     telefono: initialData?.telefono ?? '',
     note: initialData?.note ?? '',
-    tutore_nome: initialData?.tutore_nome ?? '',
-    tutore_cognome: initialData?.tutore_cognome ?? '',
-    tutore_cf: initialData?.tutore_cf ?? '',
   }
 }
 
@@ -128,6 +128,21 @@ export default function ClientForm({
   const [codiceComune, setCodiceComune] = useState('')
   const [cfError, setCfError] = useState<string | null>(null)
 
+  // Stato tutore (B7): selezione cliente come tutore via FK
+  const [tutoreId, setTutoreId] = useState<number | null>(initialData?.tutore_id ?? null)
+  const [tutoreInfo, setTutoreInfo] = useState<TutoreInfo | null>(
+    initialData?.tutore_id
+      ? {
+          nome: initialData.tutore_nome ?? '',
+          cognome: initialData.tutore_cognome ?? '',
+          codice_fiscale: initialData.tutore_cf ?? '',
+        }
+      : null,
+  )
+  const [tutoreQuery, setTutoreQuery] = useState('')
+  const [tutoreRisultati, setTutoreRisultati] = useState<ClienteRow[]>([])
+  const [tutoreAvvisoMinorenne, setTutoreAvvisoMinorenne] = useState(false)
+
   const isDirty = JSON.stringify(formData) !== JSON.stringify(buildInitialData(initialData))
   useModalDirty(isDirty)
 
@@ -161,6 +176,25 @@ export default function ClientForm({
   useEffect(() => {
     setApiErrors([])
   }, [formData])
+
+  // Ricerca tutore: al cambio query (≥2 caratteri) chiama clienti.list
+  useEffect(() => {
+    if (tutoreQuery.trim().length < 2) {
+      setTutoreRisultati([])
+      return
+    }
+    void window.api.clienti
+      .list({ search: tutoreQuery.trim(), stato: 'attivo' })
+      .then((risultati) => {
+        const filtrati = risultati.filter(
+          (c) =>
+            // Esclude il cliente corrente in edit
+            c.id !== initialData?.id,
+        )
+        setTutoreRisultati(filtrati)
+      })
+      .catch(() => setTutoreRisultati([]))
+  }, [tutoreQuery, initialData?.id])
 
   const getFieldError = (field: string): string | undefined =>
     apiErrors.find((e) => e.field === field)?.message
@@ -233,8 +267,8 @@ export default function ClientForm({
       email: formData.email.trim() || null,
       telefono: formData.telefono.trim() || null,
       note: formData.note.trim() || null,
-      // B7 Task 1: tutore_id viene da selezione cliente (Task 5).
-      // Per ora non inviamo tutore_id nel submit (campo non ancora implementato nell'UI).
+      // B7 Task 5: tutore collegato tramite FK cliente
+      tutore_id: tutoreId,
     }
 
     try {
@@ -427,7 +461,7 @@ export default function ClientForm({
         </div>
       </section>
 
-      {/* Sezione tutore (minorenne) */}
+      {/* Sezione tutore (minorenne) — B7: ricerca/selezione cliente */}
       {minorenneFlag && (
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -438,54 +472,96 @@ export default function ClientForm({
           <p className="text-xs text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg px-3 py-2 mb-4">
             {t('clienti.form.tutore_nota')}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field
-              label={t('clienti.form.tutore_nome')}
-              error={getFieldError('tutore_nome')}
-              required
-            >
-              <input
-                type="text"
-                name="tutore_nome"
-                value={formData.tutore_nome}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={[inputClass, getFieldError('tutore_nome') ? inputErrorClass : ''].join(' ')}
-              />
-            </Field>
 
-            <Field
-              label={t('clienti.form.tutore_cognome')}
-              error={getFieldError('tutore_cognome')}
-              required
+          {/* Campo di ricerca tutore */}
+          <div className="relative mb-3">
+            <label
+              htmlFor="tutore-search"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
             >
-              <input
-                type="text"
-                name="tutore_cognome"
-                value={formData.tutore_cognome}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                className={[inputClass, getFieldError('tutore_cognome') ? inputErrorClass : ''].join(' ')}
-              />
-            </Field>
-
-            <Field
-              label={t('clienti.form.tutore_cf')}
-              error={getFieldError('tutore_cf')}
-              required
-            >
-              <input
-                type="text"
-                name="tutore_cf"
-                value={formData.tutore_cf}
-                onChange={handleChange}
-                disabled={isSubmitting}
-                maxLength={16}
-                autoComplete="off"
-                className={[inputClass, 'uppercase', getFieldError('tutore_cf') ? inputErrorClass : ''].join(' ')}
-              />
-            </Field>
+              {t('clienti.form.tutore_cerca')}
+            </label>
+            <input
+              id="tutore-search"
+              type="text"
+              autoComplete="off"
+              value={tutoreQuery}
+              placeholder={t('clienti.form.tutore_cerca')}
+              disabled={isSubmitting}
+              onChange={(e) => {
+                setTutoreQuery(e.target.value)
+              }}
+              className={inputClass}
+            />
+            {tutoreRisultati.length > 0 && (
+              <ul
+                role="listbox"
+                aria-label={t('clienti.form.tutore_cerca')}
+                className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg divide-y divide-gray-100 dark:divide-gray-800"
+              >
+                {tutoreRisultati.map((c) => (
+                  <li key={c.id} role="option" aria-selected={false}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTutoreId(c.id)
+                        setTutoreInfo({
+                          nome: c.nome,
+                          cognome: c.cognome,
+                          codice_fiscale: c.codice_fiscale,
+                        })
+                        setTutoreQuery('')
+                        setTutoreRisultati([])
+                        setTutoreAvvisoMinorenne(isMinorenne(c.data_nascita))
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      {c.cognome} {c.nome}{' '}
+                      <span className="text-xs text-gray-400">({c.codice_fiscale})</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
+          {/* Riquadro tutore selezionato / nessun tutore */}
+          {tutoreInfo ? (
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 text-sm text-primary-800 dark:text-primary-200">
+              <span>
+                {t('clienti.form.tutore_selezionato', {
+                  nome: `${tutoreInfo.cognome} ${tutoreInfo.nome}`,
+                  cf: tutoreInfo.codice_fiscale,
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setTutoreId(null)
+                  setTutoreInfo(null)
+                  setTutoreAvvisoMinorenne(false)
+                }}
+                disabled={isSubmitting}
+                className="ml-3 text-xs font-medium text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
+              >
+                {t('clienti.form.tutore_rimuovi')}
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+              {t('clienti.form.tutore_nessuno')}
+            </p>
+          )}
+
+          {/* Avviso non bloccante se il tutore selezionato è minorenne */}
+          {tutoreAvvisoMinorenne && (
+            <p
+              role="alert"
+              className="mt-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2"
+            >
+              {t('clienti.form.tutore_avviso_minorenne')}
+            </p>
+          )}
         </section>
       )}
 
