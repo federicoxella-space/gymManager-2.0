@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { CertificatoRow } from '../../../../types/shared'
 
@@ -26,6 +26,8 @@ export default function CertificatoForm({
   onCancel,
 }: CertificatoFormProps): React.JSX.Element {
   const { t } = useTranslation()
+  const tipoId = useId()
+  const dataId = useId()
   const [tipo, setTipo] = useState('')
   const [dataScadenza, setDataScadenza] = useState('')
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
@@ -81,14 +83,18 @@ export default function CertificatoForm({
 
       {/* Tipo certificato */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor={tipoId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {t('clienti.certificato.tipo_label')}
-          <span className="text-red-500 ml-0.5">*</span>
+          <span aria-hidden="true" className="text-red-500 ml-0.5">*</span>
         </label>
         <select
+          id={tipoId}
           value={tipo}
           onChange={(e) => setTipo(e.target.value)}
           disabled={isSubmitting}
+          aria-required={true}
+          aria-invalid={tipoError ? true : undefined}
+          aria-describedby={tipoError ? `${tipoId}-error` : undefined}
           className={inputClass}
         >
           <option value="">{t('clienti.certificato.tipo_seleziona')}</option>
@@ -96,7 +102,7 @@ export default function CertificatoForm({
           <option value="agonistico">{t('clienti.certificato.tipo_agonistico')}</option>
         </select>
         {tipoError && (
-          <p className="text-xs text-red-600 dark:text-red-400" role="alert">
+          <p id={`${tipoId}-error`} className="text-xs text-red-600 dark:text-red-400" role="alert">
             {tipoError}
           </p>
         )}
@@ -104,19 +110,23 @@ export default function CertificatoForm({
 
       {/* Data di scadenza */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor={dataId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {t('clienti.certificato.scadenza_label')}
-          <span className="text-red-500 ml-0.5">*</span>
+          <span aria-hidden="true" className="text-red-500 ml-0.5">*</span>
         </label>
         <input
+          id={dataId}
           type="date"
           value={dataScadenza}
           onChange={(e) => setDataScadenza(e.target.value)}
           disabled={isSubmitting}
+          aria-required={true}
+          aria-invalid={dataError ? true : undefined}
+          aria-describedby={dataError ? `${dataId}-error` : undefined}
           className={inputClass}
         />
         {dataError && (
-          <p className="text-xs text-red-600 dark:text-red-400" role="alert">
+          <p id={`${dataId}-error`} className="text-xs text-red-600 dark:text-red-400" role="alert">
             {dataError}
           </p>
         )}
