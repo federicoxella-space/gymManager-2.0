@@ -510,6 +510,7 @@ export interface ElectronAPI {
       isConnected: () => Promise<boolean>
       backup: (backupPath: string) => Promise<string>
       list: () => Promise<DriveBackupItem[]>
+      restore: (fileId: string, password: string) => Promise<void>
     }
   }
   dialog: {

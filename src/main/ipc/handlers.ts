@@ -1,13 +1,16 @@
 import { ipcMain, app, dialog, BrowserWindow } from 'electron'
+import { join } from 'path'
+import { existsSync, unlinkSync } from 'fs'
 import { checkForUpdates, installUpdate } from '../updater/auto-updater'
 import { backupLocale, backupAutomatico } from '../backup/backup-service'
-import { verificaBackup, ripristinaBackup, resetDatabase } from '../backup/restore-service'
+import { verificaBackup, ripristinaBackup, resetDatabase, eseguiRipristino } from '../backup/restore-service'
 import {
   connectDrive,
   isDriveConnected,
   disconnectDrive,
   backupSuDrive,
-  listBackupDrive
+  listBackupDrive,
+  ripristinaDaDrive
 } from '../backup/drive-service'
 import type { BackupManifest, DriveBackupItem } from '../../types/shared'
 import { generaHTMLRicevuta } from '../domain/ricevuta'
@@ -1003,6 +1006,28 @@ export function registerIpcHandlers(): void {
       throw err instanceof Error ? err : new Error('Errore durante il recupero lista backup Drive')
     }
   })
+
+  /** Ripristina un backup scaricandolo da Drive in un file temporaneo, poi sovrascrive il DB. */
+  ipcMain.handle(
+    'backup:drive:restore',
+    async (
+      _event,
+      { fileId, password }: { fileId: string; password: string }
+    ): Promise<void> => {
+      const tempPath = join(app.getPath('userData'), `drive-restore-${Date.now()}.db`)
+      try {
+        await ripristinaDaDrive(fileId, tempPath)
+        await eseguiRipristino(tempPath, password)
+      } catch (err) {
+        log.error('[ipc] backup:drive:restore errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante il ripristino da Drive')
+      } finally {
+        if (existsSync(tempPath)) {
+          try { unlinkSync(tempPath) } catch { /* ignore */ }
+        }
+      }
+    }
+  )
 
   // ── Auto-updater ─────────────────────────────────────────────────────────
 

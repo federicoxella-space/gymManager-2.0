@@ -411,6 +411,7 @@ interface ElectronAPI {
       disconnect: () => Promise<void>
       backup: (args: { backupPath: string }) => Promise<string>
       list: () => Promise<DriveBackupItem[]>
+      restore: (args: { fileId: string; password: string }) => Promise<void>
     }
   }
   dialog: {

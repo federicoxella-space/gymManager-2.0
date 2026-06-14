@@ -262,6 +262,9 @@ const api: ElectronAPI = {
       },
       list(): Promise<DriveBackupItem[]> {
         return ipcRenderer.invoke('backup:drive:list')
+      },
+      restore(fileId: string, password: string): Promise<void> {
+        return ipcRenderer.invoke('backup:drive:restore', { fileId, password })
       }
     }
   },
