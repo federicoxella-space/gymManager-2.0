@@ -4,6 +4,7 @@ import type { TipoIscrizioneRow, TipoAbbonamentoRow } from '../../../types/share
 import Badge from '../components/ui/Badge'
 import Modal from '../components/ui/Modal'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
+import SearchInput from '../components/ui/SearchInput'
 import TipoIscrizioneForm from '../components/catalog/TipoIscrizioneForm'
 import TipoAbbonamentoForm from '../components/catalog/TipoAbbonamentoForm'
 
@@ -52,9 +53,10 @@ function TrashIcon(): React.JSX.Element {
 
 interface TipiIscrizioneTabProps {
   showNonValidi: boolean
+  searchTipo: string
 }
 
-function TipiIscrizioneTab({ showNonValidi }: TipiIscrizioneTabProps): React.JSX.Element {
+function TipiIscrizioneTab({ showNonValidi, searchTipo }: TipiIscrizioneTabProps): React.JSX.Element {
   const { t } = useTranslation()
   const [tipi, setTipi] = useState<TipoIscrizioneRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -166,7 +168,11 @@ function TipiIscrizioneTab({ showNonValidi }: TipiIscrizioneTabProps): React.JSX
     )
   }
 
-  const displayed = showNonValidi ? tipi : tipi.filter((t) => t.stato === 'attivo')
+  const filteredByStato = showNonValidi ? tipi : tipi.filter((t) => t.stato === 'attivo')
+  const searchLower = searchTipo.trim().toLowerCase()
+  const displayed = searchLower
+    ? filteredByStato.filter((t) => t.nome.toLowerCase().includes(searchLower))
+    : filteredByStato
 
   return (
     <>
@@ -352,9 +358,10 @@ function TipoIscrizioneRow({
 
 interface TipiAbbonamentoTabProps {
   showNonValidi: boolean
+  searchTipo: string
 }
 
-function TipiAbbonamentoTab({ showNonValidi }: TipiAbbonamentoTabProps): React.JSX.Element {
+function TipiAbbonamentoTab({ showNonValidi, searchTipo }: TipiAbbonamentoTabProps): React.JSX.Element {
   const { t } = useTranslation()
   const [tipi, setTipi] = useState<TipoAbbonamentoRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -456,7 +463,11 @@ function TipiAbbonamentoTab({ showNonValidi }: TipiAbbonamentoTabProps): React.J
     )
   }
 
-  const displayed = showNonValidi ? tipi : tipi.filter((t) => t.stato === 'attivo')
+  const filteredByStato = showNonValidi ? tipi : tipi.filter((t) => t.stato === 'attivo')
+  const searchLower = searchTipo.trim().toLowerCase()
+  const displayed = searchLower
+    ? filteredByStato.filter((t) => t.nome.toLowerCase().includes(searchLower))
+    : filteredByStato
 
   return (
     <>
@@ -656,6 +667,7 @@ export default function CatalogoPage(): React.JSX.Element {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<Tab>('iscrizioni')
   const [showNonValidi, setShowNonValidi] = useState(false)
+  const [searchTipo, setSearchTipo] = useState('')
 
   const tabClass = (tab: Tab): string =>
     [
@@ -667,7 +679,7 @@ export default function CatalogoPage(): React.JSX.Element {
 
   return (
     <div className="space-y-6">
-      {/* Barra tab + toggle */}
+      {/* Barra tab + ricerca + toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
           <button
@@ -686,6 +698,13 @@ export default function CatalogoPage(): React.JSX.Element {
           </button>
         </div>
 
+        <SearchInput
+          value={searchTipo}
+          onChange={setSearchTipo}
+          placeholder={t('catalogo.cerca')}
+          className="sm:w-64"
+        />
+
         <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer sm:ml-auto">
           <input
             type="checkbox"
@@ -699,9 +718,9 @@ export default function CatalogoPage(): React.JSX.Element {
 
       {/* Contenuto tab */}
       {activeTab === 'iscrizioni' ? (
-        <TipiIscrizioneTab showNonValidi={showNonValidi} />
+        <TipiIscrizioneTab showNonValidi={showNonValidi} searchTipo={searchTipo} />
       ) : (
-        <TipiAbbonamentoTab showNonValidi={showNonValidi} />
+        <TipiAbbonamentoTab showNonValidi={showNonValidi} searchTipo={searchTipo} />
       )}
     </div>
   )
