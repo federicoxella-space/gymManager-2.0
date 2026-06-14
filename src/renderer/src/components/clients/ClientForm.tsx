@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { ClienteRow, CreateClienteInput, ValidationError } from '../../../../types/shared'
+import type { ClienteRow, ComuneInfo, CreateClienteInput, ValidationError } from '../../../../types/shared'
 import { isMinorenne, decodeCFBasic } from '../../utils/dominio'
 
 interface ClientFormProps {
