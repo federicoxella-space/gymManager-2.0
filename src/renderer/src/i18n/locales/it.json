@@ -50,7 +50,14 @@
     "riprova": "Riprova",
     "actions": "Azioni",
     "coming_soon": "Disponibile nelle fasi successive",
-    "campi_obbligatori": "I campi contrassegnati con * sono obbligatori"
+    "campi_obbligatori": "I campi contrassegnati con * sono obbligatori",
+    "tabella_clienti": "Elenco clienti",
+    "tabella_ricevute": "Elenco ricevute",
+    "tabella_iscrizioni": "Elenco iscrizioni",
+    "tabella_abbonamenti": "Elenco abbonamenti",
+    "tabella_certificati": "Elenco certificati medici",
+    "tabella_tipi_iscrizione": "Tipi di iscrizione",
+    "tabella_tipi_abbonamento": "Tipi di abbonamento"
   },
   "clienti": {
     "titolo": "Clienti",

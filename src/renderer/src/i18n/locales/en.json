@@ -50,7 +50,14 @@
     "riprova": "Retry",
     "actions": "Actions",
     "coming_soon": "Available in subsequent phases",
-    "campi_obbligatori": "Fields marked with * are required"
+    "campi_obbligatori": "Fields marked with * are required",
+    "tabella_clienti": "Clients list",
+    "tabella_ricevute": "Receipts list",
+    "tabella_iscrizioni": "Memberships list",
+    "tabella_abbonamenti": "Subscriptions list",
+    "tabella_certificati": "Medical certificates list",
+    "tabella_tipi_iscrizione": "Membership types",
+    "tabella_tipi_abbonamento": "Subscription types"
   },
   "clienti": {
     "titolo": "Clients",

@@ -188,21 +188,22 @@ function TipiIscrizioneTab({ showNonValidi }: TipiIscrizioneTabProps): React.JSX
       ) : (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <table className="w-full text-sm">
+            <caption className="sr-only">{t('common.tabella_tipi_iscrizione')}</caption>
             <thead className="bg-gray-50 dark:bg-gray-800/60">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.nome')}
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.durata')}
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.prezzo')}
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.stato')}
                 </th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
                   {t('common.actions')}
                 </th>
               </tr>
@@ -477,24 +478,25 @@ function TipiAbbonamentoTab({ showNonValidi }: TipiAbbonamentoTabProps): React.J
       ) : (
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <table className="w-full text-sm">
+            <caption className="sr-only">{t('common.tabella_tipi_abbonamento')}</caption>
             <thead className="bg-gray-50 dark:bg-gray-800/60">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.nome')}
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.categoria')}
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.durata')}
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.prezzo')}
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                   {t('catalogo.colonne.stato')}
                 </th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                <th scope="col" className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
                   {t('common.actions')}
                 </th>
               </tr>

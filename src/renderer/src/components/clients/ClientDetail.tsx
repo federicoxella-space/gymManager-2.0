@@ -702,15 +702,16 @@ export default function ClientDetail({
               {showStoricoIscrizioni && (
                 <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                   <table className="w-full text-xs">
+                    <caption className="sr-only">{t('common.tabella_iscrizioni')}</caption>
                     <thead className="bg-gray-50 dark:bg-gray-800/60">
                       <tr>
-                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
+                        <th scope="col" className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
                           {t('iscrizioni.tipo')}
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
+                        <th scope="col" className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
                           {t('iscrizioni.periodo')}
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
+                        <th scope="col" className="px-3 py-2 text-left font-medium text-gray-600 dark:text-gray-300">
                           {t('catalogo.colonne.stato')}
                         </th>
                       </tr>
@@ -795,21 +796,22 @@ export default function ClientDetail({
             ) : (
               <div data-testid="lista-abbonamenti" className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <table className="w-full text-sm">
+                  <caption className="sr-only">{t('common.tabella_abbonamenti')}</caption>
                   <thead className="bg-gray-50 dark:bg-gray-800/60">
                     <tr>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                         {t('abbonamenti.colonne.tipo')}
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                         {t('abbonamenti.colonne.periodo')}
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                         {t('abbonamenti.colonne.stato')}
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                         {t('abbonamenti.colonne.prezzo')}
                       </th>
-                      <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
                         {t('common.actions')}
                       </th>
                     </tr>
@@ -931,24 +933,25 @@ export default function ClientDetail({
             ) : (
               <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <table className="w-full text-sm">
+                  <caption className="sr-only">{t('common.tabella_ricevute')}</caption>
                   <thead className="bg-gray-50 dark:bg-gray-800/60">
                     <tr>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                         {t('ricevute.colonne.numero')}
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                         {t('ricevute.colonne.data')}
                       </th>
-                      <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
                         {t('ricevute.colonne.importo')}
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                         {t('ricevute.colonne.metodo')}
                       </th>
-                      <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">
                         {t('ricevute.colonne.stato')}
                       </th>
-                      <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
+                      <th scope="col" className="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">
                         {t('common.actions')}
                       </th>
                     </tr>
