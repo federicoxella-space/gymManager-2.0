@@ -943,14 +943,23 @@ export function registerIpcHandlers(): void {
     'dialog:showOpenDialog',
     async (
       event,
-      options?: { title?: string; filters?: { name: string; extensions: string[] }[] }
+      options?: {
+        title?: string
+        filters?: { name: string; extensions: string[] }[]
+        properties?: Array<'openFile' | 'openDirectory'>
+      }
     ): Promise<{ canceled: boolean; filePaths: string[] }> => {
       try {
         const win = BrowserWindow.fromWebContents(event.sender)
+        const properties = options?.properties ?? ['openFile']
+        const isDirectory = properties.includes('openDirectory')
         const dialogOptions: Electron.OpenDialogOptions = {
           title: options?.title,
-          properties: ['openFile'],
-          filters: options?.filters ?? [{ name: 'Database', extensions: ['db'] }]
+          properties,
+          // I filtri si applicano solo alla selezione di file
+          ...(isDirectory
+            ? {}
+            : { filters: options?.filters ?? [{ name: 'Database', extensions: ['db'] }] })
         }
         const result = win
           ? await dialog.showOpenDialog(win, dialogOptions)

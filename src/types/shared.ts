@@ -552,6 +552,7 @@ export interface ElectronAPI {
     showOpenDialog: (options?: {
       title?: string
       filters?: { name: string; extensions: string[] }[]
+      properties?: Array<'openFile' | 'openDirectory'>
     }) => Promise<{ canceled: boolean; filePaths: string[] }>
   }
   updater: {
