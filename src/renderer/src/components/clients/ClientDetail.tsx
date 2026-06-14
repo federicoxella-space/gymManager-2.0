@@ -133,6 +133,11 @@ export default function ClientDetail({
   const [invalidaAbbonamentoTarget, setInvalidaAbbonamentoTarget] =
     useState<AbbonamentoClienteRow | null>(null)
   const [isInvalidandoAbbonamento, setIsInvalidandoAbbonamento] = useState(false)
+  const [modificaDateAbbTarget, setModificaDateAbbTarget] =
+    useState<AbbonamentoClienteRow | null>(null)
+  const [editAbbDataInizio, setEditAbbDataInizio] = useState('')
+  const [editAbbDataScadenza, setEditAbbDataScadenza] = useState('')
+  const [isSavingDateAbb, setIsSavingDateAbb] = useState(false)
 
   // ── Stato ricevute ─────────────────────────────────────────────────────────
   const [ricevute, setRicevute] = useState<RicevutaRow[]>([])
@@ -269,6 +274,22 @@ export default function ClientDetail({
       await loadAbbonamenti()
     } finally {
       setIsInvalidandoAbbonamento(false)
+    }
+  }
+
+  async function handleSalvaDateAbbonamento(): Promise<void> {
+    if (!modificaDateAbbTarget) return
+    setIsSavingDateAbb(true)
+    try {
+      const updated = await window.api.abbonamenti.updateDate(
+        modificaDateAbbTarget.id,
+        editAbbDataInizio,
+        editAbbDataScadenza,
+      )
+      setAbbonamenti((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
+      setModificaDateAbbTarget(null)
+    } finally {
+      setIsSavingDateAbb(false)
     }
   }
 
@@ -878,13 +899,26 @@ export default function ClientDetail({
                           </td>
                           <td className="px-4 py-3 text-right">
                             {abb.stato === 'attivo' && !anonimizzato && (
-                              <button
-                                type="button"
-                                onClick={() => setInvalidaAbbonamentoTarget(abb)}
-                                className="text-xs px-2 py-1 rounded border border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                              >
-                                {t('abbonamenti.invalida')}
-                              </button>
+                              <div className="inline-flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditAbbDataInizio(abb.data_inizio)
+                                    setEditAbbDataScadenza(abb.data_scadenza)
+                                    setModificaDateAbbTarget(abb)
+                                  }}
+                                  className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                  {t('abbonamenti.modifica_date')}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setInvalidaAbbonamentoTarget(abb)}
+                                  className="text-xs px-2 py-1 rounded border border-red-300 dark:border-red-700 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                                >
+                                  {t('abbonamenti.invalida')}
+                                </button>
+                              </div>
                             )}
                           </td>
                         </tr>
@@ -1159,6 +1193,60 @@ export default function ClientDetail({
         variant="danger"
         isLoading={isInvalidandoAbbonamento}
       />
+
+      {/* Modal modifica date abbonamento */}
+      <Modal
+        isOpen={modificaDateAbbTarget !== null}
+        onClose={() => setModificaDateAbbTarget(null)}
+        title={t('abbonamenti.modifica_date')}
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('abbonamenti.form.data_inizio')}
+              </label>
+              <input
+                type="date"
+                value={editAbbDataInizio}
+                onChange={(e) => setEditAbbDataInizio(e.target.value)}
+                disabled={isSavingDateAbb}
+                className="px-3 py-2 text-sm rounded-lg border w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('abbonamenti.form.data_scadenza')}
+              </label>
+              <input
+                type="date"
+                value={editAbbDataScadenza}
+                onChange={(e) => setEditAbbDataScadenza(e.target.value)}
+                disabled={isSavingDateAbb}
+                className="px-3 py-2 text-sm rounded-lg border w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setModificaDateAbbTarget(null)}
+              disabled={isSavingDateAbb}
+              className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+            >
+              {t('common.cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleSalvaDateAbbonamento()}
+              disabled={isSavingDateAbb}
+              className="px-3 py-1.5 text-sm rounded-lg bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50"
+            >
+              {isSavingDateAbb ? t('common.loading') : t('common.save')}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal emetti ricevuta */}
       {cliente && (

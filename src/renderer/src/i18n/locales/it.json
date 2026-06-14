@@ -529,6 +529,7 @@
   },
   "abbonamenti": {
     "assegna": "Assegna abbonamento",
+    "modifica_date": "Modifica date",
     "invalida": "Invalida",
     "nessuno": "Nessun abbonamento",
     "no_iscrizione_attiva": "Il cliente non ha un'iscrizione attiva. Assegna prima un'iscrizione.",

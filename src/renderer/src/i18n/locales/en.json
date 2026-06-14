@@ -529,6 +529,7 @@
   },
   "abbonamenti": {
     "assegna": "Assign subscription",
+    "modifica_date": "Edit dates",
     "invalida": "Invalidate",
     "nessuno": "No subscriptions",
     "no_iscrizione_attiva": "The client has no active membership. Assign a membership first.",
