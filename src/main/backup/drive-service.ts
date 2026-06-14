@@ -288,15 +288,91 @@ export async function disconnectDrive(): Promise<void> {
   log.info('[drive] Account Google Drive disconnesso')
 }
 
+// ── Sync: costanti ────────────────────────────────────────────────────────────
+
+const SYNC_FILE_NAME = 'gymmanager_sync.db'
+
+// ── Sync: metodi per il file di sync stabile ──────────────────────────────────
+
+/** Trova (o crea vuoto) il file di sync stabile nella cartella app. Ritorna il fileId. */
+export async function getOrCreateSyncFile(): Promise<string> {
+  const accessToken = await getValidToken()
+  const folderId = await getOrCreateFolder(accessToken)
+  const q = `name='${SYNC_FILE_NAME}' and '${folderId}' in parents and trashed=false`
+  const listUrl = `${GOOGLE_DRIVE_API}/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`
+  const listRes = await fetch(listUrl, { headers: { Authorization: `Bearer ${accessToken}` } })
+  if (!listRes.ok) throw new Error(`SYNC_LIST_FAILED: ${await listRes.text()}`)
+  const data = await listRes.json() as { files: Array<{ id: string }> }
+  if (data.files.length > 0) return data.files[0].id
+  // crea metadata-only (contenuto vuoto); il primo upload lo riempirà
+  const createRes = await fetch(`${GOOGLE_DRIVE_API}/files`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: SYNC_FILE_NAME, parents: [folderId] })
+  })
+  if (!createRes.ok) throw new Error(`SYNC_CREATE_FAILED: ${await createRes.text()}`)
+  return (await createRes.json() as { id: string }).id
+}
+
+export interface SyncMetadata { revision: string; modifiedTime: string; size: number }
+
+/** Metadati di versione del file di sync. `revision` = headRevisionId (fallback modifiedTime). */
+export async function getSyncMetadata(fileId: string): Promise<SyncMetadata> {
+  const accessToken = await getValidToken()
+  const url = `${GOOGLE_DRIVE_API}/files/${fileId}?fields=headRevisionId,modifiedTime,size`
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
+  if (!res.ok) throw new Error(`SYNC_META_FAILED: ${await res.text()}`)
+  const d = await res.json() as { headRevisionId?: string; modifiedTime: string; size?: string }
+  return { revision: d.headRevisionId ?? d.modifiedTime, modifiedTime: d.modifiedTime, size: parseInt(d.size ?? '0', 10) }
+}
+
+/** Sovrascrive in-place il contenuto del file di sync; ritorna la nuova revisione. */
+export async function uploadSync(fileId: string, dbPath: string): Promise<string> {
+  const accessToken = await getValidToken()
+  const content = readFileSync(dbPath)
+  const url = `${GOOGLE_DRIVE_UPLOAD_API}/files/${fileId}?uploadType=media&fields=headRevisionId,modifiedTime`
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/octet-stream',
+      'Content-Length': String(content.byteLength)
+    },
+    body: content
+  })
+  if (!res.ok) throw new Error(`SYNC_UPLOAD_FAILED: ${await res.text()}`)
+  const d = await res.json() as { headRevisionId?: string; modifiedTime: string }
+  return d.headRevisionId ?? d.modifiedTime
+}
+
+/** Scarica il contenuto del file di sync su `destPath`. */
+export async function downloadSync(fileId: string, destPath: string): Promise<void> {
+  const accessToken = await getValidToken()
+  const res = await fetch(`${GOOGLE_DRIVE_API}/files/${fileId}?alt=media`, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  })
+  if (!res.ok) throw new Error(`SYNC_DOWNLOAD_FAILED: ${await res.text()}`)
+  writeFileSync(destPath, Buffer.from(await res.arrayBuffer()))
+}
+
+/** Carica una copia di conflitto (file separato timestamped). Ritorna il fileId. */
+export async function uploadConflictCopy(dbPath: string): Promise<string> {
+  return backupSuDriveConNome(
+    dbPath,
+    `gymmanager_conflict_${new Date().toISOString().replace(/[:.]/g, '-')}.db`
+  )
+}
+
+// ── Backup timestamped ────────────────────────────────────────────────────────
+
 /**
- * Carica un file di backup su Google Drive nella cartella "GymManager Backup".
- * @returns ID del file su Google Drive
+ * Helper interno: carica un file su Drive con un nome specificato, nella cartella app.
+ * Ritorna il fileId.
  */
-export async function backupSuDrive(backupPath: string): Promise<string> {
+async function backupSuDriveConNome(backupPath: string, fileName: string): Promise<string> {
   const accessToken = await getValidToken()
   const folderId = await getOrCreateFolder(accessToken)
 
-  const fileName = `gymmanager_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.db`
   const fileContent = readFileSync(backupPath)
   const boundary = 'gymmanager_drive_boundary_314159'
 
@@ -330,8 +406,19 @@ export async function backupSuDrive(backupPath: string): Promise<string> {
   if (!res.ok) throw new Error(`DRIVE_UPLOAD_FAILED: ${await res.text()}`)
 
   const data = await res.json() as { id: string }
-  log.info(`[drive] Backup caricato su Drive: ${data.id} (${fileName})`)
+  log.info(`[drive] File caricato su Drive: ${data.id} (${fileName})`)
   return data.id
+}
+
+/**
+ * Carica un file di backup su Google Drive nella cartella "GymManager Backup".
+ * @returns ID del file su Google Drive
+ */
+export async function backupSuDrive(backupPath: string): Promise<string> {
+  const fileName = `gymmanager_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.db`
+  const fileId = await backupSuDriveConNome(backupPath, fileName)
+  log.info(`[drive] Backup caricato su Drive: ${fileId} (${fileName})`)
+  return fileId
 }
 
 /**
