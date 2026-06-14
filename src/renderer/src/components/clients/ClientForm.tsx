@@ -197,6 +197,19 @@ export default function ClientForm({
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
+    const erroriLocali: ValidationError[] = []
+    if (!formData.nome.trim()) erroriLocali.push({ field: 'nome', message: t('validazione.obbligatorio') })
+    if (!formData.cognome.trim()) erroriLocali.push({ field: 'cognome', message: t('validazione.obbligatorio') })
+    const cf = formData.codice_fiscale.toUpperCase().trim()
+    if (!cf) {
+      erroriLocali.push({ field: 'codice_fiscale', message: t('validazione.obbligatorio') })
+    } else if (!isFormatoCFValido(cf)) {
+      erroriLocali.push({ field: 'codice_fiscale', message: t('clienti.form.cf_formato_invalido') })
+    }
+    if (erroriLocali.length > 0) {
+      setApiErrors(erroriLocali)
+      return
+    }
     setSubmitState('submitting')
     setApiErrors([])
 
@@ -311,7 +324,7 @@ export default function ClientForm({
             />
             {cfFormatoWarning && !getFieldError('codice_fiscale') && (
               <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                {t('clienti.form.cf_hint')}
+                {t('clienti.form.cf_formato_invalido')}
               </p>
             )}
             <div className="mt-2 flex items-center gap-3">

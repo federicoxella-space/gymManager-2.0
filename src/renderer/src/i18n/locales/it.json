@@ -140,6 +140,7 @@
       "comune_nascita_placeholder": "Inizia a digitare il comune…",
       "calcola_cf": "Calcola CF",
       "calcola_cf_dati_mancanti": "Per calcolare il CF servono nome, cognome, data di nascita, sesso e comune.",
+      "cf_formato_invalido": "Codice fiscale in formato non valido",
       "salva": "Salva",
       "annulla": "Annulla",
       "errore_invio": "Errore durante il salvataggio. Riprova."

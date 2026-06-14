@@ -140,6 +140,7 @@
       "comune_nascita_placeholder": "Start typing the town…",
       "calcola_cf": "Compute CF",
       "calcola_cf_dati_mancanti": "Computing CF requires name, surname, birth date, sex and town.",
+      "cf_formato_invalido": "Invalid tax code format",
       "salva": "Save",
       "annulla": "Cancel",
       "errore_invio": "Error during save. Please try again."
