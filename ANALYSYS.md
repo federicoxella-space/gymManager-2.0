@@ -272,6 +272,7 @@ I problemi principali si concentrano su:
 - **Spec:** `FUNZIONALITA.md:56`: «percorso locale; frequenza automatica configurabile».
 - **Soluzione:** aggiungere selezione cartella (dialog `showOpenDialog`) e selettore frequenza;
   collegare "Backup ora" a `backup:locale` con il percorso scelto.
+- **Stato (2026-06-15):** **Chiuso.** Cartella backup configurabile (con "Sfoglia…"), backup periodico opzionale ogni N ore (default 6) oltre al backup-on-close, retention configurabile (default 10). `backupAutomatico` parametrico su cartella+retention; nuovo `backup-scheduler` (init a `db:setup`/`db:unlock`, restart a `settings:set`). Vedi `docs/superpowers/specs/2026-06-14-b8-backup-config-design.md`.
 
 ### B9 — [MEDIA] Drill-down certificati dalla dashboard non filtra la lista clienti
 - **Evidenza:** `DashboardPage.tsx:154-156` naviga con `{ filtro: 'certificato' }`, ma `ClientsPage`
