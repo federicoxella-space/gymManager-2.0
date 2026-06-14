@@ -262,8 +262,8 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
           <p className="text-sm text-gray-500 dark:text-gray-400">{t('ricevute.nessuna')}</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
+          <table className="w-full min-w-[820px] text-sm">
             <caption className="sr-only">{t('common.tabella_ricevute')}</caption>
             <thead className="bg-gray-50 dark:bg-gray-800/60">
               <tr>

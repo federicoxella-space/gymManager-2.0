@@ -104,8 +104,8 @@ export default function ClientList({
       />
 
       {/* Tabella */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <table data-testid="client-list-table" className="w-full text-sm">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <table data-testid="client-list-table" className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <th

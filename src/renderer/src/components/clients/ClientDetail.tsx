@@ -700,8 +700,8 @@ export default function ClientDetail({
                 ({storicoIscrizioni.length})
               </button>
               {showStoricoIscrizioni && (
-                <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <table className="w-full text-xs">
+                <div className="mt-3 rounded-lg border border-gray-200 dark:border-gray-700 overflow-x-auto">
+                  <table className="w-full min-w-[640px] text-xs">
                     <caption className="sr-only">{t('common.tabella_iscrizioni')}</caption>
                     <thead className="bg-gray-50 dark:bg-gray-800/60">
                       <tr>
@@ -794,8 +794,8 @@ export default function ClientDetail({
                 {t('abbonamenti.nessuno')}
               </p>
             ) : (
-              <div data-testid="lista-abbonamenti" className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <table className="w-full text-sm">
+              <div data-testid="lista-abbonamenti" className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
+                <table className="w-full min-w-[640px] text-sm">
                   <caption className="sr-only">{t('common.tabella_abbonamenti')}</caption>
                   <thead className="bg-gray-50 dark:bg-gray-800/60">
                     <tr>
@@ -931,8 +931,8 @@ export default function ClientDetail({
             {ricevute.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('ricevute.nessuna')}</p>
             ) : (
-              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <table className="w-full text-sm">
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-x-auto">
+                <table className="w-full min-w-[640px] text-sm">
                   <caption className="sr-only">{t('common.tabella_ricevute')}</caption>
                   <thead className="bg-gray-50 dark:bg-gray-800/60">
                     <tr>
