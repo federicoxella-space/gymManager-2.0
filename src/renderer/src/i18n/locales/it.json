@@ -117,6 +117,10 @@
       "tutore_nome": "Nome tutore",
       "tutore_cognome": "Cognome tutore",
       "tutore_cf": "C.F. tutore",
+      "comune_nascita": "Comune di nascita",
+      "comune_nascita_placeholder": "Inizia a digitare il comune…",
+      "calcola_cf": "Calcola CF",
+      "calcola_cf_dati_mancanti": "Per calcolare il CF servono nome, cognome, data di nascita, sesso e comune.",
       "salva": "Salva",
       "annulla": "Annulla",
       "errore_invio": "Errore durante il salvataggio. Riprova."

@@ -117,6 +117,10 @@
       "tutore_nome": "Guardian first name",
       "tutore_cognome": "Guardian last name",
       "tutore_cf": "Guardian tax code",
+      "comune_nascita": "Town of birth",
+      "comune_nascita_placeholder": "Start typing the town…",
+      "calcola_cf": "Compute CF",
+      "calcola_cf_dati_mancanti": "Computing CF requires name, surname, birth date, sex and town.",
       "salva": "Save",
       "annulla": "Cancel",
       "errore_invio": "Error during save. Please try again."

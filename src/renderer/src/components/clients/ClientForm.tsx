@@ -17,6 +17,7 @@ type FormData = {
   codice_fiscale: string
   data_nascita: string
   sesso: string
+  comune_nascita: string
   via: string
   civico: string
   citta: string
@@ -47,6 +48,7 @@ function buildInitialData(initialData?: ClienteRow): FormData {
     codice_fiscale: initialData?.codice_fiscale ?? '',
     data_nascita: initialData?.data_nascita ?? '',
     sesso: initialData?.sesso ?? '',
+    comune_nascita: initialData?.comune_nascita ?? '',
     via: initialData?.via ?? '',
     civico: initialData?.civico ?? '',
     citta: initialData?.citta ?? '',
@@ -108,6 +110,9 @@ export default function ClientForm({
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const [apiErrors, setApiErrors] = useState<ValidationError[]>([])
   const [cfFormatoWarning, setCfFormatoWarning] = useState(false)
+  const [comuneSuggerimenti, setComuneSuggerimenti] = useState<ComuneInfo[]>([])
+  const [codiceComune, setCodiceComune] = useState('')
+  const [cfError, setCfError] = useState<string | null>(null)
 
   const minorenneFlag = isMinorenne(formData.data_nascita)
   const isSubmitting = submitState === 'submitting'
@@ -156,6 +161,27 @@ export default function ClientForm({
     }
   }
 
+  async function handleCalcolaCF(): Promise<void> {
+    setCfError(null)
+    const sesso = formData.sesso === 'M' || formData.sesso === 'F' ? (formData.sesso as 'M' | 'F') : null
+    if (!formData.nome.trim() || !formData.cognome.trim() || !formData.data_nascita || !sesso || !codiceComune) {
+      setCfError(t('clienti.form.calcola_cf_dati_mancanti'))
+      return
+    }
+    try {
+      const cf = await window.api.cf.calcola({
+        nome: formData.nome.trim(),
+        cognome: formData.cognome.trim(),
+        dataNascita: formData.data_nascita,
+        sesso,
+        codiceComune
+      })
+      setFormData((prev) => ({ ...prev, codice_fiscale: cf }))
+    } catch {
+      setCfError(t('clienti.form.calcola_cf_dati_mancanti'))
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
     setSubmitState('submitting')
@@ -168,6 +194,7 @@ export default function ClientForm({
       numero_tessera: formData.numero_tessera.trim() || undefined,
       data_nascita: formData.data_nascita || null,
       sesso: formData.sesso || null,
+      comune_nascita: formData.comune_nascita.trim() || null,
       via: formData.via.trim() || null,
       civico: formData.civico.trim() || null,
       citta: formData.citta.trim() || null,
@@ -273,6 +300,16 @@ export default function ClientForm({
                 {t('clienti.form.cf_hint')}
               </p>
             )}
+            <div className="mt-2 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => { void handleCalcolaCF() }}
+                className="text-sm px-3 py-1.5 rounded-lg border border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+              >
+                {t('clienti.form.calcola_cf')}
+              </button>
+              {cfError && <span role="alert" className="text-xs text-amber-700 dark:text-amber-400">{cfError}</span>}
+            </div>
           </Field>
 
           <Field label={t('clienti.form.numero_tessera')}>
@@ -312,6 +349,51 @@ export default function ClientForm({
               <option value="F">{t('clienti.form.sesso_f')}</option>
             </select>
           </Field>
+
+          <div className="relative sm:col-span-2">
+            <label htmlFor="comune_nascita" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              {t('clienti.form.comune_nascita')}
+            </label>
+            <input
+              id="comune_nascita"
+              name="comune_nascita"
+              type="text"
+              autoComplete="off"
+              value={formData.comune_nascita}
+              placeholder={t('clienti.form.comune_nascita_placeholder')}
+              disabled={isSubmitting}
+              onChange={(e) => {
+                const v = e.target.value
+                setFormData((prev) => ({ ...prev, comune_nascita: v }))
+                setCodiceComune('')
+                if (v.trim().length >= 2) {
+                  void window.api.cf.cercaComuni(v).then(setComuneSuggerimenti).catch(() => setComuneSuggerimenti([]))
+                } else {
+                  setComuneSuggerimenti([])
+                }
+              }}
+              className={inputClass}
+            />
+            {comuneSuggerimenti.length > 0 && (
+              <ul className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg divide-y divide-gray-100 dark:divide-gray-800">
+                {comuneSuggerimenti.map((c) => (
+                  <li key={`${c.codiceCatastale}-${c.nome}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, comune_nascita: c.nome }))
+                        setCodiceComune(c.codiceCatastale)
+                        setComuneSuggerimenti([])
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                    >
+                      {c.nome} <span className="text-xs text-gray-400">({c.sigla})</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </section>
 
