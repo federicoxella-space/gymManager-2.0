@@ -126,7 +126,7 @@ describe('runMigrations', () => {
   it('eseguendo runMigrations due volte non duplica le righe in schema_migrations', () => {
     runMigrations(db)
     runMigrations(db)
-    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
   })
 
   it('eseguendo runMigrations due volte non duplica le righe in app_settings', () => {
@@ -255,7 +255,7 @@ describe('migrazioni su file temporaneo (persistenza)', () => {
 
     db = new Database(dbPath)
     runMigrations(db) // Seconda esecuzione su file esistente
-    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6])
+    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
   })
 })
 
@@ -445,5 +445,52 @@ describe('migrazione 003: catalogo e associazioni', () => {
     expect(getTables(db)).toContain('tipi_iscrizione')
     expect(getTables(db)).toContain('abbonamenti_cliente')
     expect(getAppliedVersions(db)).toContain(3)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Suite: migrazione 007 — tutore_id FK, rimuove colonne tutore_* free-text
+// ---------------------------------------------------------------------------
+
+describe('migrazione 007: tutore_id e rimozione colonne tutore_* free-text', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+  })
+
+  afterEach(() => {
+    if (db.open) db.close()
+  })
+
+  it('migrazione 007: clienti ha tutore_id e non ha più le colonne tutore_* free-text', () => {
+    runMigrations(db)
+    const cols = (db.prepare('PRAGMA table_info(clienti)').all() as { name: string }[]).map((c) => c.name)
+    expect(cols).toContain('tutore_id')
+    for (const c of ['tutore_nome', 'tutore_cognome', 'tutore_cf', 'tutore_via', 'tutore_civico', 'tutore_citta', 'tutore_provincia', 'tutore_cap']) {
+      expect(cols).not.toContain(c)
+    }
+  })
+
+  it('registra la versione 7 nella tabella schema_migrations', () => {
+    runMigrations(db)
+    expect(getAppliedVersions(db)).toContain(7)
+  })
+
+  it('ciclo up → down → up della migrazione 007: tutore_id torna presente dopo re-apply', () => {
+    runMigrations(db)
+    rollbackMigration(db, 7)
+    const colsAfterDown = (db.prepare('PRAGMA table_info(clienti)').all() as { name: string }[]).map((c) => c.name)
+    expect(colsAfterDown).not.toContain('tutore_id')
+    for (const c of ['tutore_nome', 'tutore_cognome', 'tutore_cf', 'tutore_via', 'tutore_civico', 'tutore_citta', 'tutore_provincia', 'tutore_cap']) {
+      expect(colsAfterDown).toContain(c)
+    }
+    runMigrations(db)
+    const colsAfterUp = (db.prepare('PRAGMA table_info(clienti)').all() as { name: string }[]).map((c) => c.name)
+    expect(colsAfterUp).toContain('tutore_id')
+    for (const c of ['tutore_nome', 'tutore_cognome', 'tutore_cf', 'tutore_via', 'tutore_civico', 'tutore_citta', 'tutore_provincia', 'tutore_cap']) {
+      expect(colsAfterUp).not.toContain(c)
+    }
+    expect(getAppliedVersions(db)).toContain(7)
   })
 })
