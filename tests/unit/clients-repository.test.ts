@@ -20,7 +20,13 @@ vi.mock('../../src/main/db/database', () => ({
 }))
 
 import { runMigrations } from '../../src/main/db/migrations'
-import { listClienti, createCliente, getNextNumeroTessera } from '../../src/main/db/clients-repository'
+import {
+  listClienti,
+  createCliente,
+  getCliente,
+  updateCliente,
+  getNextNumeroTessera
+} from '../../src/main/db/clients-repository'
 
 function creaCliente(db: Database.Database, cf: string): number {
   const info = db
@@ -168,5 +174,55 @@ describe('listClienti — filtro certificato in scadenza oggi (WP2: A11)', () =>
 
     expect(scaduti.map((r) => r.id)).toContain(c)
     expect(inScadenza.map((r) => r.id)).not.toContain(c)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// B7 — tutore_id: JOIN derivato e validazioni
+// ---------------------------------------------------------------------------
+
+describe('B7 — tutore_id: campi derivati via JOIN e validazioni', () => {
+  it('collega un tutore via tutore_id ed espone i campi tutore_* derivati in getCliente', () => {
+    const tutore = createCliente({
+      nome: 'Mario',
+      cognome: 'Rossi',
+      codice_fiscale: 'RSSMRA80A01H501U',
+      via: 'Via Roma',
+      civico: '1',
+      citta: 'Roma',
+      cap: '00100'
+    })
+    const minore = createCliente({
+      nome: 'Luca',
+      cognome: 'Rossi',
+      codice_fiscale: 'RSSLCU15A01H501A',
+      data_nascita: '2015-01-01',
+      tutore_id: tutore.id
+    })
+    const letto = getCliente(minore.id)!
+    expect(letto.tutore_id).toBe(tutore.id)
+    expect(letto.tutore_nome).toBe('Mario')
+    expect(letto.tutore_cf).toBe('RSSMRA80A01H501U')
+    expect(letto.tutore_via).toBe('Via Roma')
+  })
+
+  it('rifiuta un tutore inesistente con TUTORE_NON_TROVATO', () => {
+    expect(() =>
+      createCliente({
+        nome: 'X',
+        cognome: 'Y',
+        codice_fiscale: 'XYXXYX80A01H501V',
+        tutore_id: 999999
+      })
+    ).toThrow('TUTORE_NON_TROVATO')
+  })
+
+  it('rifiuta il self-reference in updateCliente con TUTORE_SE_STESSO', () => {
+    const c = createCliente({
+      nome: 'Alberto',
+      cognome: 'Belli',
+      codice_fiscale: 'BLLLRT80A01H501W'
+    })
+    expect(() => updateCliente(c.id, { tutore_id: c.id })).toThrow('TUTORE_SE_STESSO')
   })
 })

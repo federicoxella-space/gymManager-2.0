@@ -94,33 +94,14 @@ export function validaCliente(input: CreateClienteInput): ValidationResult {
     })
   }
 
-  // Validazione dati tutore per i minorenni
+  // B7: per i minorenni il tutore deve essere collegato tramite tutore_id (FK a clienti).
+  // La validazione che il tutore esista nel DB è delegata al repository (validaTutore).
+  // Qui si verifica solo che tutore_id sia fornito se il cliente è minorenne.
   if (isMinorenne(input.data_nascita ?? null)) {
-    if (!input.tutore_nome || input.tutore_nome.trim().length === 0) {
+    if (input.tutore_id == null) {
       errors.push({
-        field: 'tutore_nome',
-        message: 'Il nome del tutore è obbligatorio per i clienti minorenni.',
-      })
-    }
-
-    if (!input.tutore_cognome || input.tutore_cognome.trim().length === 0) {
-      errors.push({
-        field: 'tutore_cognome',
-        message:
-          'Il cognome del tutore è obbligatorio per i clienti minorenni.',
-      })
-    }
-
-    if (!input.tutore_cf || input.tutore_cf.trim().length === 0) {
-      errors.push({
-        field: 'tutore_cf',
-        message:
-          'Il codice fiscale del tutore è obbligatorio per i clienti minorenni.',
-      })
-    } else if (!isCodiceFiscaleValid(input.tutore_cf)) {
-      errors.push({
-        field: 'tutore_cf',
-        message: 'Il codice fiscale del tutore non è valido.',
+        field: 'tutore_id',
+        message: 'Il tutore è obbligatorio per i clienti minorenni.',
       })
     }
   }
@@ -168,41 +149,13 @@ export function validaClienteUpdate(input: Partial<CreateClienteInput>): Validat
     }
   }
 
-  if ('tutore_cf' in input) {
-    if (input.tutore_cf && input.tutore_cf.trim().length > 0) {
-      if (!isCodiceFiscaleValid(input.tutore_cf)) {
-        errors.push({
-          field: 'tutore_cf',
-          message: 'Il codice fiscale del tutore non è valido.',
-        })
-      }
-    }
-  }
-
-  // Se data_nascita viene aggiornata e indica un minorenne, verifica i campi
-  // tutore presenti nell'input.
+  // B7: se data_nascita viene aggiornata e indica un minorenne, e tutore_id
+  // è esplicitamente passato come null/undefined, segnala l'obbligo.
   if ('data_nascita' in input && isMinorenne(input.data_nascita ?? null)) {
-    if ('tutore_nome' in input && (!input.tutore_nome || input.tutore_nome.trim().length === 0)) {
+    if ('tutore_id' in input && input.tutore_id == null) {
       errors.push({
-        field: 'tutore_nome',
-        message: 'Il nome del tutore è obbligatorio per i clienti minorenni.',
-      })
-    }
-
-    if (
-      'tutore_cognome' in input &&
-      (!input.tutore_cognome || input.tutore_cognome.trim().length === 0)
-    ) {
-      errors.push({
-        field: 'tutore_cognome',
-        message: 'Il cognome del tutore è obbligatorio per i clienti minorenni.',
-      })
-    }
-
-    if ('tutore_cf' in input && (!input.tutore_cf || input.tutore_cf.trim().length === 0)) {
-      errors.push({
-        field: 'tutore_cf',
-        message: 'Il codice fiscale del tutore è obbligatorio per i clienti minorenni.',
+        field: 'tutore_id',
+        message: 'Il tutore è obbligatorio per i clienti minorenni.',
       })
     }
   }

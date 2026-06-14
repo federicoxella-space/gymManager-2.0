@@ -45,6 +45,9 @@ interface ClienteRow {
   email: string | null
   telefono: string | null
   note: string | null
+  /** FK al cliente-tutore (per i minori). */
+  tutore_id: number | null
+  /** Campi tutore DERIVATI via JOIN dal cliente-tutore (read-only, null se nessun tutore). */
   tutore_nome: string | null
   tutore_cognome: string | null
   tutore_cf: string | null
@@ -82,14 +85,8 @@ interface CreateClienteInput {
   email?: string | null
   telefono?: string | null
   note?: string | null
-  tutore_nome?: string | null
-  tutore_cognome?: string | null
-  tutore_cf?: string | null
-  tutore_via?: string | null
-  tutore_civico?: string | null
-  tutore_citta?: string | null
-  tutore_provincia?: string | null
-  tutore_cap?: string | null
+  /** FK al cliente-tutore (per i minori). */
+  tutore_id?: number | null
 }
 
 type UpdateClienteInput = Partial<CreateClienteInput>

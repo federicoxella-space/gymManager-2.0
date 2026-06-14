@@ -6,6 +6,35 @@ import type {
   ClientiFilters
 } from '../../types/shared'
 
+// ── Helpers interni ───────────────────────────────────────────────────────────
+
+/**
+ * Verifica che tutoreId sia un cliente esistente e che non sia uguale a selfId.
+ * Lancia 'TUTORE_SE_STESSO' o 'TUTORE_NON_TROVATO' se necessario.
+ */
+function validaTutore(
+  db: ReturnType<typeof getDatabase>,
+  tutoreId: number | null | undefined,
+  selfId?: number
+): void {
+  if (tutoreId == null) return
+  if (selfId !== undefined && tutoreId === selfId) throw new Error('TUTORE_SE_STESSO')
+  const esiste = db.prepare('SELECT 1 FROM clienti WHERE id = ?').get(tutoreId)
+  if (!esiste) throw new Error('TUTORE_NON_TROVATO')
+}
+
+/**
+ * SELECT base per leggere un cliente con i campi tutore derivati via LEFT JOIN.
+ */
+const SELECT_CLIENTE = `
+  SELECT c.*,
+    tut.nome AS tutore_nome, tut.cognome AS tutore_cognome, tut.codice_fiscale AS tutore_cf,
+    tut.via AS tutore_via, tut.civico AS tutore_civico, tut.citta AS tutore_citta,
+    tut.provincia AS tutore_provincia, tut.cap AS tutore_cap
+  FROM clienti c
+  LEFT JOIN clienti tut ON tut.id = c.tutore_id
+`
+
 export function getNextNumeroTessera(): string {
   const db = getDatabase()
   const row = db
@@ -21,6 +50,9 @@ export function getNextNumeroTessera(): string {
 export function createCliente(data: CreateClienteInput): ClienteRow {
   const db = getDatabase()
 
+  // Valida l'esistenza del tutore prima di aprire la transazione
+  validaTutore(db, data.tutore_id)
+
   let newId!: number
 
   const esegui = db.transaction(() => {
@@ -32,15 +64,13 @@ export function createCliente(data: CreateClienteInput): ClienteRow {
         data_nascita, sesso, comune_nascita,
         via, civico, citta, provincia, cap,
         email, telefono, note,
-        tutore_nome, tutore_cognome, tutore_cf,
-        tutore_via, tutore_civico, tutore_citta, tutore_provincia, tutore_cap
+        tutore_id
       ) VALUES (
         @numero_tessera, @nome, @cognome, @codice_fiscale,
         @data_nascita, @sesso, @comune_nascita,
         @via, @civico, @citta, @provincia, @cap,
         @email, @telefono, @note,
-        @tutore_nome, @tutore_cognome, @tutore_cf,
-        @tutore_via, @tutore_civico, @tutore_citta, @tutore_provincia, @tutore_cap
+        @tutore_id
       )
     `)
 
@@ -60,14 +90,7 @@ export function createCliente(data: CreateClienteInput): ClienteRow {
       email: data.email ?? null,
       telefono: data.telefono ?? null,
       note: data.note ?? null,
-      tutore_nome: data.tutore_nome ?? null,
-      tutore_cognome: data.tutore_cognome ?? null,
-      tutore_cf: data.tutore_cf ?? null,
-      tutore_via: data.tutore_via ?? null,
-      tutore_civico: data.tutore_civico ?? null,
-      tutore_citta: data.tutore_citta ?? null,
-      tutore_provincia: data.tutore_provincia ?? null,
-      tutore_cap: data.tutore_cap ?? null
+      tutore_id: data.tutore_id ?? null
     })
 
     newId = info.lastInsertRowid as number
@@ -91,13 +114,13 @@ export function createCliente(data: CreateClienteInput): ClienteRow {
 
 export function getCliente(id: number): ClienteRow | null {
   const db = getDatabase()
-  const row = db.prepare('SELECT * FROM clienti WHERE id = ?').get(id)
+  const row = db.prepare(`${SELECT_CLIENTE} WHERE c.id = ?`).get(id)
   return (row as ClienteRow) ?? null
 }
 
 export function getClienteByCodiceFiscale(cf: string): ClienteRow | null {
   const db = getDatabase()
-  const row = db.prepare('SELECT * FROM clienti WHERE codice_fiscale = ?').get(cf)
+  const row = db.prepare(`${SELECT_CLIENTE} WHERE c.codice_fiscale = ?`).get(cf)
   return (row as ClienteRow) ?? null
 }
 
@@ -109,6 +132,11 @@ export function updateCliente(id: number, data: UpdateClienteInput): ClienteRow 
     const existing = getCliente(id)
     if (!existing) throw new Error(`Cliente con id ${id} non trovato`)
     return existing
+  }
+
+  // Valida il tutore se presente nel payload (include il controllo self-reference)
+  if ('tutore_id' in data) {
+    validaTutore(db, data.tutore_id as number | null, id)
   }
 
   const setClauses = fields.map((f) => `${f} = @${f}`).join(', ')
@@ -185,7 +213,10 @@ export function listClienti(filters?: ClientiFilters, giorniPreavvisoCert = 30):
       cm.tipo AS cert_tipo,
       ic.stato AS iscrizione_stato,
       ic.data_scadenza AS iscrizione_scadenza,
-      COALESCE(ac.cnt, 0) AS abbonamenti_attivi_count
+      COALESCE(ac.cnt, 0) AS abbonamenti_attivi_count,
+      tut.nome AS tutore_nome, tut.cognome AS tutore_cognome, tut.codice_fiscale AS tutore_cf,
+      tut.via AS tutore_via, tut.civico AS tutore_civico, tut.citta AS tutore_citta,
+      tut.provincia AS tutore_provincia, tut.cap AS tutore_cap
     FROM clienti c
     LEFT JOIN (
       SELECT cliente_id, data_scadenza, tipo,
@@ -203,6 +234,7 @@ export function listClienti(filters?: ClientiFilters, giorniPreavvisoCert = 30):
       WHERE stato = 'attivo'
       GROUP BY cliente_id
     ) ac ON ac.cliente_id = c.id
+    LEFT JOIN clienti tut ON tut.id = c.tutore_id
     WHERE c.stato = ?
       AND (? IS NULL OR c.nome LIKE ? OR c.cognome LIKE ? OR c.codice_fiscale LIKE ?)
       ${extraWhereStr}
@@ -246,14 +278,7 @@ export function anonimizzaCliente(id: number): void {
       email = NULL,
       telefono = NULL,
       note = NULL,
-      tutore_nome = NULL,
-      tutore_cognome = NULL,
-      tutore_cf = NULL,
-      tutore_via = NULL,
-      tutore_civico = NULL,
-      tutore_citta = NULL,
-      tutore_provincia = NULL,
-      tutore_cap = NULL,
+      tutore_id = NULL,
       stato = 'anonimizzato',
       data_modifica = datetime('now')
     WHERE id = ?

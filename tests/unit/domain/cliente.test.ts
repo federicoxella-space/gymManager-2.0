@@ -149,7 +149,7 @@ describe('validaCliente', () => {
   })
 
   describe('minorenne — validazione tutore', () => {
-    it('richiede tutti i dati tutore per un minorenne senza tutore', () => {
+    it('B7: richiede tutore_id per un minorenne senza tutore collegato', () => {
       const input: CreateClienteInput = {
         nome: 'Luca',
         cognome: 'Verdi',
@@ -158,44 +158,36 @@ describe('validaCliente', () => {
       }
       const result = validaCliente(input)
       expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_nome')).toBe(true)
-      expect(result.errors.some(e => e.field === 'tutore_cognome')).toBe(true)
-      expect(result.errors.some(e => e.field === 'tutore_cf')).toBe(true)
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(true)
     })
 
-    it('accetta un minorenne con tutti i dati tutore validi', () => {
+    it('B7: accetta un minorenne con tutore_id valorizzato', () => {
       const input: CreateClienteInput = {
         nome: 'Luca',
         cognome: 'Verdi',
         codice_fiscale: CF_MINORE_ADULTO,
         data_nascita: '2012-01-01',
-        tutore_nome: 'Anna',
-        tutore_cognome: 'Verdi',
-        tutore_cf: CF_TUTORE,
+        tutore_id: 42, // ID del tutore (validazione esistenza è nel repository)
       }
       const result = validaCliente(input)
       expect(result.valid).toBe(true)
       expect(result.errors).toHaveLength(0)
     })
 
-    it('rifiuta tutore con CF non valido', () => {
+    it('B7: minorenne con tutore_id null produce errore tutore_id', () => {
       const input: CreateClienteInput = {
         nome: 'Luca',
         cognome: 'Verdi',
         codice_fiscale: CF_MINORE_ADULTO,
         data_nascita: '2012-01-01',
-        tutore_nome: 'Anna',
-        tutore_cognome: 'Verdi',
-        tutore_cf: 'INVALIDO1234567X',
+        tutore_id: null,
       }
       const result = validaCliente(input)
       expect(result.valid).toBe(false)
-      const cfErr = result.errors.find(e => e.field === 'tutore_cf')
-      expect(cfErr).toBeDefined()
-      expect(cfErr?.message).toContain('non è valido')
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(true)
     })
 
-    it('non richiede dati tutore per un adulto', () => {
+    it('non richiede tutore per un adulto', () => {
       const input: CreateClienteInput = {
         nome: 'Mario',
         cognome: 'Rossi',
@@ -242,63 +234,29 @@ describe('validaClienteUpdate', () => {
     expect(result.errors.some(e => e.field === 'codice_fiscale')).toBe(true)
   })
 
-  it('rifiuta tutore_cf non valido se fornito e non vuoto', () => {
-    const result = validaClienteUpdate({ tutore_cf: 'INVALIDO1234567X' })
-    expect(result.valid).toBe(false)
-    expect(result.errors.some(e => e.field === 'tutore_cf')).toBe(true)
-  })
-
   describe('minorenne — data_nascita aggiornata', () => {
-    it('rifiuta tutore_nome vuoto quando data_nascita diventa minorenne', () => {
-      // Fix DC3: se si aggiorna data_nascita a un minorenne e si passa esplicitamente
-      // tutore_nome vuoto, deve essere un errore.
-      const result = validaClienteUpdate({ data_nascita: '2015-01-01', tutore_nome: '' })
+    it('B7: rifiuta tutore_id null esplicito quando data_nascita diventa minorenne', () => {
+      const result = validaClienteUpdate({ data_nascita: '2015-01-01', tutore_id: null })
       expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_nome')).toBe(true)
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(true)
     })
 
-    it('rifiuta tutore_cognome vuoto quando data_nascita diventa minorenne', () => {
-      const result = validaClienteUpdate({ data_nascita: '2015-01-01', tutore_cognome: '' })
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_cognome')).toBe(true)
-    })
-
-    it('rifiuta tutore_cf vuoto quando data_nascita diventa minorenne', () => {
-      const result = validaClienteUpdate({ data_nascita: '2015-01-01', tutore_cf: '' })
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_cf')).toBe(true)
-    })
-
-    it('non aggiunge errori tutore se i campi tutore non sono nel payload (update parziale)', () => {
-      // Update parziale: cambio solo data_nascita; i dati tutore potrebbero già essere nel DB.
-      // In questo caso non si deve bloccare l'operazione.
+    it('B7: non aggiunge errori tutore se tutore_id non è nel payload (update parziale)', () => {
+      // Update parziale: cambio solo data_nascita; il tutore_id già nel DB non va validato qui.
       const result = validaClienteUpdate({ data_nascita: '2015-01-01' })
-      expect(result.errors.some(e => e.field === 'tutore_nome')).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_cognome')).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_cf')).toBe(false)
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(false)
     })
 
-    it('non richiede dati tutore se data_nascita aggiornata indica un adulto', () => {
-      const result = validaClienteUpdate({
-        data_nascita: '1990-06-01',
-        tutore_nome: '',
-        tutore_cognome: '',
-      })
-      // Adulto: i campi tutore vuoti non generano errori da questo controllo
-      expect(result.errors.some(e => e.field === 'tutore_nome')).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_cognome')).toBe(false)
+    it('B7: non richiede tutore se data_nascita aggiornata indica un adulto', () => {
+      const result = validaClienteUpdate({ data_nascita: '1990-06-01', tutore_id: null })
+      // Adulto: tutore_id null non genera errori
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(false)
     })
 
-    it('accetta update minorenne con tutti i campi tutore valorizzati', () => {
-      const result = validaClienteUpdate({
-        data_nascita: '2015-01-01',
-        tutore_nome: 'Anna',
-        tutore_cognome: 'Verdi',
-        tutore_cf: '',  // CF vuoto → errore
-      })
-      expect(result.errors.some(e => e.field === 'tutore_cf')).toBe(true)
-      expect(result.errors.some(e => e.field === 'tutore_nome')).toBe(false)
-      expect(result.errors.some(e => e.field === 'tutore_cognome')).toBe(false)
+    it('B7: accetta update minorenne con tutore_id valorizzato', () => {
+      const result = validaClienteUpdate({ data_nascita: '2015-01-01', tutore_id: 10 })
+      expect(result.errors.some(e => e.field === 'tutore_id')).toBe(false)
+      expect(result.valid).toBe(true)
     })
   })
 })

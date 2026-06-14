@@ -46,8 +46,7 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
   // Legge il cliente per lo snapshot intestatario
   const cliente = db
     .prepare(
-      'SELECT id, nome, cognome, codice_fiscale, data_nascita, stato, via, civico, citta, provincia, cap,' +
-        ' tutore_nome, tutore_cognome, tutore_cf, tutore_via, tutore_civico, tutore_citta, tutore_provincia, tutore_cap' +
+      'SELECT id, nome, cognome, codice_fiscale, data_nascita, stato, via, civico, citta, provincia, cap, tutore_id' +
         ' FROM clienti WHERE id = ?'
     )
     .get(input.clienteId) as
@@ -63,14 +62,7 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
         citta: string | null
         provincia: string | null
         cap: string | null
-        tutore_nome: string | null
-        tutore_cognome: string | null
-        tutore_cf: string | null
-        tutore_via: string | null
-        tutore_civico: string | null
-        tutore_citta: string | null
-        tutore_provincia: string | null
-        tutore_cap: string | null
+        tutore_id: number | null
       }
     | undefined
 
@@ -110,21 +102,47 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
     }
   }
 
-  // Il tutore è intestatario solo se il cliente ha un tutore E è effettivamente minorenne
-  const haTutore = Boolean(cliente.tutore_cf) && isMinorenne(cliente.data_nascita ?? null)
-  const intestatarioNome = haTutore ? (cliente.tutore_nome ?? '') : cliente.nome
-  const intestatarioCognome = haTutore ? (cliente.tutore_cognome ?? '') : cliente.cognome
-  const intestatarioCf = haTutore ? (cliente.tutore_cf ?? '') : cliente.codice_fiscale
-  const intestatarioVia = haTutore ? (cliente.tutore_via ?? null) : cliente.via
-  const intestatarioCivico = haTutore ? (cliente.tutore_civico ?? null) : cliente.civico
-  const intestatarioCitta = haTutore ? (cliente.tutore_citta ?? null) : cliente.citta
-  const intestatarioProvincia = haTutore ? (cliente.tutore_provincia ?? null) : cliente.provincia
-  const intestatarioCap = haTutore ? (cliente.tutore_cap ?? null) : cliente.cap
+  // B7: il tutore è intestatario solo se il cliente è minorenne e ha un tutore_id collegato.
+  const minorenne = isMinorenne(cliente.data_nascita ?? null)
 
-  // Tutore nella ricevuta: solo se il cliente è minore
-  const tutoreNome = haTutore ? cliente.tutore_nome : null
-  const tutoreCognome = haTutore ? cliente.tutore_cognome : null
-  const tutoreCf = haTutore ? cliente.tutore_cf : null
+  // B7: per un minore l'emissione richiede un tutore collegato.
+  if (minorenne && cliente.tutore_id == null) {
+    throw new Error('TUTORE_RICHIESTO')
+  }
+
+  const haTutore = minorenne && cliente.tutore_id != null
+
+  // Risolve i dati del tutore via FK se necessario
+  const tutoreRow = haTutore
+    ? (db
+        .prepare(
+          'SELECT nome, cognome, codice_fiscale, via, civico, citta, provincia, cap FROM clienti WHERE id = ?'
+        )
+        .get(cliente.tutore_id) as {
+        nome: string
+        cognome: string
+        codice_fiscale: string
+        via: string | null
+        civico: string | null
+        citta: string | null
+        provincia: string | null
+        cap: string | null
+      } | undefined)
+    : undefined
+
+  const intestatarioNome = haTutore ? (tutoreRow?.nome ?? '') : cliente.nome
+  const intestatarioCognome = haTutore ? (tutoreRow?.cognome ?? '') : cliente.cognome
+  const intestatarioCf = haTutore ? (tutoreRow?.codice_fiscale ?? '') : cliente.codice_fiscale
+  const intestatarioVia = haTutore ? (tutoreRow?.via ?? null) : cliente.via
+  const intestatarioCivico = haTutore ? (tutoreRow?.civico ?? null) : cliente.civico
+  const intestatarioCitta = haTutore ? (tutoreRow?.citta ?? null) : cliente.citta
+  const intestatarioProvincia = haTutore ? (tutoreRow?.provincia ?? null) : cliente.provincia
+  const intestatarioCap = haTutore ? (tutoreRow?.cap ?? null) : cliente.cap
+
+  // Tutore nella ricevuta: solo se il cliente è minore con tutore collegato
+  const tutoreNome = haTutore ? (tutoreRow?.nome ?? null) : null
+  const tutoreCognome = haTutore ? (tutoreRow?.cognome ?? null) : null
+  const tutoreCf = haTutore ? (tutoreRow?.codice_fiscale ?? null) : null
   // CF del minore assistito: serve per la dicitura "Tutore di [CF minore]"
   const assistitoCf = haTutore ? cliente.codice_fiscale : null
 

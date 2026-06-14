@@ -233,9 +233,8 @@ export default function ClientForm({
       email: formData.email.trim() || null,
       telefono: formData.telefono.trim() || null,
       note: formData.note.trim() || null,
-      tutore_nome: formData.tutore_nome.trim() || null,
-      tutore_cognome: formData.tutore_cognome.trim() || null,
-      tutore_cf: formData.tutore_cf.toUpperCase().trim() || null,
+      // B7 Task 1: tutore_id viene da selezione cliente (Task 5).
+      // Per ora non inviamo tutore_id nel submit (campo non ancora implementato nell'UI).
     }
 
     try {

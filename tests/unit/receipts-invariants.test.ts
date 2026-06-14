@@ -34,6 +34,7 @@ import {
   annullaRicevuta,
   getVociPagabili
 } from '../../src/main/db/receipts-repository'
+import { createCliente } from '../../src/main/db/clients-repository'
 import type { CreaRicevutaInput } from '../../src/types/shared'
 
 // ---------------------------------------------------------------------------
@@ -44,14 +45,14 @@ import type { CreaRicevutaInput } from '../../src/types/shared'
 function creaCliente(
   db: Database.Database,
   cf = 'RSSMRA85T10H501Z',
-  opts: { tutore_cf?: string; tutore_nome?: string; tutore_cognome?: string; data_nascita?: string } = {}
+  opts: { tutore_id?: number | null; data_nascita?: string } = {}
 ): number {
   const info = db
     .prepare(
-      `INSERT INTO clienti (nome, cognome, codice_fiscale, data_nascita, tutore_nome, tutore_cognome, tutore_cf)
-       VALUES ('Mario', 'Rossi', ?, ?, ?, ?, ?)`
+      `INSERT INTO clienti (nome, cognome, codice_fiscale, data_nascita, tutore_id)
+       VALUES ('Mario', 'Rossi', ?, ?, ?)`
     )
-    .run(cf, opts.data_nascita ?? null, opts.tutore_nome ?? null, opts.tutore_cognome ?? null, opts.tutore_cf ?? null)
+    .run(cf, opts.data_nascita ?? null, opts.tutore_id ?? null)
   return info.lastInsertRowid as number
 }
 
@@ -479,13 +480,18 @@ describe('Snapshot intestatario', () => {
     expect(r.intestatario_cf).toBe('RSSMRA85T10H501Z')
   })
 
-  it('per un minore con tutore, l\'intestatario è il tutore', () => {
+  it('A4: per un minore con tutore collegato (tutore_id), l\'intestatario è il tutore', () => {
     const db = _testDb!
+    // Crea prima il tutore come cliente
+    const tutoreId = db
+      .prepare(
+        `INSERT INTO clienti (nome, cognome, codice_fiscale) VALUES ('Giuseppe', 'Verdi', 'RSSMRA80T10H501Z')`
+      )
+      .run().lastInsertRowid as number
+    // Crea il minore con tutore_id collegato
     const clienteId = creaCliente(db, 'BNCNNA10A01H501X', {
       data_nascita: '2015-01-01', // minorenne nel 2026
-      tutore_cf: 'RSSMRA80T10H501Z',
-      tutore_nome: 'Giuseppe',
-      tutore_cognome: 'Verdi'
+      tutore_id: tutoreId
     })
     const r = creaRicevuta(buildInput(clienteId))
     expect(r.intestatario_cf).toBe('RSSMRA80T10H501Z')
@@ -497,13 +503,18 @@ describe('Snapshot intestatario', () => {
     expect(r.assistito_cf).toBe('BNCNNA10A01H501X')
   })
 
-  it('A5: per un MAGGIORENNE con dati tutore, l\'intestatario è il cliente (non il tutore)', () => {
+  it('A5: per un MAGGIORENNE con tutore_id valorizzato, l\'intestatario è il cliente (non il tutore)', () => {
     const db = _testDb!
+    // Crea il tutore come cliente
+    const tutoreId = db
+      .prepare(
+        `INSERT INTO clienti (nome, cognome, codice_fiscale) VALUES ('Anna', 'Bianchi', 'BNCNNA10A01H501X')`
+      )
+      .run().lastInsertRowid as number
+    // Crea il maggiorenne con tutore_id (non deve influire sull'intestatario)
     const clienteId = creaCliente(db, 'RSSMRA85T10H501Z', {
       data_nascita: '1985-01-01', // maggiorenne
-      tutore_cf: 'BNCNNA10A01H501X',
-      tutore_nome: 'Anna',
-      tutore_cognome: 'Bianchi'
+      tutore_id: tutoreId
     })
     const r = creaRicevuta(buildInput(clienteId))
 
@@ -692,5 +703,93 @@ describe('Flusso E2E-equivalent: transazione → ricevuta salvata → re-downloa
       const reletta = getRicevuta(r.id)
       expect(reletta!.numero).toBe(numeroOriginal)
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// B7 — ricevute con tutore come cliente collegato (FK)
+// ---------------------------------------------------------------------------
+
+describe('B7 — ricevute: tutore come cliente collegato', () => {
+  it('ricevuta a minore con tutore collegato: intestatario = tutore, assistito_cf = CF minore', () => {
+    const tutore = createCliente({
+      nome: 'Anna',
+      cognome: 'Bianchi',
+      codice_fiscale: 'BNCNNA80A41H501Y',
+      via: 'Via Po',
+      civico: '2',
+      citta: 'Roma',
+      cap: '00100'
+    })
+    const minore = createCliente({
+      nome: 'Sara',
+      cognome: 'Bianchi',
+      codice_fiscale: 'BNCSRA15A41H501W',
+      data_nascita: '2015-01-01',
+      tutore_id: tutore.id,
+      via: 'Via Po',
+      civico: '2',
+      citta: 'Roma',
+      cap: '00100'
+    })
+    const ric = creaRicevuta(
+      buildInput(minore.id, {
+        dataEmissione: '2026-01-10',
+        righe: [{ tipo: 'libera', descrizione: 'Quota', prezzo: 50 }]
+      })
+    )
+    expect(ric.intestatario_cf).toBe('BNCNNA80A41H501Y') // CF tutore
+    expect(ric.assistito_cf).toBe('BNCSRA15A41H501W')    // CF minore
+    expect(ric.intestatario_nome).toBe('Anna')
+    expect(ric.intestatario_cognome).toBe('Bianchi')
+  })
+
+  it('ricevuta a minore SENZA tutore collegato: emissione bloccata con TUTORE_RICHIESTO', () => {
+    const minore = createCliente({
+      nome: 'Gino',
+      cognome: 'Verdi',
+      codice_fiscale: 'VRDGNI15A01H501B',
+      data_nascita: '2015-01-01',
+      via: 'Via X',
+      civico: '1',
+      citta: 'Roma',
+      cap: '00100'
+    })
+    expect(() =>
+      creaRicevuta(
+        buildInput(minore.id, {
+          dataEmissione: '2026-01-10',
+          righe: [{ tipo: 'libera', descrizione: 'Quota', prezzo: 50 }]
+        })
+      )
+    ).toThrow('TUTORE_RICHIESTO')
+  })
+
+  it('ricevuta a maggiorenne con tutore_id valorizzato: intestatario = cliente, assistito_cf null', () => {
+    const tutoreAdulto = createCliente({
+      nome: 'T',
+      cognome: 'T',
+      codice_fiscale: 'TTTAAA80A01H501U'
+    })
+    const adulto = createCliente({
+      nome: 'Paolo',
+      cognome: 'Neri',
+      codice_fiscale: 'NREPLA80A01H501Z',
+      data_nascita: '1980-01-01',
+      tutore_id: tutoreAdulto.id,
+      via: 'Via Y',
+      civico: '3',
+      citta: 'Roma',
+      cap: '00100'
+    })
+    const ric = creaRicevuta(
+      buildInput(adulto.id, {
+        dataEmissione: '2026-01-10',
+        righe: [{ tipo: 'libera', descrizione: 'Quota', prezzo: 50 }]
+      })
+    )
+    expect(ric.intestatario_cf).toBe('NREPLA80A01H501Z')
+    expect(ric.assistito_cf).toBeNull()
+    expect(ric.tutore_cf).toBeNull()
   })
 })
