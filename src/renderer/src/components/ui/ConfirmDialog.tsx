@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import Modal from './Modal'
 
@@ -30,11 +30,12 @@ export default function ConfirmDialog({
   errorMessage = null,
 }: ConfirmDialogProps): React.JSX.Element | null {
   const { t } = useTranslation()
+  const messageId = useId()
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-md">
+    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-md" describedById={messageId}>
       <div className="space-y-5">
-        <p className="text-sm text-gray-600 dark:text-gray-300">{message}</p>
+        <p id={messageId} className="text-sm text-gray-600 dark:text-gray-300">{message}</p>
 
         {errorMessage && (
           <div
