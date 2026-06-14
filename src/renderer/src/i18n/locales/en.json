@@ -490,7 +490,11 @@
     "drive_lista_errore": "Error loading backups from Drive.",
     "drive_ripristina_scegli": "Select the backup to restore",
     "drive_ripristina_completato": "Restore from Drive completed. The app will restart.",
-    "drive_ripristina_errore": "Error restoring from Drive. Check the password."
+    "drive_ripristina_errore": "Error restoring from Drive. Check the password.",
+    "drive_backup_ora": "Back up to Drive",
+    "drive_backup_in_corso": "Backing up…",
+    "drive_backup_completato": "Backup uploaded to Google Drive.",
+    "drive_backup_errore": "Error backing up to Drive."
   },
   "abbonamenti": {
     "assegna": "Assign subscription",

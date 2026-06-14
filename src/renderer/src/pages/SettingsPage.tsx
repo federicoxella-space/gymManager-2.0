@@ -7,6 +7,7 @@ import type { AppSettings } from '../../../types/shared'
 import RestoreDialog from '../components/backup/RestoreDialog'
 import ResetPasswordDialog from '../components/backup/ResetPasswordDialog'
 import ChangePasswordDialog from '../components/backup/ChangePasswordDialog'
+import DriveRestoreDialog from '../components/backup/DriveRestoreDialog'
 
 // ── Colori preset ─────────────────────────────────────────────────────────────
 
@@ -131,6 +132,9 @@ export default function SettingsPage(): React.JSX.Element {
   const [driveConnected, setDriveConnected] = useState(false)
   const [isConnectingDrive, setIsConnectingDrive] = useState(false)
   const [driveError, setDriveError] = useState<string | null>(null)
+  const [isDriveBacking, setIsDriveBacking] = useState(false)
+  const [driveBackupMsg, setDriveBackupMsg] = useState<string | null>(null)
+  const [showDriveRestore, setShowDriveRestore] = useState(false)
 
   // Versione app e controllo aggiornamenti
   const [appVersion, setAppVersion] = useState('')
@@ -374,6 +378,20 @@ export default function SettingsPage(): React.JSX.Element {
       setDriveError(null)
     } catch {
       setDriveError(t('backup.drive_errore_connessione'))
+    }
+  }
+
+  async function handleDriveBackup(): Promise<void> {
+    setDriveBackupMsg(null)
+    setIsDriveBacking(true)
+    try {
+      const path = await window.api.backup.automatico()
+      await window.api.backup.drive.backup({ backupPath: path })
+      setDriveBackupMsg(t('backup.drive_backup_completato'))
+    } catch {
+      setDriveBackupMsg(t('backup.drive_backup_errore'))
+    } finally {
+      setIsDriveBacking(false)
     }
   }
 
@@ -1040,18 +1058,37 @@ export default function SettingsPage(): React.JSX.Element {
             )}
 
             {driveConnected && (
-              <div className="flex items-center gap-3">
-                {/* Errore disconnessione */}
+              <div className="space-y-3">
+                {driveBackupMsg !== null && (
+                  <p className="text-xs text-gray-600 dark:text-gray-400">{driveBackupMsg}</p>
+                )}
                 {driveError !== null && (
                   <span className="text-xs text-red-600 dark:text-red-400">{driveError}</span>
                 )}
-                <button
-                  type="button"
-                  onClick={() => { void handleDriveDisconnect() }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                >
-                  {t('backup.drive_disconnetti')}
-                </button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { void handleDriveBackup() }}
+                    disabled={isDriveBacking}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-600 hover:bg-primary-700 disabled:opacity-60 text-white text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  >
+                    {isDriveBacking ? t('backup.drive_backup_in_corso') : t('backup.drive_backup_ora')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowDriveRestore(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  >
+                    {t('backup.drive_ripristina_pulsante')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { void handleDriveDisconnect() }}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  >
+                    {t('backup.drive_disconnetti')}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -1179,6 +1216,7 @@ export default function SettingsPage(): React.JSX.Element {
         isOpen={showChangePasswordDialog}
         onClose={() => setShowChangePasswordDialog(false)}
       />
+      <DriveRestoreDialog isOpen={showDriveRestore} onClose={() => setShowDriveRestore(false)} />
     </div>
   )
 }
