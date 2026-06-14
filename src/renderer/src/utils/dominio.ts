@@ -103,6 +103,11 @@ export function formatNomeCliente(c: { nome: string; cognome: string }): string 
   return `${c.cognome} ${c.nome}`.trim()
 }
 
+/** true se il cliente è minorenne ma non ha un tutore collegato (emissione bloccata, B7). */
+export function minoreSenzaTutore(cliente: ClienteRow): boolean {
+  return isMinorenne(cliente.data_nascita) && cliente.tutore_id == null
+}
+
 /**
  * true se l'indirizzo che finirà sulla ricevuta (via + città + cap) è completo.
  * Controlla gli stessi campi che creaRicevuta scrive come intestatario:

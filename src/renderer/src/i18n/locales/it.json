@@ -331,6 +331,7 @@
       "intestatario": "Intestatario",
       "tutore_di": "Tutore di {{cf}}",
       "indirizzo_mancante": "Completa l'indirizzo dell'intestatario nella scheda cliente prima di emettere la ricevuta.",
+      "blocco_tutore_mancante": "Per un minore la ricevuta è intestata al tutore. Collega un tutore al cliente prima di emettere.",
       "emessa_ok": "Ricevuta {{numero}} emessa.",
       "visualizza_pdf": "Visualizza PDF",
       "chiudi": "Chiudi"

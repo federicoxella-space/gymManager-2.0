@@ -8,7 +8,7 @@ import type {
   RicevutaConRighe,
   VocePagabile,
 } from '../../../../types/shared'
-import { calcolaIntestatario, indirizzoIntestatarioCompleto } from '../../utils/dominio'
+import { calcolaIntestatario, indirizzoIntestatarioCompleto, minoreSenzaTutore } from '../../utils/dominio'
 import { apriPdfBase64 } from '../../utils/pdf'
 
 interface EmittiRicevutaFormProps {
@@ -80,6 +80,7 @@ export default function EmittiRicevutaForm({
   useModalDirty(touched)
 
   const intestatario = calcolaIntestatario(cliente)
+  const tutoreMancante = minoreSenzaTutore(cliente)
   const indirizzoOk = indirizzoIntestatarioCompleto(cliente)
   const [ricevutaEmessa, setRicevutaEmessa] = useState<RicevutaConRighe | null>(null)
   const [pdfError, setPdfError] = useState(false)
@@ -183,6 +184,11 @@ export default function EmittiRicevutaForm({
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
     if (!validate()) return
+
+    if (tutoreMancante) {
+      setValidationError(t('ricevute.blocco_tutore_mancante'))
+      return
+    }
 
     if (!indirizzoOk) {
       setValidationError(t('ricevute.form.indirizzo_mancante'))
@@ -307,11 +313,15 @@ export default function EmittiRicevutaForm({
             {t('ricevute.form.tutore_di', { cf: intestatario.assistitoCf })}
           </span>
         )}
-        {!indirizzoOk && (
+        {tutoreMancante ? (
+          <p role="alert" className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+            {t('ricevute.blocco_tutore_mancante')}
+          </p>
+        ) : !indirizzoOk ? (
           <p role="alert" className="mt-1 text-xs text-amber-700 dark:text-amber-400">
             {t('ricevute.form.indirizzo_mancante')}
           </p>
-        )}
+        ) : null}
       </div>
 
       {/* Errore di submit */}
@@ -543,7 +553,7 @@ export default function EmittiRicevutaForm({
         <button
           data-testid="btn-emetti-ricevuta"
           type="submit"
-          disabled={submitState === 'submitting'}
+          disabled={submitState === 'submitting' || tutoreMancante || !indirizzoOk}
           className={[
             'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
             'bg-primary-600 hover:bg-primary-700 text-white',

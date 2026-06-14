@@ -331,6 +331,7 @@
       "intestatario": "Recipient",
       "tutore_di": "Guardian of {{cf}}",
       "indirizzo_mancante": "Complete the recipient's address in the client profile before issuing the receipt.",
+      "blocco_tutore_mancante": "For a minor, the receipt is addressed to the guardian. Link a guardian to the client before issuing.",
       "emessa_ok": "Receipt {{numero}} issued.",
       "visualizza_pdf": "View PDF",
       "chiudi": "Close"
