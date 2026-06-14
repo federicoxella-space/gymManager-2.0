@@ -138,6 +138,9 @@ export default function ClientDetail({
   const [ricevute, setRicevute] = useState<RicevutaRow[]>([])
   const [isLoadingRicevute, setIsLoadingRicevute] = useState(true)
   const [showEmittiRicevuta, setShowEmittiRicevuta] = useState(false)
+  const [ricevutaPreselect, setRicevutaPreselect] = useState<
+    { tipo: 'iscrizione' | 'abbonamento'; riferimentoId: number } | undefined
+  >(undefined)
   const [annullaRicevutaTarget, setAnnullaRicevutaTarget] = useState<RicevutaRow | null>(null)
   const [isAnnullandoRicevuta, setIsAnnullandoRicevuta] = useState(false)
   const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null)
@@ -304,6 +307,7 @@ export default function ClientDetail({
 
   function handleRicevutaCreata(ricevuta: RicevutaConRighe): void {
     setShowEmittiRicevuta(false)
+    setRicevutaPreselect(undefined)
     // Aggiunge la nuova ricevuta in cima alla lista
     setRicevute((prev) => [ricevuta, ...prev])
   }
@@ -1093,10 +1097,14 @@ export default function ClientDetail({
           clienteId={clienteId}
           tipiDisponibili={tipiIscrizione}
           iscrizioneAttiva={iscrizioneAttiva}
-          onSuccess={(iscrizione) => {
+          onSuccess={(iscrizione, emettiRicevuta) => {
             setShowAssegnaIscrizione(false)
             setIscrizioneAttiva(iscrizione)
             void loadIscrizione()
+            if (emettiRicevuta) {
+              setRicevutaPreselect({ tipo: 'iscrizione', riferimentoId: iscrizione.id })
+              setShowEmittiRicevuta(true)
+            }
           }}
           onCancel={() => setShowAssegnaIscrizione(false)}
         />
@@ -1112,9 +1120,13 @@ export default function ClientDetail({
           clienteId={clienteId}
           tipiDisponibili={tipiAbbonamento}
           iscrizioneAttiva={iscrizioneAttiva}
-          onSuccess={() => {
+          onSuccess={(abbonamento, emettiRicevuta) => {
             setShowAssegnaAbbonamento(false)
             void loadAbbonamenti()
+            if (emettiRicevuta) {
+              setRicevutaPreselect({ tipo: 'abbonamento', riferimentoId: abbonamento.id })
+              setShowEmittiRicevuta(true)
+            }
           }}
           onCancel={() => setShowAssegnaAbbonamento(false)}
         />
@@ -1148,15 +1160,16 @@ export default function ClientDetail({
       {cliente && (
         <Modal
           isOpen={showEmittiRicevuta}
-          onClose={() => setShowEmittiRicevuta(false)}
+          onClose={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined) }}
           title={t('ricevute.form.titolo')}
           maxWidth="max-w-2xl"
         >
           <EmittiRicevutaForm
             clienteId={clienteId}
             cliente={cliente}
+            preselect={ricevutaPreselect}
             onSuccess={handleRicevutaCreata}
-            onCancel={() => setShowEmittiRicevuta(false)}
+            onCancel={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined) }}
           />
         </Modal>
       )}
