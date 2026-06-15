@@ -281,6 +281,7 @@ I problemi principali si concentrano su:
 - **Spec:** `FUNZIONALITA.md:99`: "certificati in scadenza → lista clienti filtrata".
 - **Soluzione:** navigare con `stato_certificato: 'in_scadenza'` (o combinato in_scadenza+scaduto) e
   gestirlo in `ClientsPage`.
+- **Stato (2026-06-16):** **Chiuso.** Introdotto il filtro combinato `stato_certificato: 'da_gestire'` (in scadenza + scaduti = `data_scadenza − oggi ≤ giorniPreavviso`). Il drill-down dalla card "Certificati" e la card stessa (somma `certificati_in_scadenza + certificati_scaduti`, etichetta "Certificati da gestire") puntano a quel set; opzione esposta anche nel dropdown filtro di ClientsPage. Vedi `docs/superpowers/specs/2026-06-15-b9-drilldown-certificati-design.md`.
 
 ### B10 — [MEDIA] Card "incassi" degli Indicatori ignora il selettore di periodo
 - **Evidenza:** `dashboard-repository.ts:133-160`: `getIndicatori` calcola `incassi_pagati` su **tutte**
