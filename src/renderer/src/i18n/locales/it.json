@@ -163,6 +163,7 @@
       "cert_valido": "Valido",
       "cert_in_scadenza": "In scadenza",
       "cert_scaduto": "Scaduto",
+      "cert_da_gestire": "Da gestire (in scadenza o scaduti)",
       "tipo_abbonamento": "Tipo abbonamento"
     },
     "anonimizza": {
@@ -410,7 +411,7 @@
     "indicatori": {
       "soci_attivi": "Soci attivi",
       "da_rinnovare": "Da rinnovare",
-      "certificati": "Certificati in scadenza",
+      "certificati": "Certificati da gestire",
       "iscrizioni_in_scadenza": "Iscrizioni in scadenza",
       "abbonamenti_in_scadenza": "Abbonamenti in scadenza",
       "incassi": "Incassi del periodo"

@@ -163,6 +163,7 @@
       "cert_valido": "Valid",
       "cert_in_scadenza": "Expiring soon",
       "cert_scaduto": "Expired",
+      "cert_da_gestire": "To handle (expiring or expired)",
       "tipo_abbonamento": "Subscription type"
     },
     "anonimizza": {
@@ -410,7 +411,7 @@
     "indicatori": {
       "soci_attivi": "Active members",
       "da_rinnovare": "To renew",
-      "certificati": "Expiring certificates",
+      "certificati": "Certificates to handle",
       "iscrizioni_in_scadenza": "Expiring memberships",
       "abbonamenti_in_scadenza": "Expiring subscriptions",
       "incassi": "Period income"
