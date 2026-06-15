@@ -129,7 +129,7 @@ export default function ShellPage(): React.JSX.Element {
         setClientFilter({ stato_iscrizione: 'scaduta' })
         setActiveNav('clients')
       } else if (filtro === 'certificato') {
-        setClientFilter({ stato_certificato: 'scaduto' })
+        setClientFilter({ stato_certificato: 'da_gestire' })
         setActiveNav('clients')
       } else if (filtro === 'abbonamento' && params.tipoAbbonamentoId !== undefined) {
         setClientFilter({ tipo_abbonamento_id: params.tipoAbbonamentoId as number })

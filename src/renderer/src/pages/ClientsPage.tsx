@@ -9,7 +9,7 @@ import Modal from '../components/ui/Modal'
 type View = 'list' | 'detail'
 
 type StatoIscrizioneFilter = '' | 'attiva' | 'scaduta' | 'assente'
-type StatoCertificatoFilter = '' | 'valido' | 'in_scadenza' | 'scaduto'
+type StatoCertificatoFilter = '' | 'valido' | 'in_scadenza' | 'scaduto' | 'da_gestire'
 
 interface ClientsPageProps {
   initialFilter?: ClientiFilters
@@ -223,6 +223,7 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
             <option value="valido">{t('clienti.filtri.cert_valido')}</option>
             <option value="in_scadenza">{t('clienti.filtri.cert_in_scadenza')}</option>
             <option value="scaduto">{t('clienti.filtri.cert_scaduto')}</option>
+            <option value="da_gestire">{t('clienti.filtri.cert_da_gestire')}</option>
           </select>
         </div>
 

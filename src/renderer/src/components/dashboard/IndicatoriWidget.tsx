@@ -109,7 +109,7 @@ export default function IndicatoriWidget({
       />
       <StatCard
         label={t('dashboard.indicatori.certificati')}
-        value={data?.certificati_in_scadenza ?? 0}
+        value={(data?.certificati_in_scadenza ?? 0) + (data?.certificati_scaduti ?? 0)}
         colorClasses="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-900 dark:text-red-100"
         isLoading={isLoading}
         onClick={onNavigateClientiCertificati}
