@@ -194,6 +194,12 @@ export function listClienti(filters?: ClientiFilters, giorniPreavvisoCert = 30):
       `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) - julianday(date('now')) > ?`
     )
     extraParams.push(giorniPreavvisoCert)
+  } else if (filters?.stato_certificato === 'da_gestire') {
+    // In scadenza (0..giorni) + già scaduti (<0): tutto ciò che richiede rinnovo.
+    extraWhere.push(
+      `cm.data_scadenza IS NOT NULL AND julianday(cm.data_scadenza) - julianday(date('now')) <= ?`
+    )
+    extraParams.push(giorniPreavvisoCert)
   }
 
   if (filters?.tipo_abbonamento_id !== undefined) {

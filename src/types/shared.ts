@@ -129,7 +129,7 @@ export interface ClientiFilters {
   search?: string
   stato?: 'attivo' | 'anonimizzato'
   stato_iscrizione?: 'attiva' | 'scaduta' | 'assente'
-  stato_certificato?: 'valido' | 'in_scadenza' | 'scaduto'
+  stato_certificato?: 'valido' | 'in_scadenza' | 'scaduto' | 'da_gestire'
   tipo_abbonamento_id?: number
   limit?: number
   offset?: number

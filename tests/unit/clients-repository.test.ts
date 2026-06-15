@@ -177,6 +177,48 @@ describe('listClienti — filtro certificato in scadenza oggi (WP2: A11)', () =>
   })
 })
 
+describe('listClienti — filtro certificato "da_gestire" (B9)', () => {
+  it('include in scadenza E scaduti, esclude validi e senza certificato', () => {
+    const db = _testDb!
+    const inScad = creaCliente(db, 'AAAINS80A01H501A')
+    const scaduto = creaCliente(db, 'AAASCA80A01H501B')
+    const valido = creaCliente(db, 'AAAVAL80A01H501C')
+    const senza = creaCliente(db, 'AAANES80A01H501D')
+
+    db.prepare(
+      `INSERT INTO certificati_medici (cliente_id, tipo, data_scadenza)
+       VALUES (?, 'agonistico', date('now','+10 day'))`
+    ).run(inScad)
+    db.prepare(
+      `INSERT INTO certificati_medici (cliente_id, tipo, data_scadenza)
+       VALUES (?, 'agonistico', date('now','-1 day'))`
+    ).run(scaduto)
+    db.prepare(
+      `INSERT INTO certificati_medici (cliente_id, tipo, data_scadenza)
+       VALUES (?, 'agonistico', date('now','+100 day'))`
+    ).run(valido)
+
+    const daGestire = listClienti({ stato_certificato: 'da_gestire' }, 30).map((r) => r.id)
+
+    expect(daGestire).toContain(inScad)
+    expect(daGestire).toContain(scaduto)
+    expect(daGestire).not.toContain(valido)
+    expect(daGestire).not.toContain(senza)
+  })
+
+  it('rispetta la finestra di preavviso passata', () => {
+    const db = _testDb!
+    const c = creaCliente(db, 'AAAWIN80A01H501E')
+    db.prepare(
+      `INSERT INTO certificati_medici (cliente_id, tipo, data_scadenza)
+       VALUES (?, 'agonistico', date('now','+20 day'))`
+    ).run(c)
+
+    expect(listClienti({ stato_certificato: 'da_gestire' }, 10).map((r) => r.id)).not.toContain(c)
+    expect(listClienti({ stato_certificato: 'da_gestire' }, 30).map((r) => r.id)).toContain(c)
+  })
+})
+
 // ---------------------------------------------------------------------------
 // B7 — tutore_id: JOIN derivato e validazioni
 // ---------------------------------------------------------------------------
