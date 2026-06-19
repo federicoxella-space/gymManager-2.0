@@ -290,6 +290,7 @@ I problemi principali si concentrano su:
 - **Spec:** `SPEC.md:91`/`FUNZIONALITA.md:91,98`: l'incasso "del periodo" deve seguire il selettore.
 - **Soluzione:** passare il periodo a `getIndicatori` per la voce incassi, o rimuovere l'incasso dalla
   card indicatori affidandolo al solo widget di periodo.
+- **Stato (2026-06-20):** **Chiuso.** `getIndicatori` riceve il range `{dal, al}` e calcola `incassi_pagati` sulle ricevute emesse e pagate con `data_emissione` nel periodo (stessa definizione di `getIncassiPeriodo.totale_pagato`); il range viaggia via IPC/preload/tipi e `DashboardPage` lo passa. La card "Incassi" ora segue il selettore e combacia col widget Incassi. `incassi_da_incassare` invariato. Vedi `docs/superpowers/specs/2026-06-16-b10-incassi-periodo-design.md`.
 
 ### B11 — [MEDIA] Recovery da migrazione fallita non guidato dalla UI
 - **Evidenza:** `handlers.ts` rilancia `MIGRATION_FAILED`, ma nessuna schermata propone il restore;
