@@ -517,6 +517,8 @@ export interface ElectronAPI {
       giorniCert: number
       giorniIsc: number
       giorniAbb: number
+      dal: string
+      al: string
     }) => Promise<WidgetIndicatori>
     scadenze: (params: {
       oggi: string

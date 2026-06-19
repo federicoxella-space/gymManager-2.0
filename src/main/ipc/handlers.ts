@@ -789,11 +789,13 @@ export function registerIpcHandlers(): void {
         oggi,
         giorniCert,
         giorniIsc,
-        giorniAbb
-      }: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number }
+        giorniAbb,
+        dal,
+        al
+      }: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number; dal: string; al: string }
     ): WidgetIndicatori => {
       try {
-        return getIndicatori(oggi, giorniCert, giorniIsc, giorniAbb)
+        return getIndicatori(oggi, giorniCert, giorniIsc, giorniAbb, dal, al)
       } catch (err) {
         log.error('[ipc] dashboard:indicatori errore:', err)
         throw err instanceof Error ? err : new Error('Errore nel recupero indicatori dashboard')

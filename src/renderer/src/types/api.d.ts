@@ -419,7 +419,7 @@ interface ElectronAPI {
     genera: (args: { ricevutaId: number }) => Promise<string>
   }
   dashboard: {
-    indicatori: (params: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number }) => Promise<WidgetIndicatori>
+    indicatori: (params: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number; dal: string; al: string }) => Promise<WidgetIndicatori>
     scadenze: (params: { oggi: string; giorniCert: number; giorniIsc: number; giorniAbb: number }) => Promise<ClienteInScadenza[]>
     abbonamenti: (params: { soloAttivi?: boolean }) => Promise<AbbonamentoPerTipo[]>
     incassi: (params: { periodo: DashboardPeriodo }) => Promise<IncassiPeriodo>

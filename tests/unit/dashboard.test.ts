@@ -219,7 +219,7 @@ describe('getIndicatori: soci_attivi e da_rinnovare', () => {
     assegnaIscrizione(db, c2, tipoId, { stato: 'attiva' })
     assegnaIscrizione(db, c3, tipoId, { stato: 'scaduta' })
 
-    const result = getIndicatori('2026-06-05', 30, 30, 30)
+    const result = getIndicatori('2026-06-05', 30, 30, 30, '2000-01-01', '2100-12-31')
     expect(result.soci_attivi).toBe(2)
   })
 
@@ -233,7 +233,7 @@ describe('getIndicatori: soci_attivi e da_rinnovare', () => {
     assegnaIscrizione(db, c1, tipoId, { stato: 'scaduta' })
     assegnaIscrizione(db, c2, tipoId, { stato: 'attiva' })
 
-    const result = getIndicatori('2026-06-05', 30, 30, 30)
+    const result = getIndicatori('2026-06-05', 30, 30, 30, '2000-01-01', '2100-12-31')
     expect(result.da_rinnovare).toBe(1)
   })
 
@@ -246,7 +246,7 @@ describe('getIndicatori: soci_attivi e da_rinnovare', () => {
     assegnaIscrizione(db, c1, tipoId, { stato: 'scaduta', dataInizio: '2025-01-01', dataScadenza: '2025-12-31' })
     assegnaIscrizione(db, c1, tipoId, { stato: 'attiva', dataInizio: '2026-01-01', dataScadenza: '2026-12-31' })
 
-    const result = getIndicatori('2026-06-05', 30, 30, 30)
+    const result = getIndicatori('2026-06-05', 30, 30, 30, '2000-01-01', '2100-12-31')
     expect(result.da_rinnovare).toBe(0)
     expect(result.soci_attivi).toBe(1)
   })
@@ -261,7 +261,7 @@ describe('getIndicatori: soci_attivi e da_rinnovare', () => {
     // c2: scade tra 60 giorni — oltre finestra 30gg
     creaCertificato(db, c2, '2026-08-04')
 
-    const result = getIndicatori('2026-06-05', 30, 30, 30)
+    const result = getIndicatori('2026-06-05', 30, 30, 30, '2000-01-01', '2100-12-31')
     expect(result.certificati_in_scadenza).toBe(1)
   })
 
@@ -273,7 +273,7 @@ describe('getIndicatori: soci_attivi e da_rinnovare', () => {
     creaCertificato(db, c1, '2026-05-01') // scaduto
     creaCertificato(db, c2, '2026-06-10') // non ancora scaduto
 
-    const result = getIndicatori('2026-06-05', 30, 30, 30)
+    const result = getIndicatori('2026-06-05', 30, 30, 30, '2000-01-01', '2100-12-31')
     expect(result.certificati_scaduti).toBe(1)
   })
 
@@ -286,7 +286,7 @@ describe('getIndicatori: soci_attivi e da_rinnovare', () => {
     assegnaIscrizione(db, c1, tipoIscId, { stato: 'attiva', statoPagamento: 'da_incassare', prezzo: 50 })
     assegnaAbbonamento(db, c1, tipoAbbId, { stato: 'attivo', statoPagamento: 'da_incassare', prezzo: 40 })
 
-    const result = getIndicatori('2026-06-05', 30, 30, 30)
+    const result = getIndicatori('2026-06-05', 30, 30, 30, '2000-01-01', '2100-12-31')
     expect(result.incassi_da_incassare).toBe(90)
   })
 
@@ -298,8 +298,18 @@ describe('getIndicatori: soci_attivi e da_rinnovare', () => {
     // annullata non conta
     creaRicevuta(db, c1, { totale: 200, stato: 'annullata', statoPagamento: 'pagato', dataEmissione: '2026-02-01' })
 
-    const result = getIndicatori('2026-06-05', 30, 30, 30)
+    const result = getIndicatori('2026-06-05', 30, 30, 30, '2026-01-01', '2026-12-31')
     expect(result.incassi_pagati).toBe(150)
+  })
+
+  it('incassi_pagati conta solo le ricevute pagate nel periodo selezionato', () => {
+    const db = _testDb!
+    const c1 = creaCliente(db, 'AAABBB80A01H501Z')
+    creaRicevuta(db, c1, { totale: 100, stato: 'emessa', statoPagamento: 'pagato', dataEmissione: '2026-03-10' })
+    creaRicevuta(db, c1, { totale: 999, stato: 'emessa', statoPagamento: 'pagato', dataEmissione: '2026-02-10' })
+
+    const result = getIndicatori('2026-03-15', 30, 30, 30, '2026-03-01', '2026-03-31')
+    expect(result.incassi_pagati).toBe(100)
   })
 })
 
@@ -611,7 +621,7 @@ describe('getIndicatori — in scadenza iscrizioni/abbonamenti (WP2: A13)', () =
     ).run(clienteId, tipoAbb)
 
     const oggi = new Date().toISOString().slice(0, 10)
-    const ind = getIndicatori(oggi, 30, 30, 30)
+    const ind = getIndicatori(oggi, 30, 30, 30, '2000-01-01', '2100-12-31')
     expect(ind.iscrizioni_in_scadenza).toBe(1)
     expect(ind.abbonamenti_in_scadenza).toBe(1)
   })

@@ -211,6 +211,8 @@ const api: ElectronAPI = {
       giorniCert: number
       giorniIsc: number
       giorniAbb: number
+      dal: string
+      al: string
     }): Promise<WidgetIndicatori> {
       return ipcRenderer.invoke('dashboard:indicatori', params)
     },

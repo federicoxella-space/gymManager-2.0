@@ -70,6 +70,7 @@ export interface CompleannoDellaSett {
  * - certificati_in_scadenza:  certificati con scadenza entro [oggi, oggi+giorniPreavvisoCert]
  * - certificati_scaduti:      certificati con data_scadenza < oggi
  * - incassi_pagati:           somma importi ricevute emesse con stato_pagamento='pagato' e stato='emessa'
+ *                             nel periodo [dal, al] (data_emissione BETWEEN dal AND al)
  * - incassi_da_incassare:     somma prezzi di iscrizioni + abbonamenti con stato_pagamento='da_incassare'
  *                             e stato attiva/attivo
  */
@@ -78,6 +79,8 @@ export function getIndicatori(
   giorniPreavvisoCert: number,
   giorniPreavvisoIsc: number,
   giorniPreavvisoAbb: number,
+  dal: string,
+  al: string,
 ): WidgetIndicatori {
   const db = getDatabase()
 
@@ -131,15 +134,16 @@ export function getIndicatori(
     )
     .get({ oggi }) as { cnt: number }
 
-  // incassi_pagati: somma ricevute emesse con stato_pagamento='pagato' (non annullate)
+  // incassi_pagati: ricevute emesse e pagate con data_emissione nel periodo selezionato
   const incassiPagatiRow = db
     .prepare(
       `SELECT COALESCE(SUM(totale), 0) AS totale
        FROM ricevute
        WHERE stato = 'emessa'
-         AND stato_pagamento = 'pagato'`
+         AND stato_pagamento = 'pagato'
+         AND data_emissione BETWEEN :dal AND :al`
     )
-    .get() as { totale: number }
+    .get({ dal, al }) as { totale: number }
 
   // incassi_da_incassare: somma prezzi iscrizioni attive da incassare + abbonamenti attivi da incassare
   const incassiDaIncassareRow = db

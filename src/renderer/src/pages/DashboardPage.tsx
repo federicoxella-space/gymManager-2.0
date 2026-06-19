@@ -71,7 +71,7 @@ async function fetchDashboardData(
 
   const [indicatori, scadenze, abbonamenti, incassi, tesseramenti, compleanni] =
     await Promise.all([
-      window.api.dashboard.indicatori({ oggi, giorniCert, giorniIsc, giorniAbb }),
+      window.api.dashboard.indicatori({ oggi, giorniCert, giorniIsc, giorniAbb, dal: apiPeriodo.dal, al: apiPeriodo.al }),
       window.api.dashboard.scadenze({ oggi, giorniCert, giorniIsc, giorniAbb }),
       window.api.dashboard.abbonamenti({ soloAttivi: true }),
       window.api.dashboard.incassi({ periodo: apiPeriodo }),
