@@ -2,6 +2,13 @@
 
 Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); versionamento [SemVer](https://semver.org/lang/it/) (pre-1.0).
 
+## [0.1.5] — 2026-06-25
+
+### Corretto
+- **Auto-update da repo privato**: il controllo aggiornamenti falliva con `404` su `releases.atom`. Su repository privati electron-updater seleziona il provider autenticato (API GitHub) **solo** se trova un token nella configurazione del provider; il solo `requestHeaders` non bastava. Ora il token (PAT read-only iniettato a build time) viene passato via `setFeedURL({ provider: 'github', private: true, token })`, così l'updater usa l'API autenticata invece del feed pubblico.
+
+> **Nota:** le installazioni **0.1.4** non possono auto-aggiornarsi a 0.1.5 (contengono ancora l'updater difettoso): installare la 0.1.5 **manualmente** una volta; da lì in avanti l'auto-update funziona.
+
 ## [0.1.4] — 2026-06-20
 
 Consolidamento post-F7: robustezza backend, funzionalità P1, accessibilità (WCAG 2.1), rifiniture UX e sincronizzazione multi-dispositivo. Raccoglie il lavoro WP1–WP5 e i rilievi B1–B12.
@@ -36,4 +43,5 @@ Consolidamento post-F7: robustezza backend, funzionalità P1, accessibilità (WC
 ## [0.1.3] e precedenti
 Versioni di sviluppo iniziali (fasi F0–F7): impianto Electron + React + SQLCipher, anagrafica clienti, catalogo, iscrizioni/abbonamenti, ricevute, dashboard, backup locale e impianto auto-update.
 
+[0.1.5]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.5
 [0.1.4]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.4

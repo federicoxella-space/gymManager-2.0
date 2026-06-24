@@ -26,10 +26,23 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
   // Usa electron-log come logger per l'updater
   autoUpdater.logger = log
 
-  // Autentica le richieste verso le release del repo privato.
-  // Il token è un GitHub PAT read-only iniettato a build time via Vite define.
+  // Repo privato: per leggere le release serve l'API GitHub autenticata.
+  // electron-updater sceglie il PrivateGitHubProvider SOLO se trova un token
+  // nella config del provider (providerFactory): senza token usa il feed
+  // pubblico `releases.atom`, che su un repo privato risponde 404.
+  // requestHeaders da solo NON cambia la scelta del provider, quindi inseriamo
+  // il token (PAT read-only iniettato a build time via Vite define) nella
+  // config tramite setFeedURL; requestHeaders resta per le richieste dirette
+  // (download degli asset).
   const updateToken = __GITHUB_UPDATE_TOKEN__
   if (updateToken) {
+    autoUpdater.setFeedURL({
+      provider: 'github',
+      owner: 'federicoxella-space',
+      repo: 'gymManager-2.0',
+      private: true,
+      token: updateToken
+    })
     autoUpdater.requestHeaders = { Authorization: `token ${updateToken}` }
   }
 
