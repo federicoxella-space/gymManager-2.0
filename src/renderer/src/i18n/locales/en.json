@@ -250,6 +250,8 @@
   },
   "iscrizioni": {
     "assegna": "Assign membership",
+    "segna_pagato": "Mark as paid",
+    "segna_da_incassare": "Mark as to collect",
     "rinnova": "Renew membership",
     "modifica_date": "Edit dates",
     "invalida": "Invalidate",
@@ -580,6 +582,8 @@
   },
   "abbonamenti": {
     "assegna": "Assign subscription",
+    "segna_pagato": "Mark as paid",
+    "segna_da_incassare": "Mark as to collect",
     "modifica_date": "Edit dates",
     "invalida": "Invalidate",
     "nessuno": "No subscriptions",

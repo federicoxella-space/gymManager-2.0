@@ -250,6 +250,8 @@
   },
   "iscrizioni": {
     "assegna": "Assegna iscrizione",
+    "segna_pagato": "Segna come pagato",
+    "segna_da_incassare": "Segna da incassare",
     "rinnova": "Rinnova iscrizione",
     "modifica_date": "Modifica date",
     "invalida": "Invalida",
@@ -580,6 +582,8 @@
   },
   "abbonamenti": {
     "assegna": "Assegna abbonamento",
+    "segna_pagato": "Segna come pagato",
+    "segna_da_incassare": "Segna da incassare",
     "modifica_date": "Modifica date",
     "invalida": "Invalida",
     "nessuno": "Nessun abbonamento",

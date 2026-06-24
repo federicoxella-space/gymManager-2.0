@@ -9,7 +9,6 @@ import type {
   RicevutaRow,
   TipoAbbonamentoRow,
   TipoIscrizioneRow,
-  VocePagabile,
 } from '../../../../types/shared'
 import { useSettings } from '../../context/SettingsContext'
 import { isMinorenne, formatNomeCliente } from '../../utils/dominio'
@@ -147,7 +146,6 @@ export default function ClientDetail({
   const [ricevutaPreselect, setRicevutaPreselect] = useState<
     { tipo: 'iscrizione' | 'abbonamento'; riferimentoId: number } | undefined
   >(undefined)
-  const [ricevutaVoceExtra, setRicevutaVoceExtra] = useState<VocePagabile | undefined>(undefined)
   const [annullaRicevutaTarget, setAnnullaRicevutaTarget] = useState<RicevutaRow | null>(null)
   const [isAnnullandoRicevuta, setIsAnnullandoRicevuta] = useState(false)
   const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null)
@@ -331,7 +329,6 @@ export default function ClientDetail({
   function handleRicevutaCreata(ricevuta: RicevutaConRighe): void {
     setShowEmittiRicevuta(false)
     setRicevutaPreselect(undefined)
-    setRicevutaVoceExtra(undefined)
     // Aggiunge la nuova ricevuta in cima alla lista
     setRicevute((prev) => [ricevuta, ...prev])
   }
@@ -632,23 +629,21 @@ export default function ClientDetail({
                   <button
                     type="button"
                     onClick={() => {
-                      setRicevutaPreselect(undefined)
-                      setRicevutaVoceExtra({
-                        tipo: 'iscrizione',
-                        riferimentoId: iscrizioneAttiva.id,
-                        descrizione:
-                          tipiIscrizione.find((ti) => ti.id === iscrizioneAttiva.tipo_iscrizione_id)
-                            ?.nome ?? `#${iscrizioneAttiva.tipo_iscrizione_id}`,
-                        dataInizio: iscrizioneAttiva.data_inizio,
-                        dataFine: iscrizioneAttiva.data_scadenza,
-                        prezzo: iscrizioneAttiva.prezzo,
-                        stato_pagamento: iscrizioneAttiva.stato_pagamento,
-                      })
-                      setShowEmittiRicevuta(true)
+                      const nuovoStato = iscrizioneAttiva.stato_pagamento === 'da_incassare' ? 'pagato' : 'da_incassare'
+                      void (async () => {
+                        try {
+                          await window.api.iscrizioni.setPagamento({ id: iscrizioneAttiva.id, stato: nuovoStato })
+                          await loadIscrizione()
+                        } catch {
+                          // silenzioso
+                        }
+                      })()
                     }}
-                    className="text-sm px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                    className="text-sm px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
-                    {t('ricevute.nuova')}
+                    {iscrizioneAttiva.stato_pagamento === 'da_incassare'
+                      ? t('iscrizioni.segna_pagato')
+                      : t('iscrizioni.segna_da_incassare')}
                   </button>
                   <button
                     data-testid="btn-nuova-iscrizione"
@@ -932,21 +927,21 @@ export default function ClientDetail({
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setRicevutaPreselect(undefined)
-                                    setRicevutaVoceExtra({
-                                      tipo: 'abbonamento',
-                                      riferimentoId: abb.id,
-                                      descrizione: tipoNome,
-                                      dataInizio: abb.data_inizio,
-                                      dataFine: abb.data_scadenza,
-                                      prezzo: abb.prezzo,
-                                      stato_pagamento: abb.stato_pagamento,
-                                    })
-                                    setShowEmittiRicevuta(true)
+                                    const nuovoStato = abb.stato_pagamento === 'da_incassare' ? 'pagato' : 'da_incassare'
+                                    void (async () => {
+                                      try {
+                                        await window.api.abbonamenti.setPagamento({ id: abb.id, stato: nuovoStato })
+                                        await loadAbbonamenti()
+                                      } catch {
+                                        // silenzioso
+                                      }
+                                    })()
                                   }}
-                                  className="text-xs px-2 py-1 rounded bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                                  className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                 >
-                                  {t('ricevute.nuova')}
+                                  {abb.stato_pagamento === 'da_incassare'
+                                    ? t('abbonamenti.segna_pagato')
+                                    : t('abbonamenti.segna_da_incassare')}
                                 </button>
                                 <button
                                   type="button"
@@ -1188,7 +1183,6 @@ export default function ClientDetail({
             setIscrizioneAttiva(iscrizione)
             void loadIscrizione()
             if (emettiRicevuta) {
-              setRicevutaVoceExtra(undefined)
               setRicevutaPreselect({ tipo: 'iscrizione', riferimentoId: iscrizione.id })
               setShowEmittiRicevuta(true)
             }
@@ -1211,7 +1205,6 @@ export default function ClientDetail({
             setShowAssegnaAbbonamento(false)
             void loadAbbonamenti()
             if (emettiRicevuta) {
-              setRicevutaVoceExtra(undefined)
               setRicevutaPreselect({ tipo: 'abbonamento', riferimentoId: abbonamento.id })
               setShowEmittiRicevuta(true)
             }
@@ -1307,7 +1300,7 @@ export default function ClientDetail({
       {cliente && (
         <Modal
           isOpen={showEmittiRicevuta}
-          onClose={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined); setRicevutaVoceExtra(undefined) }}
+          onClose={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined) }}
           title={t('ricevute.form.titolo')}
           maxWidth="max-w-2xl"
         >
@@ -1315,9 +1308,8 @@ export default function ClientDetail({
             clienteId={clienteId}
             cliente={cliente}
             preselect={ricevutaPreselect}
-            voceExtra={ricevutaVoceExtra}
             onSuccess={handleRicevutaCreata}
-            onCancel={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined); setRicevutaVoceExtra(undefined) }}
+            onCancel={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined) }}
           />
         </Modal>
       )}
