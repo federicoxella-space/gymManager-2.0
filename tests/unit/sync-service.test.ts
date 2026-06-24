@@ -116,6 +116,9 @@ beforeEach(() => {
   vi.mocked(driveService.downloadSync).mockResolvedValue(undefined)
   vi.mocked(driveService.uploadConflictCopy).mockResolvedValue('conflict-file-id')
   vi.mocked(restoreService.eseguiRipristinoConChiaveCorrente).mockResolvedValue(undefined)
+  // Default: Drive connesso e file di sync risolvibile (precondizioni di enableSync)
+  vi.mocked(driveService.isDriveConnected).mockReturnValue(true)
+  vi.mocked(driveService.getOrCreateSyncFile).mockResolvedValue('file-id-default')
 })
 
 // ── Suite: getStatus ──────────────────────────────────────────────────────────
@@ -415,6 +418,44 @@ describe("resolveConflict('copia')", () => {
 // ── Suite: enableSync / disableSync / setPolling ──────────────────────────────
 
 describe('enableSync', () => {
+  it('lancia SYNC_DRIVE_NON_CONNESSO se Drive non è connesso, senza abilitare', async () => {
+    vi.mocked(driveService.isDriveConnected).mockReturnValue(false)
+    vi.mocked(syncState.loadSyncState).mockReturnValue({
+      enabled: false,
+      syncFileId: null,
+      lastRemoteRevision: null,
+      lastLocalHash: null,
+      lastSyncAt: null,
+      pollingSec: 60,
+    })
+
+    await expect(enableSync()).rejects.toThrow('SYNC_DRIVE_NON_CONNESSO')
+    // Non deve aver tentato di creare il file di sync né salvato enabled=true
+    expect(driveService.getOrCreateSyncFile).not.toHaveBeenCalled()
+    expect(syncState.saveSyncState).not.toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true }),
+    )
+  })
+
+  it('in caso di errore su getOrCreateSyncFile fa rollback (enabled=false) e rilancia', async () => {
+    vi.mocked(driveService.isDriveConnected).mockReturnValue(true)
+    vi.mocked(syncState.loadSyncState).mockReturnValue({
+      enabled: false,
+      syncFileId: null,
+      lastRemoteRevision: null,
+      lastLocalHash: null,
+      lastSyncAt: null,
+      pollingSec: 60,
+    })
+    vi.mocked(driveService.getOrCreateSyncFile).mockRejectedValue(new Error('rete KO'))
+
+    await expect(enableSync()).rejects.toThrow('rete KO')
+    // Rollback: l'ultimo salvataggio riporta enabled=false
+    expect(syncState.saveSyncState).toHaveBeenLastCalledWith(
+      expect.objectContaining({ enabled: false }),
+    )
+  })
+
   it('salva lo stato con enabled=true', async () => {
     vi.mocked(syncState.loadSyncState).mockReturnValue({
       enabled: false,

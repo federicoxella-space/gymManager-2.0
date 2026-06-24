@@ -150,6 +150,7 @@ export default function SettingsPage(): React.JSX.Element {
   const [syncStatus, setSyncStatus] = useState<ReturnType<typeof window.api.sync.status> extends Promise<infer T> ? T | null : never>(null)
   const [isSyncNow, setIsSyncNow] = useState(false)
   const [syncNowResult, setSyncNowResult] = useState<'idle' | 'ok' | 'errore'>('idle')
+  const [syncError, setSyncError] = useState<string | null>(null)
   const syncNowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [form, setForm] = useState<FormState>({
@@ -417,38 +418,53 @@ export default function SettingsPage(): React.JSX.Element {
     }
   }
 
+  /** Traduce un errore di sync in un messaggio leggibile. */
+  function mapSyncError(err: unknown): string {
+    const msg = err instanceof Error ? err.message : ''
+    if (msg.includes('SYNC_DRIVE_NON_CONNESSO')) return t('sync.drive_non_connesso')
+    if (msg.includes('SYNC_PASSWORD_MISMATCH')) return t('sync.errore_password_diversa')
+    return msg.trim().length > 0 ? msg : t('sync.sincronizza_errore')
+  }
+
   async function handleSyncEnable(): Promise<void> {
+    setSyncError(null)
     try {
       await window.api.sync.enable()
       const s = await window.api.sync.status()
       setSyncStatus(s)
       window.dispatchEvent(new CustomEvent('gm:sync-config-changed'))
-    } catch {
-      // non bloccante
+    } catch (err) {
+      setSyncError(mapSyncError(err))
+      // Riallinea lo stato (enableSync fa rollback a disabilitato in caso di errore)
+      const s = await window.api.sync.status().catch(() => null)
+      if (s !== null) setSyncStatus(s)
     }
   }
 
   async function handleSyncDisable(): Promise<void> {
+    setSyncError(null)
     try {
       await window.api.sync.disable()
       const s = await window.api.sync.status()
       setSyncStatus(s)
       window.dispatchEvent(new CustomEvent('gm:sync-config-changed'))
-    } catch {
-      // non bloccante
+    } catch (err) {
+      setSyncError(mapSyncError(err))
     }
   }
 
   async function handleSyncNow(): Promise<void> {
     setSyncNowResult('idle')
+    setSyncError(null)
     setIsSyncNow(true)
     try {
       await window.api.sync.now()
       const s = await window.api.sync.status()
       setSyncStatus(s)
       setSyncNowResult('ok')
-    } catch {
+    } catch (err) {
       setSyncNowResult('errore')
+      setSyncError(mapSyncError(err))
     } finally {
       setIsSyncNow(false)
       if (syncNowTimerRef.current !== null) clearTimeout(syncNowTimerRef.current)
@@ -462,8 +478,8 @@ export default function SettingsPage(): React.JSX.Element {
       const s = await window.api.sync.status()
       setSyncStatus(s)
       window.dispatchEvent(new CustomEvent('gm:sync-config-changed'))
-    } catch {
-      // non bloccante
+    } catch (err) {
+      setSyncError(mapSyncError(err))
     }
   }
 
@@ -1330,6 +1346,22 @@ export default function SettingsPage(): React.JSX.Element {
             </p>
           ) : (
             <div className="space-y-5">
+              {syncError !== null && (
+                <div
+                  role="alert"
+                  className="flex items-start justify-between gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-3 py-2 text-sm text-red-700 dark:text-red-400"
+                >
+                  <span className="min-w-0 break-words">{syncError}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSyncError(null)}
+                    aria-label={t('common.close')}
+                    className="shrink-0 text-red-400 hover:text-red-700 dark:hover:text-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
               {/* Toggle abilita / disabilita */}
               <div className="flex items-center justify-between gap-4">
                 <div>

@@ -11,6 +11,7 @@ Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Chang
 ### Corretto
 - **Auto-update da repo privato**: il controllo aggiornamenti falliva con `404` su `releases.atom`. Su repository privati electron-updater seleziona il provider autenticato (API GitHub) **solo** se trova un token nella configurazione del provider; il solo `requestHeaders` non bastava. Ora il token (PAT read-only iniettato a build time) viene passato via `setFeedURL({ provider: 'github', private: true, token })`, così l'updater usa l'API autenticata invece del feed pubblico.
 - **Messaggio d'errore aggiornamento non chiudibile**: il banner d'errore dell'updater (in basso) e il riquadro d'errore in Impostazioni → Informazioni app ora hanno un pulsante di chiusura (✕) per essere rimossi.
+- **Sincronizzazione Drive che falliva in silenzio**: l'abilitazione inghiottiva gli errori (sync "abilitato" ma non funzionante, senza messaggio). Ora `enableSync` verifica che Drive sia connesso, fa rollback in caso di errore e **mostra il motivo** in Impostazioni → Sincronizzazione (messaggio chiudibile).
 
 > **Nota:** le installazioni **0.1.4** non possono auto-aggiornarsi a 0.1.5 (contengono ancora l'updater difettoso): installare la 0.1.5 **manualmente** una volta; da lì in avanti l'auto-update funziona.
 

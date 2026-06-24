@@ -323,6 +323,11 @@ export async function resolveConflict(scelta: 'remoto' | 'locale' | 'copia'): Pr
  * "remoto" = adotta l'altro dispositivo, "locale" = questo dispositivo è il master.
  */
 export async function enableSync(): Promise<void> {
+  // Precondizione: Drive deve essere connesso, altrimenti il sync non è funzionante.
+  if (!drive.isDriveConnected()) {
+    throw new Error('SYNC_DRIVE_NON_CONNESSO')
+  }
+
   const st = loadSyncState()
   const updatedSt: SyncState = { ...st, enabled: true }
   saveSyncState(updatedSt)
@@ -333,7 +338,10 @@ export async function enableSync(): Promise<void> {
     fileId = await drive.getOrCreateSyncFile()
   } catch (err) {
     log.error('[sync] enableSync: impossibile risolvere fileId', err)
-    return
+    // Rollback: non lasciare il sync "abilitato" ma non funzionante, e propaga
+    // l'errore così la UI può mostrarne il motivo.
+    saveSyncState({ ...st, enabled: false })
+    throw err instanceof Error ? err : new Error('SYNC_ENABLE_FAILED')
   }
 
   // Salva il fileId
