@@ -2,16 +2,24 @@
 
 Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); versionamento [SemVer](https://semver.org/lang/it/) (pre-1.0).
 
+## [0.1.6] — 2026-06-25
+
+### Modificato
+- **Ricevuta e pagamento disaccoppiati** (invariante 5): l'eleggibilità di una voce all'emissione **non dipende più dallo stato di pagamento**, ma dal fatto che la voce **non sia già coperta da una ricevuta emessa**. Conseguenze: si possono mettere su un'unica ricevuta voci **pagate e non**; non si possono più creare ricevute duplicate per la stessa voce; emettere o annullare una ricevuta **non altera** il pagamento (annullare libera di nuovo la voce). Lo stato pagato / da incassare si cambia con un **toggle dedicato per riga** su iscrizioni e abbonamenti.
+- **Rimosso il pulsante "Emetti ricevuta" per riga** introdotto in 0.1.5 (e l'emissione di voci già pagate via quel pulsante): l'emissione avviene dal CTA della sezione Ricevute, che ora elenca correttamente tutte le voci ancora senza ricevuta.
+
+### Corretto
+- **Sincronizzazione Drive che falliva in silenzio**: l'abilitazione inghiottiva gli errori (sync "abilitato" ma non funzionante, senza messaggio). Ora `enableSync` verifica che Drive sia connesso, fa rollback in caso di errore e **mostra il motivo** in Impostazioni → Sincronizzazione (messaggio chiudibile).
+
 ## [0.1.5] — 2026-06-25
 
 ### Aggiunto
-- **"Emetti ricevuta" per riga** nel dettaglio cliente: sulle iscrizioni/abbonamenti attivi compare un pulsante che apre il form di emissione con quella voce **già preselezionata**, senza doverla cercare nella sezione Ricevute. Funziona **anche per le voci già "pagato"** (la ricevuta documenta il pagamento già registrato): il form generale continua però a elencare solo le voci da incassare.
+- **"Emetti ricevuta" per riga** nel dettaglio cliente: sulle iscrizioni/abbonamenti attivi compare un pulsante che apre il form di emissione con quella voce **già preselezionata**, senza doverla cercare nella sezione Ricevute. Funziona **anche per le voci già "pagato"** (la ricevuta documenta il pagamento già registrato): il form generale continua però a elencare solo le voci da incassare. *(Rimosso in 0.1.6 a favore del disaccoppiamento ricevuta/pagamento.)*
 - **Stato di pagamento negli abbonamenti**: la tabella Abbonamenti del dettaglio cliente ora mostra, accanto al prezzo, se la voce è "pagato" o "da incassare" (come già avviene per l'iscrizione).
 
 ### Corretto
 - **Auto-update da repo privato**: il controllo aggiornamenti falliva con `404` su `releases.atom`. Su repository privati electron-updater seleziona il provider autenticato (API GitHub) **solo** se trova un token nella configurazione del provider; il solo `requestHeaders` non bastava. Ora il token (PAT read-only iniettato a build time) viene passato via `setFeedURL({ provider: 'github', private: true, token })`, così l'updater usa l'API autenticata invece del feed pubblico.
 - **Messaggio d'errore aggiornamento non chiudibile**: il banner d'errore dell'updater (in basso) e il riquadro d'errore in Impostazioni → Informazioni app ora hanno un pulsante di chiusura (✕) per essere rimossi.
-- **Sincronizzazione Drive che falliva in silenzio**: l'abilitazione inghiottiva gli errori (sync "abilitato" ma non funzionante, senza messaggio). Ora `enableSync` verifica che Drive sia connesso, fa rollback in caso di errore e **mostra il motivo** in Impostazioni → Sincronizzazione (messaggio chiudibile).
 
 > **Nota:** le installazioni **0.1.4** non possono auto-aggiornarsi a 0.1.5 (contengono ancora l'updater difettoso): installare la 0.1.5 **manualmente** una volta; da lì in avanti l'auto-update funziona.
 
@@ -49,5 +57,6 @@ Consolidamento post-F7: robustezza backend, funzionalità P1, accessibilità (WC
 ## [0.1.3] e precedenti
 Versioni di sviluppo iniziali (fasi F0–F7): impianto Electron + React + SQLCipher, anagrafica clienti, catalogo, iscrizioni/abbonamenti, ricevute, dashboard, backup locale e impianto auto-update.
 
+[0.1.6]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.6
 [0.1.5]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.5
 [0.1.4]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.4
