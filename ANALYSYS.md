@@ -297,6 +297,7 @@ I problemi principali si concentrano su:
   il "percorso di ripristino" (Gate F6, `PHASES.md:58`) è solo documentale (`DECISIONS.md` D13).
 - **Soluzione:** alla ricezione di `MIGRATION_FAILED` nella schermata Unlock, mostrare un'opzione
   "Ripristina dall'ultimo backup automatico" (backup auto in `userData/backups`).
+- **Stato (2026-06-20):** **Chiuso.** Alla ricezione di `MIGRATION_FAILED`, la schermata Unlock mostra un pannello di recovery con l'elenco dei backup locali (`backup:listLocale` → `listBackupLocali`) e un'opzione "Sfoglia file…"; il ripristino riusa `backup:ripristina` con la password già inserita. Solo backup locali. Vedi `docs/superpowers/specs/2026-06-20-b11-recovery-migrazione-design.md`.
 
 ### B12 — [BASSA] Gap minori
 - **Ricerca tipi catalogo ASSENTE** (`FUNZIONALITA.md:42`): in `CatalogoPage.tsx` c'è solo il toggle
