@@ -13,7 +13,10 @@ permissions:
 jobs:
   release-windows:
     name: Build & Release (Windows x64)
-    runs-on: windows-latest
+    # Pinned a windows-2022 (VS 2022 / v17): windows-latest monta VS 18, non
+    # riconosciuto da node-gyp 9.4.1 ("could not find a version of Visual Studio
+    # 2017 or newer"), che fa fallire la compilazione del modulo nativo.
+    runs-on: windows-2022
 
     steps:
       - name: Checkout
