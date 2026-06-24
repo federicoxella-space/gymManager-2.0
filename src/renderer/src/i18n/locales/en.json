@@ -352,7 +352,10 @@
       "stato": "Status",
       "stato_pagamento": "Payment",
       "cerca": "Search by number or client",
-      "tutti_stati": "All statuses"
+      "tutti_stati": "All statuses",
+      "cliente": "Client",
+      "cliente_cerca": "Search client…",
+      "cliente_rimuovi": "Clear client filter"
     },
     "errore_caricamento": "Error loading receipts.",
     "errore_pdf": "Error generating PDF."

@@ -352,7 +352,10 @@
       "stato": "Stato",
       "stato_pagamento": "Pagamento",
       "cerca": "Cerca per numero o cliente",
-      "tutti_stati": "Tutti gli stati"
+      "tutti_stati": "Tutti gli stati",
+      "cliente": "Cliente",
+      "cliente_cerca": "Cerca cliente…",
+      "cliente_rimuovi": "Rimuovi filtro cliente"
     },
     "errore_caricamento": "Errore durante il caricamento delle ricevute.",
     "errore_pdf": "Errore durante la generazione del PDF."
