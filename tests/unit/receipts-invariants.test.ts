@@ -793,3 +793,37 @@ describe('B7 — ricevute: tutore come cliente collegato', () => {
     expect(ric.tutore_cf).toBeNull()
   })
 })
+
+// ---------------------------------------------------------------------------
+// B12 — regressione filtro clienteId in listRicevute
+// ---------------------------------------------------------------------------
+
+describe('listRicevute — filtro clienteId (B12)', () => {
+  it('ritorna solo le ricevute del cliente indicato', () => {
+    const db = _testDb!
+    const c1 = creaCliente(db, 'AAAAAA80A01H501A')
+    const c2 = creaCliente(db, 'BBBBBB80A01H501B')
+    creaRicevuta(buildInput(c1, { dataEmissione: '2026-03-01' }))
+    creaRicevuta(buildInput(c1, { dataEmissione: '2026-04-01' }))
+    creaRicevuta(buildInput(c2, { dataEmissione: '2026-03-15' }))
+
+    const soloC1 = listRicevute({ clienteId: c1 })
+    expect(soloC1.length).toBe(2)
+    expect(soloC1.every((r) => r.cliente_id === c1)).toBe(true)
+
+    const soloC2 = listRicevute({ clienteId: c2 })
+    expect(soloC2.length).toBe(1)
+    expect(soloC2[0].cliente_id).toBe(c2)
+  })
+
+  it('combina clienteId e anno', () => {
+    const db = _testDb!
+    const c1 = creaCliente(db, 'CCCCCC80A01H501C')
+    creaRicevuta(buildInput(c1, { dataEmissione: '2025-12-01' }))
+    creaRicevuta(buildInput(c1, { dataEmissione: '2026-01-01' }))
+
+    const r2026 = listRicevute({ clienteId: c1, anno: 2026 })
+    expect(r2026.length).toBe(1)
+    expect(r2026[0].anno).toBe(2026)
+  })
+})
