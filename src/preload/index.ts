@@ -390,6 +390,7 @@ export type {
   CompleannoDellaSett,
   DashboardPeriodo,
   BackupManifest,
+  BackupLocaleInfo,
   DriveBackupItem,
   UpdateInfo,
   UpdateProgress,
