@@ -504,12 +504,14 @@ export interface ElectronAPI {
     list: (clienteId: number) => Promise<IscrizioneClienteRow[]>
     updateDate: (id: number, dataInizio: string, dataScadenza: string) => Promise<IscrizioneClienteRow>
     invalida: (id: number) => Promise<IscrizioneClienteRow>
+    setPagamento: (args: { id: number; stato: 'pagato' | 'da_incassare' }) => Promise<void>
   }
   abbonamenti: {
     assegna: (data: AssegnaAbbonamentoInput) => Promise<AbbonamentoClienteRow>
     list: (clienteId: number, soloAttivi?: boolean) => Promise<AbbonamentoClienteRow[]>
     updateDate: (id: number, dataInizio: string, dataScadenza: string) => Promise<AbbonamentoClienteRow>
     invalida: (id: number) => Promise<AbbonamentoClienteRow>
+    setPagamento: (args: { id: number; stato: 'pagato' | 'da_incassare' }) => Promise<void>
   }
   ricevute: {
     crea: (data: CreaRicevutaInput) => Promise<RicevutaConRighe>

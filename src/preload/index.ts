@@ -161,6 +161,9 @@ const api: ElectronAPI = {
     },
     invalida(id: number): Promise<IscrizioneClienteRow> {
       return ipcRenderer.invoke('iscrizioni:invalida', { id })
+    },
+    setPagamento(args: { id: number; stato: 'pagato' | 'da_incassare' }): Promise<void> {
+      return ipcRenderer.invoke('iscrizioni:setPagamento', args)
     }
   },
 
@@ -176,6 +179,9 @@ const api: ElectronAPI = {
     },
     invalida(id: number): Promise<AbbonamentoClienteRow> {
       return ipcRenderer.invoke('abbonamenti:invalida', { id })
+    },
+    setPagamento(args: { id: number; stato: 'pagato' | 'da_incassare' }): Promise<void> {
+      return ipcRenderer.invoke('abbonamenti:setPagamento', args)
     }
   },
 

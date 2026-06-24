@@ -71,7 +71,9 @@ import {
   listRicevute,
   annullaRicevuta,
   getVociPagabili,
-  listAnniRicevute
+  listAnniRicevute,
+  setStatoPagamentoIscrizione,
+  setStatoPagamentoAbbonamento
 } from '../db/receipts-repository'
 import {
   getIndicatori,
@@ -598,6 +600,18 @@ export function registerIpcHandlers(): void {
     }
   )
 
+  ipcMain.handle(
+    'iscrizioni:setPagamento',
+    (_event, { id, stato }: { id: number; stato: 'pagato' | 'da_incassare' }): void => {
+      try {
+        setStatoPagamentoIscrizione(id, stato)
+      } catch (err) {
+        log.error('[ipc] iscrizioni:setPagamento errore:', err)
+        throw err instanceof Error ? err : new Error('Errore aggiornamento pagamento')
+      }
+    }
+  )
+
   // ── Abbonamenti ───────────────────────────────────────────────────────────
 
   ipcMain.handle(
@@ -650,6 +664,18 @@ export function registerIpcHandlers(): void {
       } catch (err) {
         log.error('[ipc] abbonamenti:invalida errore:', err)
         throw err instanceof Error ? err : new Error("Errore durante l'invalidazione dell'abbonamento")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'abbonamenti:setPagamento',
+    (_event, { id, stato }: { id: number; stato: 'pagato' | 'da_incassare' }): void => {
+      try {
+        setStatoPagamentoAbbonamento(id, stato)
+      } catch (err) {
+        log.error('[ipc] abbonamenti:setPagamento errore:', err)
+        throw err instanceof Error ? err : new Error('Errore aggiornamento pagamento')
       }
     }
   )

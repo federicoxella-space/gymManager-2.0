@@ -32,7 +32,9 @@ import {
   getRicevuta,
   listRicevute,
   annullaRicevuta,
-  getVociPagabili
+  getVociPagabili,
+  setStatoPagamentoIscrizione,
+  setStatoPagamentoAbbonamento
 } from '../../src/main/db/receipts-repository'
 import { createCliente } from '../../src/main/db/clients-repository'
 import type { CreaRicevutaInput } from '../../src/types/shared'
@@ -267,11 +269,38 @@ describe('Invariante 5: immutabilità e annullamento ricevute', () => {
 })
 
 // ---------------------------------------------------------------------------
-// Pagamento voci
+// Disaccoppiamento ricevuta ↔ pagamento
 // ---------------------------------------------------------------------------
 
-describe('Pagamento voci collegate', () => {
-  it('creaRicevuta con stato_pagamento=pagato marca l\'iscrizione come pagata', () => {
+describe('Disaccoppiamento ricevuta ↔ pagamento', () => {
+  it('getVociPagabili include voci da_incassare senza ricevuta', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoIscId = creaTipoIscrizione(db)
+    const tipoAbbId = creaTipoAbbonamento(db)
+
+    assegnaIscrizione(db, clienteId, tipoIscId, 'da_incassare')
+    assegnaAbbonamento(db, clienteId, tipoAbbId, 'da_incassare')
+
+    const voci = getVociPagabili(clienteId)
+    expect(voci.length).toBe(2)
+  })
+
+  it('getVociPagabili include anche voci già pagate se non hanno ricevuta emessa', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoIscId = creaTipoIscrizione(db)
+    const tipoAbbId = creaTipoAbbonamento(db)
+
+    // Pagate ma senza ricevuta: devono comparire
+    assegnaIscrizione(db, clienteId, tipoIscId, 'pagato')
+    assegnaAbbonamento(db, clienteId, tipoAbbId, 'pagato')
+
+    const voci = getVociPagabili(clienteId)
+    expect(voci.length).toBe(2)
+  })
+
+  it('creaRicevuta NON cambia stato_pagamento dell\'iscrizione (pagato rimane pagato)', () => {
     const db = _testDb!
     const clienteId = creaCliente(db)
     const tipoIscId = creaTipoIscrizione(db)
@@ -293,21 +322,24 @@ describe('Pagamento voci collegate', () => {
       })
     )
 
+    // lo stato_pagamento dell'iscrizione NON deve essere cambiato
     const isc = db
       .prepare('SELECT stato_pagamento FROM iscrizioni_cliente WHERE id = ?')
       .get(iscId) as { stato_pagamento: string }
-    expect(isc.stato_pagamento).toBe('pagato')
+    expect(isc.stato_pagamento).toBe('da_incassare')
   })
 
-  it('creaRicevuta con stato_pagamento=da_incassare NON marca l\'iscrizione come pagata', () => {
+  it('creaRicevuta esclude la voce da getVociPagabili (è ora su ricevuta emessa)', () => {
     const db = _testDb!
     const clienteId = creaCliente(db)
     const tipoIscId = creaTipoIscrizione(db)
     const iscId = assegnaIscrizione(db, clienteId, tipoIscId, 'da_incassare')
 
+    expect(getVociPagabili(clienteId).length).toBe(1)
+
     creaRicevuta(
       buildInput(clienteId, {
-        stato_pagamento: 'da_incassare',
+        stato_pagamento: 'pagato',
         righe: [
           {
             tipo: 'iscrizione',
@@ -321,13 +353,10 @@ describe('Pagamento voci collegate', () => {
       })
     )
 
-    const isc = db
-      .prepare('SELECT stato_pagamento FROM iscrizioni_cliente WHERE id = ?')
-      .get(iscId) as { stato_pagamento: string }
-    expect(isc.stato_pagamento).toBe('da_incassare')
+    expect(getVociPagabili(clienteId).length).toBe(0)
   })
 
-  it('dopo annullamento, l\'iscrizione torna a da_incassare', () => {
+  it('annullaRicevuta NON cambia stato_pagamento dell\'iscrizione', () => {
     const db = _testDb!
     const clienteId = creaCliente(db)
     const tipoIscId = creaTipoIscrizione(db)
@@ -349,28 +378,46 @@ describe('Pagamento voci collegate', () => {
       })
     )
 
-    // Verifica che sia pagata
-    const iscPagata = db
-      .prepare('SELECT stato_pagamento FROM iscrizioni_cliente WHERE id = ?')
-      .get(iscId) as { stato_pagamento: string }
-    expect(iscPagata.stato_pagamento).toBe('pagato')
-
-    // Annulla la ricevuta
     annullaRicevuta(r.id)
 
-    // L'iscrizione deve tornare da_incassare
-    const iscRipristinata = db
+    const isc = db
       .prepare('SELECT stato_pagamento FROM iscrizioni_cliente WHERE id = ?')
       .get(iscId) as { stato_pagamento: string }
-    expect(iscRipristinata.stato_pagamento).toBe('da_incassare')
+    // l'annullamento NON deve ripristinare da_incassare: il pagamento è rimasto invariato
+    expect(isc.stato_pagamento).toBe('da_incassare')
   })
 
-  it('dopo annullamento, l\'abbonamento torna a da_incassare', () => {
+  it('dopo annullaRicevuta la voce torna in getVociPagabili', () => {
     const db = _testDb!
     const clienteId = creaCliente(db)
     const tipoIscId = creaTipoIscrizione(db)
+    const iscId = assegnaIscrizione(db, clienteId, tipoIscId, 'da_incassare')
+
+    const r = creaRicevuta(
+      buildInput(clienteId, {
+        stato_pagamento: 'pagato',
+        righe: [
+          {
+            tipo: 'iscrizione',
+            riferimentoId: iscId,
+            descrizione: 'Iscrizione annuale',
+            dataInizio: '2025-01-01',
+            dataFine: '2025-12-31',
+            prezzo: 30
+          }
+        ]
+      })
+    )
+
+    expect(getVociPagabili(clienteId).length).toBe(0)
+    annullaRicevuta(r.id)
+    expect(getVociPagabili(clienteId).length).toBe(1)
+  })
+
+  it('annullaRicevuta NON cambia stato_pagamento dell\'abbonamento', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
     const tipoAbbId = creaTipoAbbonamento(db)
-    assegnaIscrizione(db, clienteId, tipoIscId, 'pagato')
     const abbId = assegnaAbbonamento(db, clienteId, tipoAbbId, 'da_incassare')
 
     const r = creaRicevuta(
@@ -389,80 +436,74 @@ describe('Pagamento voci collegate', () => {
       })
     )
 
-    // Verifica che sia pagato
-    const abbPagato = db
-      .prepare('SELECT stato_pagamento FROM abbonamenti_cliente WHERE id = ?')
-      .get(abbId) as { stato_pagamento: string }
-    expect(abbPagato.stato_pagamento).toBe('pagato')
-
-    // Annulla la ricevuta
     annullaRicevuta(r.id)
 
-    // L'abbonamento deve tornare da_incassare
-    const abbRipristinato = db
+    const abb = db
       .prepare('SELECT stato_pagamento FROM abbonamenti_cliente WHERE id = ?')
       .get(abbId) as { stato_pagamento: string }
-    expect(abbRipristinato.stato_pagamento).toBe('da_incassare')
+    expect(abb.stato_pagamento).toBe('da_incassare')
   })
 
-  it('getVociPagabili restituisce solo le voci da_incassare con stato attivo/attiva', () => {
-    const db = _testDb!
-    const clienteId = creaCliente(db)
-    const tipoIscId = creaTipoIscrizione(db)
-    const tipoAbbId = creaTipoAbbonamento(db)
-
-    // Iscrizione da incassare (attiva)
-    assegnaIscrizione(db, clienteId, tipoIscId, 'da_incassare')
-    // Abbonamento da incassare (attivo)
-    assegnaAbbonamento(db, clienteId, tipoAbbId, 'da_incassare')
-
-    const voci = getVociPagabili(clienteId)
-    expect(voci.length).toBe(2)
-    expect(voci.every((v) => v.stato_pagamento === 'da_incassare')).toBe(true)
-  })
-
-  it('getVociPagabili esclude le voci già pagate', () => {
-    const db = _testDb!
-    const clienteId = creaCliente(db)
-    const tipoIscId = creaTipoIscrizione(db)
-
-    // Iscrizione già pagata
-    assegnaIscrizione(db, clienteId, tipoIscId, 'pagato')
-
-    const voci = getVociPagabili(clienteId)
-    expect(voci.length).toBe(0)
-  })
-
-  it('getVociPagabili esclude le voci pagate dopo aver creato la ricevuta', () => {
+  it('getVociPagabili esclude voci invalidate (iscrizione invalidata)', () => {
     const db = _testDb!
     const clienteId = creaCliente(db)
     const tipoIscId = creaTipoIscrizione(db)
     const iscId = assegnaIscrizione(db, clienteId, tipoIscId, 'da_incassare')
 
-    // Prima della ricevuta: voce presente
-    const voceAnticipata = getVociPagabili(clienteId)
-    expect(voceAnticipata.length).toBe(1)
+    db.prepare(`UPDATE iscrizioni_cliente SET stato = 'invalidata' WHERE id = ?`).run(iscId)
 
-    // Crea la ricevuta pagata
-    creaRicevuta(
-      buildInput(clienteId, {
-        stato_pagamento: 'pagato',
-        righe: [
-          {
-            tipo: 'iscrizione',
-            riferimentoId: iscId,
-            descrizione: 'Iscrizione annuale',
-            dataInizio: '2025-01-01',
-            dataFine: '2025-12-31',
-            prezzo: 30
-          }
-        ]
-      })
-    )
+    expect(getVociPagabili(clienteId).length).toBe(0)
+  })
 
-    // Dopo la ricevuta: voce non più presente
-    const voceSuccessiva = getVociPagabili(clienteId)
-    expect(voceSuccessiva.length).toBe(0)
+  it('getVociPagabili esclude voci invalidate (abbonamento invalidato)', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoAbbId = creaTipoAbbonamento(db)
+    const abbId = assegnaAbbonamento(db, clienteId, tipoAbbId, 'da_incassare')
+
+    db.prepare(`UPDATE abbonamenti_cliente SET stato = 'invalidato' WHERE id = ?`).run(abbId)
+
+    expect(getVociPagabili(clienteId).length).toBe(0)
+  })
+
+  it('setStatoPagamentoIscrizione aggiorna il campo stato_pagamento', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoIscId = creaTipoIscrizione(db)
+    const iscId = assegnaIscrizione(db, clienteId, tipoIscId, 'da_incassare')
+
+    setStatoPagamentoIscrizione(iscId, 'pagato')
+
+    const isc = db
+      .prepare('SELECT stato_pagamento FROM iscrizioni_cliente WHERE id = ?')
+      .get(iscId) as { stato_pagamento: string }
+    expect(isc.stato_pagamento).toBe('pagato')
+
+    setStatoPagamentoIscrizione(iscId, 'da_incassare')
+    const isc2 = db
+      .prepare('SELECT stato_pagamento FROM iscrizioni_cliente WHERE id = ?')
+      .get(iscId) as { stato_pagamento: string }
+    expect(isc2.stato_pagamento).toBe('da_incassare')
+  })
+
+  it('setStatoPagamentoAbbonamento aggiorna il campo stato_pagamento', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    const tipoAbbId = creaTipoAbbonamento(db)
+    const abbId = assegnaAbbonamento(db, clienteId, tipoAbbId, 'da_incassare')
+
+    setStatoPagamentoAbbonamento(abbId, 'pagato')
+
+    const abb = db
+      .prepare('SELECT stato_pagamento FROM abbonamenti_cliente WHERE id = ?')
+      .get(abbId) as { stato_pagamento: string }
+    expect(abb.stato_pagamento).toBe('pagato')
+
+    setStatoPagamentoAbbonamento(abbId, 'da_incassare')
+    const abb2 = db
+      .prepare('SELECT stato_pagamento FROM abbonamenti_cliente WHERE id = ?')
+      .get(abbId) as { stato_pagamento: string }
+    expect(abb2.stato_pagamento).toBe('da_incassare')
   })
 })
 
@@ -671,11 +712,11 @@ describe('Flusso E2E-equivalent: transazione → ricevuta salvata → re-downloa
       })
     )
 
-    // Verifica: la voce è stata marcata come pagata
+    // Verifica: lo stato_pagamento dell'iscrizione NON è stato modificato dall'emissione
     const iscRow = db
       .prepare('SELECT stato_pagamento FROM iscrizioni_cliente WHERE id = ?')
       .get(iscId) as { stato_pagamento: string }
-    expect(iscRow.stato_pagamento).toBe('pagato')
+    expect(iscRow.stato_pagamento).toBe('da_incassare')
 
     // Re-download: ri-legge la stessa ricevuta
     const ridownload = getRicevuta(ricevuta.id)

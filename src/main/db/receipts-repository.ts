@@ -230,23 +230,6 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
         prezzo: riga.prezzo,
         ordine: idx
       })
-
-      // Marca la voce collegata come 'pagato' solo se la ricevuta è pagata
-      if (input.stato_pagamento === 'pagato' && riga.riferimentoId != null) {
-        if (riga.tipo === 'iscrizione') {
-          db.prepare(
-            `UPDATE iscrizioni_cliente
-             SET stato_pagamento = 'pagato', data_modifica = datetime('now')
-             WHERE id = ?`
-          ).run(riga.riferimentoId)
-        } else if (riga.tipo === 'abbonamento') {
-          db.prepare(
-            `UPDATE abbonamenti_cliente
-             SET stato_pagamento = 'pagato', data_modifica = datetime('now')
-             WHERE id = ?`
-          ).run(riga.riferimentoId)
-        }
-      }
     })
   })
 
@@ -330,30 +313,12 @@ export function annullaRicevuta(id: number): RicevutaRow {
     throw new Error('RICEVUTA_GIA_ANNULLATA')
   }
 
-  const righe = getRighe(id)
-
   const esegui = db.transaction(() => {
     db.prepare(
       `UPDATE ricevute
        SET stato = 'annullata', data_annullamento = datetime('now')
        WHERE id = ?`
     ).run(id)
-
-    for (const riga of righe) {
-      if (riga.tipo === 'iscrizione' && riga.riferimento_id != null) {
-        db.prepare(
-          `UPDATE iscrizioni_cliente
-           SET stato_pagamento = 'da_incassare', data_modifica = datetime('now')
-           WHERE id = ?`
-        ).run(riga.riferimento_id)
-      } else if (riga.tipo === 'abbonamento' && riga.riferimento_id != null) {
-        db.prepare(
-          `UPDATE abbonamenti_cliente
-           SET stato_pagamento = 'da_incassare', data_modifica = datetime('now')
-           WHERE id = ?`
-        ).run(riga.riferimento_id)
-      }
-    }
   })
 
   esegui()
@@ -373,8 +338,9 @@ export function listAnniRicevute(): number[] {
 }
 
 /**
- * Restituisce le voci pagabili di un cliente (iscrizioni e abbonamenti
- * con stato_pagamento='da_incassare' e stato attivo/attiva).
+ * Restituisce le voci fatturabili di un cliente: iscrizioni e abbonamenti
+ * non invalidati e non già coperti da una ricevuta emessa.
+ * Il pagamento (stato_pagamento) è indipendente dall'eleggibilità.
  */
 export function getVociPagabili(clienteId: number): VocePagabile[] {
   const db = getDatabase()
@@ -392,8 +358,14 @@ export function getVociPagabili(clienteId: number): VocePagabile[] {
       FROM iscrizioni_cliente ic
       JOIN tipi_iscrizione ti ON ti.id = ic.tipo_iscrizione_id
       WHERE ic.cliente_id = ?
-        AND ic.stato_pagamento = 'da_incassare'
-        AND ic.stato = 'attiva'`
+        AND ic.stato != 'invalidata'
+        AND NOT EXISTS (
+          SELECT 1 FROM righe_ricevuta rr
+          JOIN ricevute r ON r.id = rr.ricevuta_id
+          WHERE rr.tipo = 'iscrizione'
+            AND rr.riferimento_id = ic.id
+            AND r.stato = 'emessa'
+        )`
     )
     .all(clienteId) as VocePagabile[]
 
@@ -410,10 +382,36 @@ export function getVociPagabili(clienteId: number): VocePagabile[] {
       FROM abbonamenti_cliente ac
       JOIN tipi_abbonamento ta ON ta.id = ac.tipo_abbonamento_id
       WHERE ac.cliente_id = ?
-        AND ac.stato_pagamento = 'da_incassare'
-        AND ac.stato = 'attivo'`
+        AND ac.stato != 'invalidato'
+        AND NOT EXISTS (
+          SELECT 1 FROM righe_ricevuta rr
+          JOIN ricevute r ON r.id = rr.ricevuta_id
+          WHERE rr.tipo = 'abbonamento'
+            AND rr.riferimento_id = ac.id
+            AND r.stato = 'emessa'
+        )`
     )
     .all(clienteId) as VocePagabile[]
 
   return [...iscrizioni, ...abbonamenti]
+}
+
+/**
+ * Aggiorna lo stato di pagamento di un'iscrizione cliente.
+ */
+export function setStatoPagamentoIscrizione(id: number, stato: 'pagato' | 'da_incassare'): void {
+  const db = getDatabase()
+  db.prepare(
+    `UPDATE iscrizioni_cliente SET stato_pagamento = ?, data_modifica = datetime('now') WHERE id = ?`
+  ).run(stato, id)
+}
+
+/**
+ * Aggiorna lo stato di pagamento di un abbonamento cliente.
+ */
+export function setStatoPagamentoAbbonamento(id: number, stato: 'pagato' | 'da_incassare'): void {
+  const db = getDatabase()
+  db.prepare(
+    `UPDATE abbonamenti_cliente SET stato_pagamento = ?, data_modifica = datetime('now') WHERE id = ?`
+  ).run(stato, id)
 }
