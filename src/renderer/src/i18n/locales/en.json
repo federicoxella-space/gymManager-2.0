@@ -22,7 +22,17 @@
     "submit": "Sign in",
     "wrong_password": "Wrong password. Please try again.",
     "error": "Error during login. Please try again.",
-    "migration_failed": "Error updating the database after the app update. Restore a recent backup from Settings → Backup. If the problem persists, contact support."
+    "migration_failed": "Error updating the database after the app update. Restore a recent backup from Settings → Backup. If the problem persists, contact support.",
+    "recovery_titolo": "Database update failed",
+    "recovery_spiegazione": "Your data is not lost. You can restore a recent backup to bring the database back to a working state.",
+    "recovery_limite": "If restoring does not fix the problem, the update may require a corrected app version: contact support.",
+    "recovery_lista_titolo": "Restore from a backup",
+    "recovery_ripristina": "Restore",
+    "recovery_sfoglia": "Browse file…",
+    "recovery_vuota": "No local backup found.",
+    "recovery_in_corso": "Restoring…",
+    "recovery_errore": "Restore failed. Try another backup or contact support.",
+    "recovery_riga_versione": "app {{versione}}"
   },
   "shell": {
     "nav": {

@@ -22,7 +22,17 @@
     "submit": "Accedi",
     "wrong_password": "Password errata. Riprova.",
     "error": "Errore durante l'accesso. Riprova.",
-    "migration_failed": "Errore nell'aggiornamento del database dopo l'aggiornamento dell'app. Ripristina un backup recente dalle Impostazioni → Backup. Se il problema persiste, contatta il supporto."
+    "migration_failed": "Errore nell'aggiornamento del database dopo l'aggiornamento dell'app. Ripristina un backup recente dalle Impostazioni → Backup. Se il problema persiste, contatta il supporto.",
+    "recovery_titolo": "Aggiornamento del database non riuscito",
+    "recovery_spiegazione": "I tuoi dati non sono persi. Puoi ripristinare un backup recente per riportare il database a uno stato funzionante.",
+    "recovery_limite": "Se il ripristino non risolve il problema, l'aggiornamento potrebbe richiedere una versione corretta dell'app: contatta il supporto.",
+    "recovery_lista_titolo": "Ripristina da un backup",
+    "recovery_ripristina": "Ripristina",
+    "recovery_sfoglia": "Sfoglia file…",
+    "recovery_vuota": "Nessun backup locale trovato.",
+    "recovery_in_corso": "Ripristino in corso…",
+    "recovery_errore": "Ripristino non riuscito. Prova con un altro backup o contatta il supporto.",
+    "recovery_riga_versione": "app {{versione}}"
   },
   "shell": {
     "nav": {
