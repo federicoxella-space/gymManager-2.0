@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { RicevutaRow } from '../../../types/shared'
+import type { ClienteRow, RicevutaRow } from '../../../types/shared'
 import Badge from '../components/ui/Badge'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 
@@ -57,6 +57,12 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
   )
   const [filtroSearch, setFiltroSearch] = useState('')
 
+  // Filtro cliente
+  const [filtroClienteId, setFiltroClienteId] = useState<number | null>(null)
+  const [clienteSelezionato, setClienteSelezionato] = useState<ClienteRow | null>(null)
+  const [clienteQuery, setClienteQuery] = useState('')
+  const [clienteRisultati, setClienteRisultati] = useState<ClienteRow[]>([])
+
   // Annullamento
   const [annullaTarget, setAnnullaTarget] = useState<RicevutaRow | null>(null)
   const [isAnnullando, setIsAnnullando] = useState(false)
@@ -82,6 +88,17 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    if (clienteQuery.trim().length < 2) {
+      setClienteRisultati([])
+      return
+    }
+    void window.api.clienti
+      .list({ search: clienteQuery.trim(), stato: 'attivo' })
+      .then((risultati) => setClienteRisultati(risultati))
+      .catch(() => setClienteRisultati([]))
+  }, [clienteQuery])
+
   const loadRicevute = useCallback(async (): Promise<void> => {
     setIsLoading(true)
     setLoadError(false)
@@ -89,6 +106,7 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
       const data = await window.api.ricevute.list({
         anno: filtroAnno,
         stato: filtroStato || undefined,
+        clienteId: filtroClienteId ?? undefined,
       })
       setRicevute(data)
     } catch {
@@ -96,7 +114,7 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
     } finally {
       setIsLoading(false)
     }
-  }, [filtroAnno, filtroStato])
+  }, [filtroAnno, filtroStato, filtroClienteId])
 
   useEffect(() => {
     void loadRicevute()
@@ -153,6 +171,20 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
     } finally {
       setIsAnnullando(false)
     }
+  }
+
+  function selezionaCliente(c: ClienteRow): void {
+    setFiltroClienteId(c.id)
+    setClienteSelezionato(c)
+    setClienteQuery('')
+    setClienteRisultati([])
+  }
+
+  function rimuoviCliente(): void {
+    setFiltroClienteId(null)
+    setClienteSelezionato(null)
+    setClienteQuery('')
+    setClienteRisultati([])
   }
 
   return (
@@ -219,6 +251,58 @@ export default function ReceiptsPage({ initialFilter }: ReceiptsPageProps = {}):
             <option value="pagato">{t('iscrizioni.pagamento.pagato')}</option>
             <option value="da_incassare">{t('iscrizioni.pagamento.da_incassare')}</option>
           </select>
+        </div>
+
+        {/* Filtro cliente */}
+        <div className="relative min-w-[200px]">
+          <label
+            htmlFor="ricevute-filtro-cliente"
+            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+          >
+            {t('ricevute.filtri.cliente')}
+          </label>
+          {clienteSelezionato ? (
+            <div className="flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+              <span className="truncate">
+                {clienteSelezionato.cognome} {clienteSelezionato.nome}
+              </span>
+              <button
+                type="button"
+                onClick={rimuoviCliente}
+                aria-label={t('ricevute.filtri.cliente_rimuovi')}
+                className="shrink-0 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <>
+              <input
+                id="ricevute-filtro-cliente"
+                type="search"
+                value={clienteQuery}
+                onChange={(e) => setClienteQuery(e.target.value)}
+                placeholder={t('ricevute.filtri.cliente_cerca')}
+                className="px-3 py-2 text-sm rounded-lg border w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              {clienteRisultati.length > 0 && (
+                <ul className="absolute z-10 mt-1 w-full max-h-48 overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg">
+                  {clienteRisultati.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        type="button"
+                        onClick={() => selezionaCliente(c)}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-none focus-visible:bg-gray-50 dark:focus-visible:bg-gray-700"
+                      >
+                        {c.cognome} {c.nome}
+                        {c.codice_fiscale ? ` · ${c.codice_fiscale}` : ''}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
         </div>
 
         {/* Ricerca */}
