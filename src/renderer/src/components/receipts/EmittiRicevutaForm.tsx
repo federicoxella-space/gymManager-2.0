@@ -18,6 +18,12 @@ interface EmittiRicevutaFormProps {
   onCancel: () => void
   /** Se passato, preseleziona la voce corrispondente (oltre a quelle da incassare). */
   preselect?: { tipo: 'iscrizione' | 'abbonamento'; riferimentoId: number }
+  /**
+   * Se passata, include e preseleziona questa specifica voce anche se NON è "da incassare"
+   * (es. abbonamento/iscrizione già pagati): consente di emettere comunque la ricevuta.
+   * Il form generale continua a elencare solo le voci da incassare.
+   */
+  voceExtra?: VocePagabile
 }
 
 type SubmitState = 'idle' | 'loading' | 'submitting' | 'error'
@@ -64,6 +70,7 @@ export default function EmittiRicevutaForm({
   onSuccess,
   onCancel,
   preselect,
+  voceExtra,
 }: EmittiRicevutaFormProps): React.JSX.Element {
   const { t } = useTranslation()
 
@@ -92,15 +99,27 @@ export default function EmittiRicevutaForm({
         window.api.ricevute.vociPagabili(clienteId),
         window.api.settings.get(),
       ])
-      setVociPagabili(voci)
+      // Include la voce specifica richiesta (es. già pagata) se non è già nell'elenco.
+      const lista = [...voci]
+      if (
+        voceExtra &&
+        !lista.some(
+          (v) => v.tipo === voceExtra.tipo && v.riferimentoId === voceExtra.riferimentoId,
+        )
+      ) {
+        lista.push(voceExtra)
+      }
+      setVociPagabili(lista)
       // Preseleziona tutte le voci da incassare
-      const idxDaIncassare = voci
+      const idxDaIncassare = lista
         .map((v, idx) => (v.stato_pagamento === 'da_incassare' ? idx : -1))
         .filter((idx) => idx >= 0)
       const selezione = new Set(idxDaIncassare)
-      if (preselect) {
-        const idxPre = voci.findIndex(
-          (v) => v.tipo === preselect.tipo && v.riferimentoId === preselect.riferimentoId,
+      // Preseleziona anche la voce specifica richiesta (anche se già pagata)
+      const riferimento = voceExtra ?? preselect
+      if (riferimento) {
+        const idxPre = lista.findIndex(
+          (v) => v.tipo === riferimento.tipo && v.riferimentoId === riferimento.riferimentoId,
         )
         if (idxPre >= 0) selezione.add(idxPre)
       }
@@ -112,7 +131,7 @@ export default function EmittiRicevutaForm({
     } catch {
       setSubmitState('error')
     }
-  }, [clienteId, preselect])
+  }, [clienteId, preselect, voceExtra])
 
   useEffect(() => {
     void loadVoci()

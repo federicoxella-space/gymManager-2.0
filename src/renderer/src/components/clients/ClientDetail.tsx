@@ -9,6 +9,7 @@ import type {
   RicevutaRow,
   TipoAbbonamentoRow,
   TipoIscrizioneRow,
+  VocePagabile,
 } from '../../../../types/shared'
 import { useSettings } from '../../context/SettingsContext'
 import { isMinorenne, formatNomeCliente } from '../../utils/dominio'
@@ -146,6 +147,7 @@ export default function ClientDetail({
   const [ricevutaPreselect, setRicevutaPreselect] = useState<
     { tipo: 'iscrizione' | 'abbonamento'; riferimentoId: number } | undefined
   >(undefined)
+  const [ricevutaVoceExtra, setRicevutaVoceExtra] = useState<VocePagabile | undefined>(undefined)
   const [annullaRicevutaTarget, setAnnullaRicevutaTarget] = useState<RicevutaRow | null>(null)
   const [isAnnullandoRicevuta, setIsAnnullandoRicevuta] = useState(false)
   const [pdfLoadingId, setPdfLoadingId] = useState<number | null>(null)
@@ -329,6 +331,7 @@ export default function ClientDetail({
   function handleRicevutaCreata(ricevuta: RicevutaConRighe): void {
     setShowEmittiRicevuta(false)
     setRicevutaPreselect(undefined)
+    setRicevutaVoceExtra(undefined)
     // Aggiunge la nuova ricevuta in cima alla lista
     setRicevute((prev) => [ricevuta, ...prev])
   }
@@ -626,18 +629,27 @@ export default function ClientDetail({
               </div>
               {!anonimizzato && (
                 <div className="flex flex-wrap gap-2 shrink-0">
-                  {iscrizioneAttiva.stato_pagamento === 'da_incassare' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRicevutaPreselect({ tipo: 'iscrizione', riferimentoId: iscrizioneAttiva.id })
-                        setShowEmittiRicevuta(true)
-                      }}
-                      className="text-sm px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
-                    >
-                      {t('ricevute.nuova')}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRicevutaPreselect(undefined)
+                      setRicevutaVoceExtra({
+                        tipo: 'iscrizione',
+                        riferimentoId: iscrizioneAttiva.id,
+                        descrizione:
+                          tipiIscrizione.find((ti) => ti.id === iscrizioneAttiva.tipo_iscrizione_id)
+                            ?.nome ?? `#${iscrizioneAttiva.tipo_iscrizione_id}`,
+                        dataInizio: iscrizioneAttiva.data_inizio,
+                        dataFine: iscrizioneAttiva.data_scadenza,
+                        prezzo: iscrizioneAttiva.prezzo,
+                        stato_pagamento: iscrizioneAttiva.stato_pagamento,
+                      })
+                      setShowEmittiRicevuta(true)
+                    }}
+                    className="text-sm px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                  >
+                    {t('ricevute.nuova')}
+                  </button>
                   <button
                     data-testid="btn-nuova-iscrizione"
                     type="button"
@@ -904,26 +916,38 @@ export default function ClientDetail({
                             </Badge>
                           </td>
                           <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                            {new Intl.NumberFormat('it-IT', {
-                              style: 'currency',
-                              currency: 'EUR',
-                            }).format(abb.prezzo)}
+                            <span>
+                              {new Intl.NumberFormat('it-IT', {
+                                style: 'currency',
+                                currency: 'EUR',
+                              }).format(abb.prezzo)}
+                            </span>
+                            <span className="block text-xs text-gray-500 dark:text-gray-400">
+                              {t(`iscrizioni.pagamento.${abb.stato_pagamento}`)}
+                            </span>
                           </td>
                           <td className="px-4 py-3 text-right">
                             {abb.stato === 'attivo' && !anonimizzato && (
                               <div className="inline-flex gap-2">
-                                {abb.stato_pagamento === 'da_incassare' && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setRicevutaPreselect({ tipo: 'abbonamento', riferimentoId: abb.id })
-                                      setShowEmittiRicevuta(true)
-                                    }}
-                                    className="text-xs px-2 py-1 rounded bg-primary-600 hover:bg-primary-700 text-white transition-colors"
-                                  >
-                                    {t('ricevute.nuova')}
-                                  </button>
-                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setRicevutaPreselect(undefined)
+                                    setRicevutaVoceExtra({
+                                      tipo: 'abbonamento',
+                                      riferimentoId: abb.id,
+                                      descrizione: tipoNome,
+                                      dataInizio: abb.data_inizio,
+                                      dataFine: abb.data_scadenza,
+                                      prezzo: abb.prezzo,
+                                      stato_pagamento: abb.stato_pagamento,
+                                    })
+                                    setShowEmittiRicevuta(true)
+                                  }}
+                                  className="text-xs px-2 py-1 rounded bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                                >
+                                  {t('ricevute.nuova')}
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -1164,6 +1188,7 @@ export default function ClientDetail({
             setIscrizioneAttiva(iscrizione)
             void loadIscrizione()
             if (emettiRicevuta) {
+              setRicevutaVoceExtra(undefined)
               setRicevutaPreselect({ tipo: 'iscrizione', riferimentoId: iscrizione.id })
               setShowEmittiRicevuta(true)
             }
@@ -1186,6 +1211,7 @@ export default function ClientDetail({
             setShowAssegnaAbbonamento(false)
             void loadAbbonamenti()
             if (emettiRicevuta) {
+              setRicevutaVoceExtra(undefined)
               setRicevutaPreselect({ tipo: 'abbonamento', riferimentoId: abbonamento.id })
               setShowEmittiRicevuta(true)
             }
@@ -1281,7 +1307,7 @@ export default function ClientDetail({
       {cliente && (
         <Modal
           isOpen={showEmittiRicevuta}
-          onClose={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined) }}
+          onClose={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined); setRicevutaVoceExtra(undefined) }}
           title={t('ricevute.form.titolo')}
           maxWidth="max-w-2xl"
         >
@@ -1289,8 +1315,9 @@ export default function ClientDetail({
             clienteId={clienteId}
             cliente={cliente}
             preselect={ricevutaPreselect}
+            voceExtra={ricevutaVoceExtra}
             onSuccess={handleRicevutaCreata}
-            onCancel={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined) }}
+            onCancel={() => { setShowEmittiRicevuta(false); setRicevutaPreselect(undefined); setRicevutaVoceExtra(undefined) }}
           />
         </Modal>
       )}
