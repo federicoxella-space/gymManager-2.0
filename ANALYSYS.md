@@ -310,6 +310,7 @@ I problemi principali si concentrano su:
   `AssegnaAbbonamentoForm.tsx:219-221`, `CatalogoPage.tsx:291`. → esternalizzare in i18n (plurale).
 - **Decodifica anno CF euristica** (`utils/dominio.ts:46`, `annoRaw < 30 ? 2000 : 1900`): documentare
   l'assunzione in `OPEN-QUESTIONS.md`.
+- **Stato (2026-06-20):** **Chiuso.** #1 ricerca catalogo, #2 modifica date abbonamento (WP4b), #4 stringhe `'mese'/'mesi'` (WP5), #5 euristica CF (documentata) già chiusi; #3 selettore cliente Ricevute implementato (autocomplete che imposta il filtro `clienteId`, già supportato da `listRicevute`). Vedi `docs/superpowers/specs/2026-06-20-b12-selettore-cliente-ricevute-design.md`.
 
 ---
 
