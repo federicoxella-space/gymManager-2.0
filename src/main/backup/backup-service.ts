@@ -6,12 +6,14 @@ import {
   writeFileSync,
   readdirSync,
   unlinkSync,
-  statSync
+  statSync,
+  readFileSync
 } from 'fs'
 import { join, dirname } from 'path'
 import log from 'electron-log'
 import { DB_PATH, getDatabase, isDatabaseOpen } from '../db/database'
 import { loadSettings } from '../settings/store'
+import type { BackupLocaleInfo } from '../../types/shared'
 
 export interface BackupManifest {
   /** Versione schema DB al momento del backup (PRAGMA user_version). */
@@ -136,4 +138,40 @@ export async function backupAutomatico(opts?: { dir?: string; retention?: number
   }
 
   return backupPath
+}
+
+/**
+ * Elenca i backup locali (`backup_*.db`) nella cartella configurata (o `dir` se passata),
+ * leggendo i metadati dal sidecar `.manifest.json`. Ordina dal più recente.
+ * Se la cartella non esiste ritorna [].
+ */
+export async function listBackupLocali(dir?: string): Promise<BackupLocaleInfo[]> {
+  const defaultDir = join(app.getPath('userData'), 'backups')
+  const targetDir = dir ?? risolviCartellaBackup(loadSettings().backup_dir, defaultDir)
+  if (!existsSync(targetDir)) return []
+
+  const files = readdirSync(targetDir).filter((f) => f.startsWith('backup_') && f.endsWith('.db'))
+  const lista: BackupLocaleInfo[] = files.map((f) => {
+    const fullPath = join(targetDir, f)
+    const manifestPath = fullPath + '.manifest.json'
+    let createdAt: string
+    let appVersion = ''
+    let version = 0
+    if (existsSync(manifestPath)) {
+      try {
+        const m = JSON.parse(readFileSync(manifestPath, 'utf-8')) as Partial<BackupManifest>
+        createdAt = m.createdAt ?? new Date(statSync(fullPath).mtimeMs).toISOString()
+        appVersion = m.appVersion ?? ''
+        version = m.version ?? 0
+      } catch {
+        createdAt = new Date(statSync(fullPath).mtimeMs).toISOString()
+      }
+    } else {
+      createdAt = new Date(statSync(fullPath).mtimeMs).toISOString()
+    }
+    return { path: fullPath, createdAt, appVersion, version }
+  })
+
+  lista.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  return lista
 }

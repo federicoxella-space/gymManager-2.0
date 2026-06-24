@@ -65,7 +65,7 @@ const TEST_USER_DATA = join(tmpdir(), `gymmanager-backup-test-${process.pid}`)
 // Import DOPO i mock
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { backupLocale, backupAutomatico, risolviCartellaBackup } from '../../src/main/backup/backup-service'
+import { backupLocale, backupAutomatico, risolviCartellaBackup, listBackupLocali } from '../../src/main/backup/backup-service'
 import { verificaBackup, ripristinaBackup, resetDatabase } from '../../src/main/backup/restore-service'
 import {
   connectDrive,
@@ -575,5 +575,52 @@ describe('backupAutomatico — cartella e retention parametriche', () => {
     await backupAutomatico({ dir, retention: 3 })
     const rimasti = readdirSync(dir).filter((f) => f.startsWith('backup_') && f.endsWith('.db'))
     expect(rimasti.length).toBe(3)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Suite 10: listBackupLocali
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('listBackupLocali', () => {
+  it('elenca i backup con manifest, ordinati dal più recente', async () => {
+    const dir = join(TEST_USER_DATA, 'list-bk')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'backup_20260101_100000.db'), 'x')
+    writeFileSync(
+      join(dir, 'backup_20260101_100000.db.manifest.json'),
+      JSON.stringify({ version: 6, createdAt: '2026-01-01T10:00:00.000Z', appVersion: '0.1.0', dbPath: 'x' })
+    )
+    writeFileSync(join(dir, 'backup_20260201_120000.db'), 'x')
+    writeFileSync(
+      join(dir, 'backup_20260201_120000.db.manifest.json'),
+      JSON.stringify({ version: 7, createdAt: '2026-02-01T12:00:00.000Z', appVersion: '0.1.1', dbPath: 'x' })
+    )
+
+    const lista = await listBackupLocali(dir)
+    expect(lista.length).toBe(2)
+    expect(lista[0].createdAt).toBe('2026-02-01T12:00:00.000Z')
+    expect(lista[0].appVersion).toBe('0.1.1')
+    expect(lista[0].version).toBe(7)
+    expect(lista[1].appVersion).toBe('0.1.0')
+  })
+
+  it('include i backup senza manifest (fallback) ed esclude i file non-backup', async () => {
+    const dir = join(TEST_USER_DATA, 'list-bk2')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(dir, 'backup_20260301_090000.db'), 'x')
+    writeFileSync(join(dir, 'altro.db'), 'x')
+    writeFileSync(join(dir, 'note.txt'), 'x')
+
+    const lista = await listBackupLocali(dir)
+    expect(lista.length).toBe(1)
+    expect(lista[0].path.endsWith('backup_20260301_090000.db')).toBe(true)
+    expect(typeof lista[0].createdAt).toBe('string')
+    expect(lista[0].createdAt.length).toBeGreaterThan(0)
+  })
+
+  it('ritorna [] se la cartella non esiste', async () => {
+    const lista = await listBackupLocali(join(TEST_USER_DATA, 'inesistente-xyz'))
+    expect(lista).toEqual([])
   })
 })

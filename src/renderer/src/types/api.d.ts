@@ -330,6 +330,17 @@ interface BackupManifest {
   dbPath: string
 }
 
+interface BackupLocaleInfo {
+  /** Percorso completo del file .db di backup. */
+  path: string
+  /** ISO datetime di creazione (dal manifest; fallback mtime del file). */
+  createdAt: string
+  /** Versione app al backup (dal manifest; '' se assente). */
+  appVersion: string
+  /** user_version dello schema al backup (dal manifest; 0 se assente). */
+  version: number
+}
+
 interface DriveBackupItem {
   id: string
   nome: string
@@ -429,6 +440,7 @@ interface ElectronAPI {
   backup: {
     locale: (args: { destinazionePath: string }) => Promise<BackupManifest>
     automatico: () => Promise<string>
+    listLocale: () => Promise<BackupLocaleInfo[]>
     verifica: (args: { backupPath: string }) => Promise<BackupManifest>
     ripristina: (args: { backupPath: string; password: string }) => Promise<void>
     reset: (args: { nuovaPassword: string }) => Promise<void>

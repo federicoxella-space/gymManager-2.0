@@ -2,7 +2,7 @@ import { ipcMain, app, dialog, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { existsSync, unlinkSync } from 'fs'
 import { checkForUpdates, installUpdate } from '../updater/auto-updater'
-import { backupLocale, backupAutomatico } from '../backup/backup-service'
+import { backupLocale, backupAutomatico, listBackupLocali } from '../backup/backup-service'
 import { initBackupScheduler, restartBackupScheduler } from '../backup/backup-scheduler'
 import { verificaBackup, ripristinaBackup, resetDatabase, eseguiRipristino } from '../backup/restore-service'
 import {
@@ -13,7 +13,7 @@ import {
   listBackupDrive,
   ripristinaDaDrive
 } from '../backup/drive-service'
-import type { BackupManifest, DriveBackupItem, SyncStatus } from '../../types/shared'
+import type { BackupManifest, BackupLocaleInfo, DriveBackupItem, SyncStatus } from '../../types/shared'
 import {
   getStatus as syncGetStatus,
   upload as syncUpload,
@@ -901,6 +901,15 @@ export function registerIpcHandlers(): void {
     } catch (err) {
       log.error('[ipc] backup:automatico errore:', err)
       throw err instanceof Error ? err : new Error('Errore durante il backup automatico')
+    }
+  })
+
+  ipcMain.handle('backup:listLocale', async (): Promise<BackupLocaleInfo[]> => {
+    try {
+      return await listBackupLocali()
+    } catch (err) {
+      log.error('[ipc] backup:listLocale errore:', err)
+      throw err instanceof Error ? err : new Error('Errore nel recupero dei backup locali')
     }
   })
 

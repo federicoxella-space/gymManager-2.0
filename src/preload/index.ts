@@ -34,6 +34,7 @@ import type {
   CompleannoDellaSett,
   DashboardPeriodo,
   BackupManifest,
+  BackupLocaleInfo,
   DriveBackupItem,
   UpdateInfo,
   UpdateProgress,
@@ -244,6 +245,9 @@ const api: ElectronAPI = {
     },
     automatico(): Promise<string> {
       return ipcRenderer.invoke('backup:automatico')
+    },
+    listLocale(): Promise<BackupLocaleInfo[]> {
+      return ipcRenderer.invoke('backup:listLocale')
     },
     verifica(args: { backupPath: string }): Promise<BackupManifest> {
       return ipcRenderer.invoke('backup:verifica', args)
