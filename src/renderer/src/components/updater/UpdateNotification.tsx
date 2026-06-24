@@ -134,7 +134,15 @@ export default function UpdateNotification(): React.JSX.Element | null {
         {stato.fase === 'errore' && (
           <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs px-3 py-2 rounded-md shadow-sm">
             <ExclamationIcon />
-            <span>{stato.messaggio ?? t('aggiornamento.errore')}</span>
+            <span className="min-w-0 flex-1">{stato.messaggio ?? t('aggiornamento.errore')}</span>
+            <button
+              type="button"
+              onClick={() => setStato({ fase: 'nessuno' })}
+              aria-label={t('common.close')}
+              className="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+            >
+              ✕
+            </button>
           </div>
         )}
       </div>

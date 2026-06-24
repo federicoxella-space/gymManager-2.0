@@ -1499,15 +1499,28 @@ export default function SettingsPage(): React.JSX.Element {
         )}
 
         {updateCheckResult === 'errore' && (
-          <div className="mt-3">
-            <p className="text-sm text-red-600 dark:text-red-400">
-              {t('aggiornamento.errore_verifica')}
-            </p>
-            {updateErrorMsg !== null && (
-              <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 font-mono break-all">
-                {updateErrorMsg}
+          <div className="mt-3 flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {t('aggiornamento.errore_verifica')}
               </p>
-            )}
+              {updateErrorMsg !== null && (
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 font-mono break-all">
+                  {updateErrorMsg}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setUpdateCheckResult('idle')
+                setUpdateErrorMsg(null)
+              }}
+              aria-label={t('common.close')}
+              className="shrink-0 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
+            >
+              ✕
+            </button>
           </div>
         )}
       </section>
