@@ -4,6 +4,9 @@ Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Chang
 
 ## [0.1.5] — 2026-06-25
 
+### Aggiunto
+- **"Emetti ricevuta" per riga** nel dettaglio cliente: sulle iscrizioni/abbonamenti **da incassare** (e attivi) compare un pulsante che apre il form di emissione con quella voce **già preselezionata**, senza dover cercare il pulsante nella sezione Ricevute.
+
 ### Corretto
 - **Auto-update da repo privato**: il controllo aggiornamenti falliva con `404` su `releases.atom`. Su repository privati electron-updater seleziona il provider autenticato (API GitHub) **solo** se trova un token nella configurazione del provider; il solo `requestHeaders` non bastava. Ora il token (PAT read-only iniettato a build time) viene passato via `setFeedURL({ provider: 'github', private: true, token })`, così l'updater usa l'API autenticata invece del feed pubblico.
 - **Messaggio d'errore aggiornamento non chiudibile**: il banner d'errore dell'updater (in basso) e il riquadro d'errore in Impostazioni → Informazioni app ora hanno un pulsante di chiusura (✕) per essere rimossi.

@@ -626,6 +626,18 @@ export default function ClientDetail({
               </div>
               {!anonimizzato && (
                 <div className="flex flex-wrap gap-2 shrink-0">
+                  {iscrizioneAttiva.stato_pagamento === 'da_incassare' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRicevutaPreselect({ tipo: 'iscrizione', riferimentoId: iscrizioneAttiva.id })
+                        setShowEmittiRicevuta(true)
+                      }}
+                      className="text-sm px-3 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                    >
+                      {t('ricevute.nuova')}
+                    </button>
+                  )}
                   <button
                     data-testid="btn-nuova-iscrizione"
                     type="button"
@@ -900,6 +912,18 @@ export default function ClientDetail({
                           <td className="px-4 py-3 text-right">
                             {abb.stato === 'attivo' && !anonimizzato && (
                               <div className="inline-flex gap-2">
+                                {abb.stato_pagamento === 'da_incassare' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setRicevutaPreselect({ tipo: 'abbonamento', riferimentoId: abb.id })
+                                      setShowEmittiRicevuta(true)
+                                    }}
+                                    className="text-xs px-2 py-1 rounded bg-primary-600 hover:bg-primary-700 text-white transition-colors"
+                                  >
+                                    {t('ricevute.nuova')}
+                                  </button>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => {
