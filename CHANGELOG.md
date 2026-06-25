@@ -2,6 +2,14 @@
 
 Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); versionamento [SemVer](https://semver.org/lang/it/) (pre-1.0).
 
+## [0.1.7] — 2026-06-25
+
+### Corretto
+- **Ricevuta in errore con un logo caricato**: un logo pesante (es. foto da fotocamera) faceva fallire la generazione del PDF. Il documento veniva caricato come `data:text/html;base64,…` e, con il logo incluso **due volte** (copia cliente + matrice), superava il tetto di Chromium sulla lunghezza delle URL (`url::kMaxURLChars`, ~2 MB). Ora il logo viene **ridimensionato automaticamente al caricamento** dentro il box di stampa (max **360×192 px**, derivato dal formato della ricevuta) **mantenendo il rapporto d'aspetto** (un solo fattore di scala, solo riduzione), e normalizzato a **PNG**. In export resta una **guardia** che, oltre il limite, dà un errore chiaro e attribuibile invece di fallire in modo opaco.
+
+### Modificato
+- **Caricamento logo (Impostazioni)**: selezione ristretta ai formati stampabili (PNG, JPEG, WebP, GIF, SVG), nota informativa sul ridimensionamento e messaggio d'errore in caso di formato non supportato o file illeggibile.
+
 ## [0.1.6] — 2026-06-25
 
 ### Modificato
@@ -57,6 +65,7 @@ Consolidamento post-F7: robustezza backend, funzionalità P1, accessibilità (WC
 ## [0.1.3] e precedenti
 Versioni di sviluppo iniziali (fasi F0–F7): impianto Electron + React + SQLCipher, anagrafica clienti, catalogo, iscrizioni/abbonamenti, ricevute, dashboard, backup locale e impianto auto-update.
 
+[0.1.7]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.7
 [0.1.6]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.6
 [0.1.5]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.5
 [0.1.4]: https://github.com/federicoxella-space/gymManager-2.0/releases/tag/v0.1.4
