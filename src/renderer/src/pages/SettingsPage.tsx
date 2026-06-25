@@ -8,6 +8,7 @@ import RestoreDialog from '../components/backup/RestoreDialog'
 import ResetPasswordDialog from '../components/backup/ResetPasswordDialog'
 import ChangePasswordDialog from '../components/backup/ChangePasswordDialog'
 import DriveRestoreDialog from '../components/backup/DriveRestoreDialog'
+import { ridimensionaLogo } from '../utils/logo'
 
 // ── Colori preset ─────────────────────────────────────────────────────────────
 
@@ -178,6 +179,7 @@ export default function SettingsPage(): React.JSX.Element {
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [logoError, setLogoError] = useState<string | null>(null)
   const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Listener eventi aggiornamento (separato — non dipende dalle impostazioni)
@@ -353,22 +355,29 @@ export default function SettingsPage(): React.JSX.Element {
     setForm((prev) => ({ ...prev, codice_fiscale_piva: e.target.value }))
   }
 
-  function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>): void {
+  async function handleLogoFileChange(e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
     const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = (): void => {
-      const result = reader.result
-      if (typeof result === 'string') {
-        setForm((prev) => ({ ...prev, logo_base64: result }))
-      }
-    }
-    reader.readAsDataURL(file)
     // Reset il valore dell'input per permettere di ricaricare lo stesso file
     e.target.value = ''
+    if (!file) return
+    setLogoError(null)
+    try {
+      // Ridimensiona dentro il box della ricevuta mantenendo il rapporto d'aspetto
+      // e normalizza a PNG (evita logo troppo grandi / formati non stampabili).
+      const ridimensionato = await ridimensionaLogo(file)
+      setForm((prev) => ({ ...prev, logo_base64: ridimensionato }))
+    } catch (err) {
+      const code = err instanceof Error ? err.message : ''
+      setLogoError(
+        code === 'LOGO_FORMATO_NON_SUPPORTATO'
+          ? t('impostazioni.logo_errore_formato')
+          : t('impostazioni.logo_errore_generico')
+      )
+    }
   }
 
   function handleLogoRimuovi(): void {
+    setLogoError(null)
     setForm((prev) => ({ ...prev, logo_base64: '' }))
   }
 
@@ -690,11 +699,19 @@ export default function SettingsPage(): React.JSX.Element {
               <input
                 id="settings-logo-upload"
                 type="file"
-                accept="image/*"
-                onChange={handleLogoFileChange}
+                accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+                onChange={(e) => void handleLogoFileChange(e)}
                 className="sr-only"
               />
             </label>
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              {t('impostazioni.logo_hint')}
+            </p>
+            {logoError ? (
+              <p role="alert" className="mt-1.5 text-xs text-red-600 dark:text-red-400">
+                {logoError}
+              </p>
+            ) : null}
           </div>
         </section>
 

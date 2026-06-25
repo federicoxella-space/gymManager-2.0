@@ -13,6 +13,28 @@ import type { RicevutaConRighe } from '../../types/shared'
 
 export { formatImporto, formatDataIT, formatNumeroRicevuta }
 
+// ---------------------------------------------------------------------------
+// Dimensioni del logo derivate dal formato della ricevuta
+// ---------------------------------------------------------------------------
+
+/**
+ * Box di rendering del logo nell'intestazione della ricevuta (CSS `.logo`).
+ * È la SORGENTE UNICA: il CSS viene generato a partire da queste costanti,
+ * e il ridimensionamento del logo deve puntare allo stesso box.
+ */
+export const LOGO_BOX_WIDTH_PX = 120
+export const LOGO_BOX_HEIGHT_PX = 64
+
+/**
+ * Fattore di scala per una stampa nitida sul box (≈288 DPI con DPR=3).
+ * Oltre questo valore non si guadagna nitidezza percepibile, si aggiungono solo byte.
+ */
+export const LOGO_PRINT_SCALE = 3
+
+/** Dimensione intrinseca massima consigliata del logo (box × scala di stampa). */
+export const LOGO_MAX_WIDTH_PX = LOGO_BOX_WIDTH_PX * LOGO_PRINT_SCALE // 360
+export const LOGO_MAX_HEIGHT_PX = LOGO_BOX_HEIGHT_PX * LOGO_PRINT_SCALE // 192
+
 export interface ImpostazioniAttivitaSnapshot {
   ragione_sociale: string
   indirizzo: string
@@ -251,8 +273,8 @@ function generaCSS(): string {
     }
 
     .logo {
-      max-height: 64px;
-      max-width: 120px;
+      max-height: ${LOGO_BOX_HEIGHT_PX}px;
+      max-width: ${LOGO_BOX_WIDTH_PX}px;
       object-fit: contain;
     }
 
