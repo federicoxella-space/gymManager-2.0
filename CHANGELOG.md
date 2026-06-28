@@ -2,6 +2,17 @@
 
 Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); versionamento [SemVer](https://semver.org/lang/it/) (pre-1.0).
 
+## [0.1.8] — 2026-06-28
+
+### Aggiunto
+- **Installer macOS**: nuovo target `.dmg` universale (Apple Silicon + Intel) e job di build dedicato su runner `macos-latest` nel workflow di release; al push del tag viene pubblicato sulla stessa release insieme all'installer Windows.
+
+### Modificato
+- **Auto-update su macOS**: la build macOS non è firmata, quindi Squirrel.Mac non può auto-installare l'aggiornamento. L'app ora **scarica** comunque il pacchetto (target `zip` + `latest-mac.yml`) e, al posto del riavvio automatico, lo **rivela in Finder** ("Apri in Finder") per l'installazione manuale (trascinare GymManager in Applicazioni). Su Windows l'auto-update resta invariato.
+
+### Note
+- macOS: prima apertura via clic destro → Apri (avviso Gatekeeper "sviluppatore non identificato"). Manca ancora `icon.icns`: viene usata l'icona Electron di default.
+
 ## [0.1.7] — 2026-06-25
 
 ### Corretto

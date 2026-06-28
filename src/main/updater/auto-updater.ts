@@ -1,6 +1,6 @@
 import { autoUpdater } from 'electron-updater'
-import type { UpdateInfo, ProgressInfo } from 'electron-updater'
-import { BrowserWindow } from 'electron'
+import type { UpdateInfo, ProgressInfo, UpdateDownloadedEvent } from 'electron-updater'
+import { BrowserWindow, shell } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import log from 'electron-log'
 
@@ -16,6 +16,16 @@ declare const __GITHUB_UPDATE_TOKEN__: string
 
 /** Riferimento alla finestra principale, salvato da initAutoUpdater. */
 let _mainWindow: BrowserWindow | null = null
+
+/** macOS: serve un trattamento diverso perché senza firma Squirrel.Mac non auto-installa. */
+const isMac = process.platform === 'darwin'
+
+/**
+ * Percorso del pacchetto di aggiornamento scaricato (macOS).
+ * Su macOS non firmato non possiamo auto-installare: salviamo il file scaricato
+ * così da poterlo rivelare in Finder e lasciare l'installazione manuale all'utente.
+ */
+let _downloadedFilePath: string | null = null
 
 /**
  * Inizializza electron-updater e registra i listener degli eventi.
@@ -71,8 +81,11 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
     mainWindow.webContents.send('update:progress', progressData)
   })
 
-  autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+  autoUpdater.on('update-downloaded', (info: UpdateDownloadedEvent) => {
     log.info(`[updater] Aggiornamento scaricato: v${info.version}`)
+    // Su macOS conserviamo il percorso del pacchetto per rivelarlo in Finder:
+    // l'app non firmata non può auto-installare (Squirrel.Mac richiede la firma).
+    _downloadedFilePath = info.downloadedFile ?? null
     mainWindow.webContents.send('update:downloaded', info)
   })
 
@@ -111,7 +124,27 @@ export function checkForUpdates(): void {
 /**
  * Installa l'aggiornamento già scaricato e riavvia l'applicazione.
  * Deve essere chiamato solo dopo che l'evento 'update-downloaded' è stato emesso.
+ * Su macOS non firmato quitAndInstall fallirebbe (Squirrel.Mac richiede la firma):
+ * in quel caso riveliamo il pacchetto in Finder per l'installazione manuale.
  */
 export function installUpdate(): void {
+  if (isMac) {
+    revealDownloadedUpdate()
+    return
+  }
   autoUpdater.quitAndInstall()
+}
+
+/**
+ * Rivela in Finder il pacchetto di aggiornamento scaricato (macOS).
+ * L'utente lo apre, estrae GymManager.app e la trascina nella cartella Applicazioni.
+ * Se per qualche motivo il percorso non è noto, apre la cartella dei download
+ * dell'updater come fallback.
+ */
+export function revealDownloadedUpdate(): void {
+  if (_downloadedFilePath) {
+    shell.showItemInFolder(_downloadedFilePath)
+  } else {
+    log.warn('[updater] Nessun pacchetto scaricato da rivelare in Finder')
+  }
 }

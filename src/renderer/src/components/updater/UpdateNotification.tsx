@@ -24,6 +24,10 @@ export default function UpdateNotification(): React.JSX.Element | null {
   const { t } = useTranslation()
   const [stato, setStato] = useState<UpdateState>({ fase: 'nessuno' })
 
+  // Su macOS la build non è firmata: l'app non può auto-installare l'aggiornamento.
+  // Lo scarica e poi lo rivela in Finder per l'installazione manuale.
+  const isMac = window.api.platform === 'darwin'
+
   useEffect(() => {
     // Ascolta update:available
     const unsubAvailable = window.api.on('update:available', (...args: unknown[]) => {
@@ -75,6 +79,12 @@ export default function UpdateNotification(): React.JSX.Element | null {
     })
   }
 
+  function handleRevealInFinder(): void {
+    window.api.updater.revealDownload().catch(() => {
+      // Errore: viene comunicato via 'update:error'
+    })
+  }
+
   if (stato.fase === 'nessuno') {
     return null
   }
@@ -118,15 +128,17 @@ export default function UpdateNotification(): React.JSX.Element | null {
             <div className="flex items-center gap-3 min-w-0">
               <CheckCircleIcon />
               <span className="truncate">
-                {t('aggiornamento.pronto', { version: stato.version })}
+                {isMac
+                  ? t('aggiornamento.pronto_mac', { version: stato.version })
+                  : t('aggiornamento.pronto', { version: stato.version })}
               </span>
             </div>
             <button
               type="button"
-              onClick={handleInstall}
+              onClick={isMac ? handleRevealInFinder : handleInstall}
               className="shrink-0 bg-white text-green-700 font-semibold text-xs px-3 py-1.5 rounded-md hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors"
             >
-              {t('aggiornamento.installa')}
+              {isMac ? t('aggiornamento.apri_finder') : t('aggiornamento.installa')}
             </button>
           </div>
         )}

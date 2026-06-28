@@ -34,6 +34,26 @@ nsis:
   installerHeaderIcon: resources/icon.ico
   language: '1040'
 
+mac:
+  target:
+    # dmg: installer scaricato/consegnato manualmente la prima volta.
+    - target: dmg
+      arch:
+        - universal
+    # zip: richiesto da electron-updater per il download dell'aggiornamento
+    # in-app (genera latest-mac.yml). Su build non firmata l'app non auto-installa
+    # ma scarica lo zip e lo rivela in Finder (vedi src/main/updater).
+    - target: zip
+      arch:
+        - universal
+  category: public.app-category.business
+  # Build NON firmata: nessun certificato Apple Developer ID.
+  # Gli utenti alla prima apertura dovranno usare clic destro → Apri
+  # per superare l'avviso Gatekeeper ("sviluppatore non identificato").
+  identity: null
+  # TODO: aggiungere resources/icon.icns (ora esiste solo icon.ico placeholder).
+  # Senza .icns viene usata l'icona Electron di default.
+
 publish:
   provider: github
   owner: federicoxella-space

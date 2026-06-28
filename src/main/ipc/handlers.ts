@@ -1,7 +1,7 @@
 import { ipcMain, app, dialog, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { existsSync, unlinkSync } from 'fs'
-import { checkForUpdates, installUpdate } from '../updater/auto-updater'
+import { checkForUpdates, installUpdate, revealDownloadedUpdate } from '../updater/auto-updater'
 import { backupLocale, backupAutomatico, listBackupLocali } from '../backup/backup-service'
 import { initBackupScheduler, restartBackupScheduler } from '../backup/backup-scheduler'
 import { verificaBackup, ripristinaBackup, resetDatabase, eseguiRipristino } from '../backup/restore-service'
@@ -1166,6 +1166,20 @@ export function registerIpcHandlers(): void {
     } catch (err) {
       log.error('[ipc] updater:install errore:', err)
       throw err instanceof Error ? err : new Error("Errore durante l'installazione dell'aggiornamento")
+    }
+  })
+
+  /**
+   * macOS: rivela in Finder il pacchetto di aggiornamento scaricato, così che
+   * l'utente possa installarlo manualmente (build non firmata, no auto-install).
+   */
+  ipcMain.handle('updater:revealDownload', (): void => {
+    try {
+      log.info('[ipc] updater:revealDownload avviato')
+      revealDownloadedUpdate()
+    } catch (err) {
+      log.error('[ipc] updater:revealDownload errore:', err)
+      throw err instanceof Error ? err : new Error("Errore nell'apertura del pacchetto di aggiornamento")
     }
   })
 

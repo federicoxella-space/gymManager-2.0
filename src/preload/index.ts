@@ -46,6 +46,10 @@ exposeElectronAPI()
 
 // Costruisce l'API applicativa personalizzata
 const api: ElectronAPI = {
+  // Piattaforma del sistema operativo (es. 'darwin', 'win32'): usata dalla UI
+  // per adattare il comportamento dell'auto-update su macOS.
+  platform: process.platform,
+
   db: {
     getState(): Promise<{ state: DbState }> {
       return ipcRenderer.invoke('db:getState')
@@ -317,6 +321,9 @@ const api: ElectronAPI = {
     },
     install(): Promise<void> {
       return ipcRenderer.invoke('updater:install')
+    },
+    revealDownload(): Promise<void> {
+      return ipcRenderer.invoke('updater:revealDownload')
     }
   },
 

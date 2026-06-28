@@ -75,3 +75,55 @@ jobs:
           # GITHUB_TOKEN è fornito automaticamente da Actions con i permessi
           # dichiarati sopra (contents: write). Non serve un PAT manuale.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-macos:
+    name: Build & Release (macOS universal)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        # --ignore-scripts salta postinstall (electron-builder install-app-deps),
+        # i moduli nativi vengono compilati negli step successivi.
+        run: npm ci --ignore-scripts
+
+      # node-gyp 9.x usa distutils, rimosso da Python 3.12: setuptools lo ripristina.
+      - name: Install setuptools (distutils rimosso in Python 3.12, richiesto da node-gyp)
+        run: pip3 install setuptools --break-system-packages
+
+      # Fase 1 — Compila il modulo nativo per Node.js (ABI del runner), per i test.
+      - name: Rebuild native module for Node.js (tests)
+        run: npm rebuild better-sqlite3-multiple-ciphers
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      # Fase 2 — Build Vite. Il rebuild dei moduli nativi per Electron (per
+      # entrambe le architetture arm64+x64 del pacchetto universale) è gestito
+      # da electron-builder durante il packaging (npmRebuild: true).
+      - name: Build Electron app (Vite)
+        run: npm run build:electron
+        env:
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GITHUB_UPDATE_TOKEN: ${{ secrets.UPDATE_TOKEN }}
+
+      # Fase 3 — Packaging DMG universale + pubblicazione sulla stessa release.
+      - name: Package & Publish to GitHub Releases
+        run: npx electron-builder --mac --universal --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

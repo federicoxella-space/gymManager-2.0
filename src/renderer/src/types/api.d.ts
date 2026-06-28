@@ -363,6 +363,8 @@ interface SyncStatus {
 // ── ElectronAPI ───────────────────────────────────────────────────────────────
 
 interface ElectronAPI {
+  /** Piattaforma del sistema operativo ('darwin', 'win32', 'linux', …). */
+  platform: NodeJS.Platform
   db: {
     getState: () => Promise<{ state: DbState }>
     setup: (password: string) => Promise<void>
@@ -469,6 +471,8 @@ interface ElectronAPI {
   updater: {
     check: () => Promise<void>
     install: () => Promise<void>
+    /** macOS: rivela in Finder il pacchetto di aggiornamento scaricato. */
+    revealDownload: () => Promise<void>
   }
   sync: {
     status: () => Promise<SyncStatus>
