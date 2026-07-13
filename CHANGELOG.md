@@ -2,6 +2,14 @@
 
 Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); versionamento [SemVer](https://semver.org/lang/it/) (pre-1.0).
 
+## [0.1.9] — 2026-07-14
+
+### Modificato
+- **Numerazione ricevute ancorata all'anno** (invariante 6): il *numero iniziale* configurato in Impostazioni ora vale **solo per l'anno per cui è stato impostato**; un nuovo anno riparte comunque da **1** e non eredita più il valore residuo dell'anno precedente. Se il numero impostato è **maggiore** dell'ultima ricevuta emessa nell'anno, la numerazione **salta in avanti** a quel numero (es. ultima = 3, imposto 8 → la prossima è la 8); se è minore o uguale viene ignorato e si prosegue da `MAX+1`.
+
+### Aggiunto
+- **Impostazioni → Numero iniziale ricevute**: il campo propone come default l'**ultimo numero emesso** per l'anno corrente e **impedisce** di inserire un valore inferiore a esso.
+
 ## [0.1.8] — 2026-06-28
 
 ### Aggiunto
