@@ -15,14 +15,38 @@ export type { RicevutaRow, RigaRicevutaRow, RicevutaConRighe, VocePagabile, Rice
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Legge il numero iniziale ricevute da app_settings (default 1). */
-function getReceiptStartNumber(): number {
+/**
+ * Legge la configurazione del numero iniziale ricevute da app_settings.
+ * `number` è il numero da cui partire (default 1); `year` è l'anno a cui il
+ * numero è ancorato (0 = non impostato). Il numero iniziale vale SOLO per il
+ * suo anno: così un valore residuo non trabocca sull'anno successivo.
+ */
+function getReceiptStartConfig(): { number: number; year: number } {
   const db = getDatabase()
-  const row = db
+  const numRow = db
     .prepare(`SELECT value FROM app_settings WHERE key = 'receipt_start_number'`)
     .get() as { value: string } | undefined
-  const n = row ? parseInt(row.value, 10) : 1
-  return isNaN(n) || n < 1 ? 1 : n
+  const yearRow = db
+    .prepare(`SELECT value FROM app_settings WHERE key = 'receipt_start_number_year'`)
+    .get() as { value: string } | undefined
+  const n = numRow ? parseInt(numRow.value, 10) : 1
+  const y = yearRow ? parseInt(yearRow.value, 10) : 0
+  return {
+    number: Number.isNaN(n) || n < 1 ? 1 : n,
+    year: Number.isNaN(y) || y < 0 ? 0 : y
+  }
+}
+
+/**
+ * Ultimo numero di ricevuta emesso per l'anno indicato (0 se non ce ne sono).
+ * Include le ricevute annullate: il numero resta nella serie (nessun buco).
+ */
+export function getUltimoNumeroRicevuta(anno: number): number {
+  const db = getDatabase()
+  const row = db
+    .prepare(`SELECT COALESCE(MAX(numero), 0) AS massimo FROM ricevute WHERE anno = ?`)
+    .get(anno) as { massimo: number }
+  return row.massimo
 }
 
 /** Recupera le righe di una ricevuta. */
@@ -155,12 +179,17 @@ export function creaRicevuta(input: CreaRicevutaInput): RicevutaConRighe {
   let ricevutaId!: number
 
   const esegui = db.transaction(() => {
-    // Invariante 6: numero progressivo nell'anno
-    const startNumber = getReceiptStartNumber()
+    // Invariante 6: numero progressivo per anno.
+    // Il numero iniziale configurato vale solo per l'anno per cui è stato impostato
+    // (startConfig.year): un anno diverso riparte da 1 (il valore non trabocca).
+    // Se il numero iniziale è maggiore dell'ultimo emesso, la serie salta in avanti;
+    // se è minore/uguale, si continua semplicemente da MAX(numero)+1.
+    const startConfig = getReceiptStartConfig()
+    const startNumber = startConfig.year === anno ? startConfig.number : 0
     const maxRow = db
-      .prepare(`SELECT COALESCE(MAX(numero), ?) AS prossimo FROM ricevute WHERE anno = ?`)
-      .get(startNumber - 1, anno) as { prossimo: number }
-    const numero = maxRow.prossimo + 1
+      .prepare(`SELECT COALESCE(MAX(numero), 0) AS massimo FROM ricevute WHERE anno = ?`)
+      .get(anno) as { massimo: number }
+    const numero = Math.max(startNumber, maxRow.massimo + 1)
 
     // Inserisce la ricevuta
     const info = db

@@ -72,6 +72,7 @@ import {
   annullaRicevuta,
   getVociPagabili,
   listAnniRicevute,
+  getUltimoNumeroRicevuta,
   setStatoPagamentoIscrizione,
   setStatoPagamentoAbbonamento
 } from '../db/receipts-repository'
@@ -751,6 +752,19 @@ export function registerIpcHandlers(): void {
     } catch (err) {
       log.error('[ipc] ricevute:anni errore:', err)
       return []
+    }
+  })
+
+  /**
+   * Ultimo numero di ricevuta emesso per un anno (0 se nessuno). Usato dalle
+   * impostazioni per proporre il default e il minimo del numero iniziale.
+   */
+  ipcMain.handle('ricevute:ultimoNumero', (_event, { anno }: { anno: number }): number => {
+    try {
+      return getUltimoNumeroRicevuta(anno)
+    } catch (err) {
+      log.error('[ipc] ricevute:ultimoNumero errore:', err)
+      return 0
     }
   })
 

@@ -126,7 +126,7 @@ describe('runMigrations', () => {
   it('eseguendo runMigrations due volte non duplica le righe in schema_migrations', () => {
     runMigrations(db)
     runMigrations(db)
-    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   })
 
   it('eseguendo runMigrations due volte non duplica le righe in app_settings', () => {
@@ -255,7 +255,7 @@ describe('migrazioni su file temporaneo (persistenza)', () => {
 
     db = new Database(dbPath)
     runMigrations(db) // Seconda esecuzione su file esistente
-    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(getAppliedVersions(db)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
   })
 })
 

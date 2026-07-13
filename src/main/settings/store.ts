@@ -14,6 +14,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   expiry_warning_days_subscriptions: 30,
   dicitura_pie: '',
   receipt_start_number: 1,
+  receipt_start_number_year: 0,
   dashboard_widgets: ['indicatori', 'scadenze', 'incassi', 'abbonamenti', 'tesseramenti'],
   ragione_sociale: '',
   indirizzo_attivita: '',
@@ -61,6 +62,8 @@ export function loadSettings(): AppSettings {
         DEFAULT_SETTINGS.expiry_warning_days_subscriptions,
       dicitura_pie: parsed.dicitura_pie ?? DEFAULT_SETTINGS.dicitura_pie,
       receipt_start_number: parsed.receipt_start_number ?? DEFAULT_SETTINGS.receipt_start_number,
+      receipt_start_number_year:
+        parsed.receipt_start_number_year ?? DEFAULT_SETTINGS.receipt_start_number_year,
       dashboard_widgets:
         Array.isArray(parsed.dashboard_widgets)
           ? parsed.dashboard_widgets
@@ -94,6 +97,7 @@ export function applyAppSettingsToDb(db: Database.Database, settings: Partial<Ap
   )
   const campi = [
     'receipt_start_number',
+    'receipt_start_number_year',
     'dicitura_pie',
     'ragione_sociale',
     'indirizzo_attivita',

@@ -12,6 +12,8 @@ interface AppSettings {
   dicitura_pie: string
   /** Numero di partenza ricevute per anno (configurabile dall'utente). */
   receipt_start_number: number
+  /** Anno a cui è ancorato receipt_start_number (0 = non impostato). */
+  receipt_start_number_year: number
   /** Widget visibili nella dashboard. */
   dashboard_widgets: string[]
   /** Ragione sociale dell'attività (usata nelle ricevute). */
@@ -429,6 +431,7 @@ interface ElectronAPI {
     annulla: (id: number) => Promise<RicevutaRow>
     vociPagabili: (clienteId: number) => Promise<VocePagabile[]>
     anni: () => Promise<number[]>
+    ultimoNumero: (anno: number) => Promise<number>
   }
   pdf: {
     genera: (args: { ricevutaId: number }) => Promise<string>

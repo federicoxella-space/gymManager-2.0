@@ -207,6 +207,9 @@ const api: ElectronAPI = {
     },
     anni(): Promise<number[]> {
       return ipcRenderer.invoke('ricevute:anni')
+    },
+    ultimoNumero(anno: number): Promise<number> {
+      return ipcRenderer.invoke('ricevute:ultimoNumero', { anno })
     }
   },
 

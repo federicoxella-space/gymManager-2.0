@@ -34,7 +34,8 @@ import {
   annullaRicevuta,
   getVociPagabili,
   setStatoPagamentoIscrizione,
-  setStatoPagamentoAbbonamento
+  setStatoPagamentoAbbonamento,
+  getUltimoNumeroRicevuta
 } from '../../src/main/db/receipts-repository'
 import { createCliente } from '../../src/main/db/clients-repository'
 import type { CreaRicevutaInput } from '../../src/types/shared'
@@ -112,6 +113,16 @@ function assegnaAbbonamento(
   return info.lastInsertRowid as number
 }
 
+/** Imposta numero iniziale ricevute e l'anno a cui è ancorato in app_settings. */
+function setNumeroIniziale(db: Database.Database, numero: number, anno: number): void {
+  db.prepare(`UPDATE app_settings SET value = ? WHERE key = 'receipt_start_number'`).run(
+    String(numero)
+  )
+  db.prepare(`UPDATE app_settings SET value = ? WHERE key = 'receipt_start_number_year'`).run(
+    String(anno)
+  )
+}
+
 /** Input base per creaRicevuta. */
 function buildInput(
   clienteId: number,
@@ -179,13 +190,71 @@ describe('Invariante 6: numerazione progressiva per anno', () => {
     expect(r3.anno).toBe(2026)
   })
 
-  it('rispetta numero_inizio configurato in app_settings', () => {
+  it('rispetta numero_inizio configurato in app_settings se ancorato allo stesso anno', () => {
     const db = _testDb!
-    // Imposta numero_inizio = 100
-    db.prepare(`UPDATE app_settings SET value = '100' WHERE key = 'receipt_start_number'`).run()
+    // Numero iniziale = 100 ancorato all'anno 2025 (anno vuoto → caso adozione)
+    setNumeroIniziale(db, 100, 2025)
     const clienteId = creaCliente(db)
     const r = creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-05-01' }))
     expect(r.numero).toBe(100)
+  })
+
+  it('il numero_inizio ancorato a un anno NON si applica a un anno diverso (riparte da 1)', () => {
+    const db = _testDb!
+    // Numero iniziale 100 ancorato al 2025, ma la ricevuta è emessa nel 2026
+    setNumeroIniziale(db, 100, 2025)
+    const clienteId = creaCliente(db)
+    const r = creaRicevuta(buildInput(clienteId, { dataEmissione: '2026-03-01' }))
+    expect(r.numero).toBe(1)
+    expect(r.anno).toBe(2026)
+  })
+
+  it('cambiando il numero con uno maggiore dell\'ultimo emesso, la serie salta in avanti', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    // Emette ricevute 1, 2, 3 nel 2025
+    creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-01-10' }))
+    creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-02-10' }))
+    const r3 = creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-03-10' }))
+    expect(r3.numero).toBe(3)
+    // L'utente imposta il numero iniziale a 8 per il 2025 → la prossima è la 8
+    setNumeroIniziale(db, 8, 2025)
+    const r4 = creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-04-10' }))
+    expect(r4.numero).toBe(8)
+    // E la successiva prosegue da 9
+    const r5 = creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-05-10' }))
+    expect(r5.numero).toBe(9)
+  })
+
+  it('un numero_inizio minore/uguale all\'ultimo emesso viene ignorato (continua da MAX+1)', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-01-10' }))
+    creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-02-10' }))
+    creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-03-10' }))
+    // Numero iniziale 2 (≤ ultimo emesso 3): deve essere ignorato
+    setNumeroIniziale(db, 2, 2025)
+    const r4 = creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-04-10' }))
+    expect(r4.numero).toBe(4)
+  })
+
+  it('getUltimoNumeroRicevuta ritorna l\'ultimo numero dell\'anno (0 se nessuno)', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    expect(getUltimoNumeroRicevuta(2025)).toBe(0)
+    creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-01-10' }))
+    creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-02-10' }))
+    expect(getUltimoNumeroRicevuta(2025)).toBe(2)
+    expect(getUltimoNumeroRicevuta(2026)).toBe(0)
+  })
+
+  it('getUltimoNumeroRicevuta include le ricevute annullate (numero resta nella serie)', () => {
+    const db = _testDb!
+    const clienteId = creaCliente(db)
+    creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-01-10' }))
+    const r2 = creaRicevuta(buildInput(clienteId, { dataEmissione: '2025-02-10' }))
+    annullaRicevuta(r2.id)
+    expect(getUltimoNumeroRicevuta(2025)).toBe(2)
   })
 
   it('getRicevuta (re-download) restituisce lo stesso numero', () => {

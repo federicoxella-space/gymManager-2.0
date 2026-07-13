@@ -175,6 +175,10 @@ export default function SettingsPage(): React.JSX.Element {
     backup_retention: 10,
   })
   const [errors, setErrors] = useState<FormErrors>({})
+  // Ultimo numero di ricevuta emesso per l'anno corrente: default e minimo del numero iniziale
+  const currentYear = new Date().getFullYear()
+  const [ultimoNumeroAnno, setUltimoNumeroAnno] = useState(0)
+  const numeroInizialeMin = Math.max(ultimoNumeroAnno, 1)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState(false)
@@ -209,15 +213,23 @@ export default function SettingsPage(): React.JSX.Element {
     void window.api.backup.drive.isConnected().then(c => setDriveConnected(c)).catch(() => {})
     void window.api.app.getVersion().then(v => setAppVersion(v)).catch(() => {})
     void window.api.sync.status().then(s => setSyncStatus(s)).catch(() => {})
-    window.api.settings
-      .get()
-      .then((s: AppSettings) => {
+    Promise.all([
+      window.api.settings.get(),
+      window.api.ricevute.ultimoNumero(currentYear).catch(() => 0),
+    ])
+      .then(([s, ultimo]: [AppSettings, number]) => {
+        setUltimoNumeroAnno(ultimo)
+        // Il numero iniziale salvato vale solo se ancorato all'anno corrente.
+        // Default mostrato = massimo tra l'ultimo emesso e l'eventuale salto in sospeso.
+        const inizialeAncorato =
+          (s.receipt_start_number_year ?? 0) === currentYear ? (s.receipt_start_number ?? 1) : 0
+        const numeroIniziale = Math.max(ultimo, inizialeAncorato, 1)
         setForm({
           theme: s.theme,
           language: s.language ?? 'it',
           primaryColor: s.primaryColor ?? '37,99,235',
           dicitura_pie: s.dicitura_pie ?? '',
-          receipt_start_number: String(s.receipt_start_number ?? 1),
+          receipt_start_number: String(numeroIniziale),
           expiry_warning_days_certificates: String(
             s.expiry_warning_days_certificates ?? 30
           ),
@@ -259,7 +271,7 @@ export default function SettingsPage(): React.JSX.Element {
         clearTimeout(syncNowTimerRef.current)
       }
     }
-  }, [t])
+  }, [t, currentYear])
 
   // ── Validazione ─────────────────────────────────────────────────────────────
 
@@ -275,6 +287,10 @@ export default function SettingsPage(): React.JSX.Element {
       const startNum = parseInt(data.receipt_start_number, 10)
       if (!Number.isInteger(startNum) || startNum < 1 || data.receipt_start_number.trim() === '') {
         errs.receipt_start_number = t('impostazioni.errore_numero_minimo_uno')
+      } else if (startNum < numeroInizialeMin) {
+        errs.receipt_start_number = t('impostazioni.errore_numero_minore_ultimo', {
+          numero: numeroInizialeMin,
+        })
       }
 
       if (!validateWarningDays(data.expiry_warning_days_certificates)) {
@@ -291,7 +307,7 @@ export default function SettingsPage(): React.JSX.Element {
 
       return errs
     },
-    [t]
+    [t, numeroInizialeMin]
   )
 
   // ── Handlers ────────────────────────────────────────────────────────────────
@@ -517,6 +533,8 @@ export default function SettingsPage(): React.JSX.Element {
         primaryColor: form.primaryColor,
         dicitura_pie: form.dicitura_pie,
         receipt_start_number: parseInt(form.receipt_start_number, 10),
+        // Ancora il numero iniziale all'anno corrente: non traboccherà sul prossimo anno
+        receipt_start_number_year: currentYear,
         expiry_warning_days_certificates: parseInt(
           form.expiry_warning_days_certificates,
           10
@@ -856,7 +874,7 @@ export default function SettingsPage(): React.JSX.Element {
             <input
               id="settings-start-number"
               type="number"
-              min={1}
+              min={numeroInizialeMin}
               step={1}
               value={form.receipt_start_number}
               onChange={handleStartNumberChange}
