@@ -209,6 +209,16 @@ export function listClienti(filters?: ClientiFilters, giorniPreavvisoCert = 30):
     extraParams.push(filters.tipo_abbonamento_id)
   }
 
+  if (filters?.eta === 'minorenne') {
+    extraWhere.push(
+      `c.data_nascita IS NOT NULL AND date(c.data_nascita) > date('now','-18 years')`
+    )
+  } else if (filters?.eta === 'maggiorenne') {
+    extraWhere.push(
+      `c.data_nascita IS NOT NULL AND date(c.data_nascita) <= date('now','-18 years')`
+    )
+  }
+
   const extraWhereStr = extraWhere.length > 0 ? `AND ${extraWhere.join(' AND ')}` : ''
 
   const rows = db
@@ -382,4 +392,13 @@ export function importClienti(nuovi: CreateClienteInput[]): number {
   })
 
   return esegui(nuovi)
+}
+
+/** Numero di clienti con stato 'attivo' (totale della pagina Clienti). */
+export function contaClientiAttivi(): number {
+  const db = getDatabase()
+  const row = db
+    .prepare(`SELECT COUNT(*) AS n FROM clienti WHERE stato = 'attivo'`)
+    .get() as { n: number }
+  return row.n
 }

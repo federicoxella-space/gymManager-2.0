@@ -174,8 +174,13 @@
       "cert_in_scadenza": "In scadenza",
       "cert_scaduto": "Scaduto",
       "cert_da_gestire": "Da gestire (in scadenza o scaduti)",
-      "tipo_abbonamento": "Tipo abbonamento"
+      "tipo_abbonamento": "Tipo abbonamento",
+      "eta": "Età",
+      "eta_minorenni": "Minorenni",
+      "eta_maggiorenni": "Maggiorenni"
     },
+    "conteggio_totale": "{{totale}} clienti",
+    "conteggio_filtrati": "{{filtrati}}/{{totale}}",
     "anonimizza": {
       "titolo": "Anonimizza cliente",
       "messaggio": "I dati personali saranno cancellati in modo irreversibile. Ricevute, iscrizioni e abbonamenti resteranno intatti.",

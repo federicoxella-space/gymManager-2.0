@@ -112,6 +112,9 @@ const api: ElectronAPI = {
       template(destPath: string): Promise<void> {
         return ipcRenderer.invoke('clienti:import:template', destPath)
       }
+    },
+    count(): Promise<number> {
+      return ipcRenderer.invoke('clienti:count')
     }
   },
 

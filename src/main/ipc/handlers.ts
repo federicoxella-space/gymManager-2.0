@@ -39,7 +39,8 @@ import {
   anonimizzaCliente,
   getTuttiCodiciFiscali,
   getTutteTessere,
-  importClienti
+  importClienti,
+  contaClientiAttivi
 } from '../db/clients-repository'
 import { parseCsvClienti, analizzaImport } from '../domain/import-clienti'
 import { addCertificato, listCertificati } from '../db/certificates-repository'
@@ -304,6 +305,15 @@ export function registerIpcHandlers(): void {
       }
     }
   )
+
+  ipcMain.handle('clienti:count', (): number => {
+    try {
+      return contaClientiAttivi()
+    } catch (err) {
+      log.error('[ipc] clienti:count errore:', err)
+      throw err instanceof Error ? err : new Error('Errore nel conteggio clienti')
+    }
+  })
 
   ipcMain.handle(
     'clienti:get',

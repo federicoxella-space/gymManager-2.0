@@ -136,6 +136,8 @@ export interface ClientiFilters {
   stato_iscrizione?: 'attiva' | 'scaduta' | 'assente'
   stato_certificato?: 'valido' | 'in_scadenza' | 'scaduto' | 'da_gestire'
   tipo_abbonamento_id?: number
+  /** Filtro per fascia d'età (minorenne/maggiorenne); i clienti senza data di nascita sono esclusi. */
+  eta?: 'minorenne' | 'maggiorenne'
   limit?: number
   offset?: number
 }
@@ -521,6 +523,7 @@ export interface ElectronAPI {
       esegui: (path: string) => Promise<ImportReport>
       template: (destPath: string) => Promise<void>
     }
+    count: () => Promise<number>
   }
   certificati: {
     list: (clienteId: number) => Promise<CertificatoRow[]>
