@@ -58,6 +58,7 @@ export function initAutoUpdater(mainWindow: BrowserWindow): void {
 
   autoUpdater.on('checking-for-update', () => {
     log.info('[updater] Verifica aggiornamenti in corso...')
+    mainWindow.webContents.send('update:checking')
   })
 
   autoUpdater.on('update-available', (info: UpdateInfo) => {

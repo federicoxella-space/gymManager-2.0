@@ -503,6 +503,7 @@
   },
   "aggiornamento": {
     "disponibile": "Aggiornamento {{version}} disponibile. Download in corso...",
+    "trovato": "Aggiornamento {{version}} disponibile",
     "scaricamento": "Download aggiornamento: {{percent}}%",
     "pronto": "Aggiornamento {{version}} pronto. Riavvia per installare.",
     "pronto_mac": "Aggiornamento {{version}} scaricato. Aprilo e trascina GymManager nella cartella Applicazioni.",
@@ -510,6 +511,7 @@
     "apri_finder": "Apri in Finder",
     "errore": "Errore aggiornamento (non bloccante)",
     "controllo": "Controllo aggiornamenti...",
+    "controllo_in_corso": "Controllo aggiornamenti in corso…",
     "nessuno": "App aggiornata",
     "controlla_pulsante": "Controlla aggiornamenti",
     "versione_corrente": "Versione corrente",
