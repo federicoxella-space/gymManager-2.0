@@ -7,6 +7,7 @@ import CatalogoPage from './CatalogoPage'
 import ReceiptsPage from './ReceiptsPage'
 import SettingsPage from './SettingsPage'
 import UpdateNotification from '../components/updater/UpdateNotification'
+import UpdateCheckSnackbar from '../components/updater/UpdateCheckSnackbar'
 import type { ClientiFilters } from '../../../types/shared'
 
 type NavItem = 'dashboard' | 'clients' | 'catalog' | 'receipts' | 'settings'
@@ -235,6 +236,7 @@ export default function ShellPage(): React.JSX.Element {
 
       {/* Notifica aggiornamento — overlay non invasivo posizionato in fondo */}
       <UpdateNotification />
+      <UpdateCheckSnackbar />
     </div>
     </SettingsProvider>
   )

@@ -510,6 +510,7 @@
     "apri_finder": "Reveal in Finder",
     "errore": "Update error (non-blocking)",
     "controllo": "Checking for updates...",
+    "controllo_in_corso": "Checking for updates…",
     "nessuno": "App up to date",
     "controlla_pulsante": "Check for updates",
     "versione_corrente": "Current version",
