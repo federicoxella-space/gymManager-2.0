@@ -295,3 +295,72 @@ export function anonimizzaCliente(id: number): void {
     throw new Error(`Impossibile anonimizzare il cliente con id ${id}: nessuna riga aggiornata`)
   }
 }
+
+/** Insieme di tutti i codici fiscali presenti (maiuscolo), per la deduplica dell'import. */
+export function getTuttiCodiciFiscali(): Set<string> {
+  const db = getDatabase()
+  const rows = db.prepare('SELECT codice_fiscale FROM clienti').all() as {
+    codice_fiscale: string
+  }[]
+  return new Set(rows.map((r) => r.codice_fiscale.toUpperCase()))
+}
+
+/** Insieme dei numeri tessera già in uso, per la validazione dell'import. */
+export function getTutteTessere(): Set<string> {
+  const db = getDatabase()
+  const rows = db
+    .prepare('SELECT numero_tessera FROM clienti WHERE numero_tessera IS NOT NULL')
+    .all() as { numero_tessera: string }[]
+  return new Set(rows.map((r) => r.numero_tessera))
+}
+
+/**
+ * Inserisce in blocco i clienti nuovi in un'unica transazione atomica.
+ * La numero_tessera assente viene assegnata automaticamente e progressivamente.
+ * Restituisce il numero di clienti inseriti. In caso di violazione di vincolo
+ * l'intera transazione viene annullata (nessun inserimento parziale).
+ */
+export function importClienti(nuovi: CreateClienteInput[]): number {
+  const db = getDatabase()
+
+  const insert = db.prepare(`
+    INSERT INTO clienti (
+      numero_tessera, nome, cognome, codice_fiscale,
+      data_nascita, sesso, comune_nascita,
+      via, civico, citta, provincia, cap,
+      email, telefono, note
+    ) VALUES (
+      @numero_tessera, @nome, @cognome, @codice_fiscale,
+      @data_nascita, @sesso, @comune_nascita,
+      @via, @civico, @citta, @provincia, @cap,
+      @email, @telefono, @note
+    )
+  `)
+
+  const esegui = db.transaction((righe: CreateClienteInput[]): number => {
+    let inseriti = 0
+    for (const c of righe) {
+      insert.run({
+        numero_tessera: c.numero_tessera ?? getNextNumeroTessera(),
+        nome: c.nome,
+        cognome: c.cognome,
+        codice_fiscale: c.codice_fiscale,
+        data_nascita: c.data_nascita ?? null,
+        sesso: c.sesso ?? null,
+        comune_nascita: c.comune_nascita ?? null,
+        via: c.via ?? null,
+        civico: c.civico ?? null,
+        citta: c.citta ?? null,
+        provincia: c.provincia ?? null,
+        cap: c.cap ?? null,
+        email: c.email ?? null,
+        telefono: c.telefono ?? null,
+        note: c.note ?? null,
+      })
+      inseriti++
+    }
+    return inseriti
+  })
+
+  return esegui(nuovi)
+}
