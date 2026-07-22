@@ -151,8 +151,10 @@ export interface ImportRowResult {
   cf: string | null
   /** Popolato solo quando esito === 'nuovo'. */
   cliente?: CreateClienteInput
-  /** Motivo, presente per 'duplicato' ed 'errore'. */
-  messaggio?: string
+  /** Codice motivo stabile, presente per 'duplicato' ed 'errore'; chiave i18n sotto `clienti.import.motivi`. */
+  motivo?: string
+  /** Parametri di interpolazione per il messaggio i18n associato a `motivo`. */
+  motivoParams?: Record<string, string | number>
 }
 
 /** Anteprima dell'import: conteggi + esito per riga. Nessuna scrittura effettuata. */

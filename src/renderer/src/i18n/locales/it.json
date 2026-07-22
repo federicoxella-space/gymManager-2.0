@@ -226,7 +226,17 @@
       "errore_analisi": "Impossibile leggere o analizzare il file CSV.",
       "errore_import": "Errore durante l'import dei clienti.",
       "chiudi": "Chiudi",
-      "annulla": "Annulla"
+      "annulla": "Annulla",
+      "motivi": {
+        "CF_MANCANTE": "Codice fiscale mancante.",
+        "CF_NON_VALIDO": "Codice fiscale non valido.",
+        "NOME_COGNOME_MANCANTE": "Nome o cognome mancante.",
+        "GIA_PRESENTE": "Cliente già presente in anagrafica.",
+        "CF_RIPETUTO_FILE": "Codice fiscale ripetuto nel file.",
+        "TESSERA_IN_USO": "Numero tessera \"{{tessera}}\" già in uso.",
+        "DATA_NON_VALIDA": "Data di nascita non valida: \"{{valore}}\".",
+        "SESSO_NON_VALIDO": "Sesso non valido: \"{{valore}}\" (atteso M o F)."
+      }
     }
   },
   "catalogo": {

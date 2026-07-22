@@ -156,7 +156,9 @@ export default function ImportClientiDialog({
                         <tr key={r.riga} className="border-t border-gray-100 dark:border-gray-800">
                           <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.riga}</td>
                           <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.cf ?? '—'}</td>
-                          <td className="px-3 py-2 text-gray-700 dark:text-gray-300">{r.messaggio}</td>
+                          <td className="px-3 py-2 text-gray-700 dark:text-gray-300">
+                            {r.motivo ? t(`clienti.import.motivi.${r.motivo}`, r.motivoParams) : ''}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

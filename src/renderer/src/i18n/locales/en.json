@@ -226,7 +226,17 @@
       "errore_analisi": "Unable to read or analyze the CSV file.",
       "errore_import": "Error while importing clients.",
       "chiudi": "Close",
-      "annulla": "Cancel"
+      "annulla": "Cancel",
+      "motivi": {
+        "CF_MANCANTE": "Tax code missing.",
+        "CF_NON_VALIDO": "Invalid tax code.",
+        "NOME_COGNOME_MANCANTE": "First or last name missing.",
+        "GIA_PRESENTE": "Client already present in the registry.",
+        "CF_RIPETUTO_FILE": "Tax code repeated in the file.",
+        "TESSERA_IN_USO": "Card number \"{{tessera}}\" already in use.",
+        "DATA_NON_VALIDA": "Invalid date of birth: \"{{valore}}\".",
+        "SESSO_NON_VALIDO": "Invalid gender: \"{{valore}}\" (expected M or F)."
+      }
     }
   },
   "catalogo": {

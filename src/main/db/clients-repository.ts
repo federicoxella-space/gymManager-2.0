@@ -316,7 +316,9 @@ export function getTutteTessere(): Set<string> {
 
 /**
  * Inserisce in blocco i clienti nuovi in un'unica transazione atomica.
- * La numero_tessera assente viene assegnata automaticamente e progressivamente.
+ * La numero_tessera assente viene assegnata automaticamente e progressivamente,
+ * evitando collisioni sia con il DB sia con le tessere ESPLICITE presenti nello
+ * stesso batch (l'anteprima riserva solo queste ultime).
  * Restituisce il numero di clienti inseriti. In caso di violazione di vincolo
  * l'intera transazione viene annullata (nessun inserimento parziale).
  */
@@ -337,11 +339,28 @@ export function importClienti(nuovi: CreateClienteInput[]): number {
     )
   `)
 
+  // Tessere già occupate: quelle esistenti a DB + quelle esplicite del batch.
+  const occupate = getTutteTessere()
+  for (const c of nuovi) {
+    if (c.numero_tessera) occupate.add(c.numero_tessera)
+  }
+  let prossimo = parseInt(getNextNumeroTessera(), 10)
+
+  function prossimaTesseraLibera(): string {
+    while (occupate.has(String(prossimo))) {
+      prossimo++
+    }
+    const tessera = String(prossimo)
+    occupate.add(tessera)
+    prossimo++
+    return tessera
+  }
+
   const esegui = db.transaction((righe: CreateClienteInput[]): number => {
     let inseriti = 0
     for (const c of righe) {
       insert.run({
-        numero_tessera: c.numero_tessera ?? getNextNumeroTessera(),
+        numero_tessera: c.numero_tessera ?? prossimaTesseraLibera(),
         nome: c.nome,
         cognome: c.cognome,
         codice_fiscale: c.codice_fiscale,

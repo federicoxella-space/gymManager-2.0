@@ -90,4 +90,24 @@ describe('importClienti', () => {
     // La prima riga (valida) NON deve essere rimasta persistita: prova il rollback.
     expect(getClienteByCodiceFiscale('RSSMRA85M01H501Q')).toBeNull()
   })
+
+  it('evita la collisione tra tessera esplicita e tessera auto-assegnata nello stesso batch', () => {
+    // DB vuoto: getNextNumeroTessera() partirebbe da '1'. Se la riga con
+    // tessera esplicita '2' precede quella senza tessera, l'auto-assegnazione
+    // ingenua (MAX+1 calcolato PRIMA dell'insert) potrebbe produrre '2' e
+    // collidere con la tessera esplicita già presente nello stesso batch.
+    const batch: CreateClienteInput[] = [
+      { codice_fiscale: 'RSSMRA85M01H501Q', nome: 'Mario', cognome: 'Rossi', numero_tessera: '2' },
+      { codice_fiscale: 'VRDLGI90A41H501K', nome: 'Luigi', cognome: 'Verdi' },
+    ]
+
+    const n = importClienti(batch)
+    expect(n).toBe(2)
+
+    const mario = getClienteByCodiceFiscale('RSSMRA85M01H501Q')
+    const luigi = getClienteByCodiceFiscale('VRDLGI90A41H501K')
+    expect(mario?.numero_tessera).toBe('2')
+    expect(luigi?.numero_tessera).not.toBe('2')
+    expect(luigi?.numero_tessera).not.toBeNull()
+  })
 })

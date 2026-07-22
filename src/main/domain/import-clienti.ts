@@ -97,27 +97,27 @@ export function analizzaImport(
 
     // 1. Campi obbligatori e formato CF
     if (!cfRaw) {
-      risultati.push({ riga, esito: 'errore', cf, messaggio: 'Codice fiscale mancante.' })
+      risultati.push({ riga, esito: 'errore', cf, motivo: 'CF_MANCANTE' })
       continue
     }
     if (!isCodiceFiscaleValid(cfRaw)) {
-      risultati.push({ riga, esito: 'errore', cf, messaggio: 'Codice fiscale non valido.' })
+      risultati.push({ riga, esito: 'errore', cf, motivo: 'CF_NON_VALIDO' })
       continue
     }
     if (!nome || !cognome) {
-      risultati.push({ riga, esito: 'errore', cf, messaggio: 'Nome o cognome mancante.' })
+      risultati.push({ riga, esito: 'errore', cf, motivo: 'NOME_COGNOME_MANCANTE' })
       continue
     }
 
     // 2. Duplicato già in anagrafica (saltato, non modificato)
     if (cfEsistenti.has(cfRaw)) {
-      risultati.push({ riga, esito: 'duplicato', cf, messaggio: 'Cliente già presente in anagrafica.' })
+      risultati.push({ riga, esito: 'duplicato', cf, motivo: 'GIA_PRESENTE' })
       continue
     }
 
     // 3. Duplicato all'interno dello stesso file
     if (cfVistiNelFile.has(cfRaw)) {
-      risultati.push({ riga, esito: 'errore', cf, messaggio: 'Codice fiscale ripetuto nel file.' })
+      risultati.push({ riga, esito: 'errore', cf, motivo: 'CF_RIPETUTO_FILE' })
       continue
     }
     cfVistiNelFile.add(cfRaw)
@@ -128,7 +128,7 @@ export function analizzaImport(
     const tessera = cella(dati, 'numero_tessera')
     if (tessera) {
       if (tessereEsistenti.has(tessera) || tessereVisteNelFile.has(tessera)) {
-        risultati.push({ riga, esito: 'errore', cf, messaggio: `Numero tessera "${tessera}" già in uso.` })
+        risultati.push({ riga, esito: 'errore', cf, motivo: 'TESSERA_IN_USO', motivoParams: { tessera } })
         continue
       }
       tessereVisteNelFile.add(tessera)
@@ -139,7 +139,7 @@ export function analizzaImport(
     if (dataNascita) {
       const iso = parseDataItaliana(dataNascita)
       if (!iso) {
-        risultati.push({ riga, esito: 'errore', cf, messaggio: `Data di nascita non valida: "${dataNascita}".` })
+        risultati.push({ riga, esito: 'errore', cf, motivo: 'DATA_NON_VALIDA', motivoParams: { valore: dataNascita } })
         continue
       }
       cliente.data_nascita = iso
@@ -148,7 +148,7 @@ export function analizzaImport(
     const sesso = cella(dati, 'sesso').toUpperCase()
     if (sesso) {
       if (sesso !== 'M' && sesso !== 'F') {
-        risultati.push({ riga, esito: 'errore', cf, messaggio: `Sesso non valido: "${sesso}" (atteso M o F).` })
+        risultati.push({ riga, esito: 'errore', cf, motivo: 'SESSO_NON_VALIDO', motivoParams: { valore: sesso } })
         continue
       }
       cliente.sesso = sesso
