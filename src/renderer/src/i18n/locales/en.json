@@ -174,8 +174,13 @@
       "cert_in_scadenza": "Expiring soon",
       "cert_scaduto": "Expired",
       "cert_da_gestire": "To handle (expiring or expired)",
-      "tipo_abbonamento": "Subscription type"
+      "tipo_abbonamento": "Subscription type",
+      "eta": "Age",
+      "eta_minorenni": "Minors",
+      "eta_maggiorenni": "Adults"
     },
+    "conteggio_totale": "{{totale}} clients",
+    "conteggio_filtrati": "{{filtrati}}/{{totale}}",
     "anonimizza": {
       "titolo": "Anonymize client",
       "messaggio": "Personal data will be permanently deleted. Receipts, memberships and subscriptions will remain intact.",

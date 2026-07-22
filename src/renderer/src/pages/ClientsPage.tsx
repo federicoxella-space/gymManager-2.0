@@ -11,6 +11,7 @@ type View = 'list' | 'detail'
 
 type StatoIscrizioneFilter = '' | 'attiva' | 'scaduta' | 'assente'
 type StatoCertificatoFilter = '' | 'valido' | 'in_scadenza' | 'scaduto' | 'da_gestire'
+type EtaFilter = '' | 'minorenne' | 'maggiorenne'
 
 interface ClientsPageProps {
   initialFilter?: ClientiFilters
@@ -31,6 +32,8 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
   const [filtroIscrizione, setFiltroIscrizione] = useState<StatoIscrizioneFilter>('')
   const [filtroCertificato, setFiltroCertificato] = useState<StatoCertificatoFilter>('')
   const [filtroTipoAbbonamento, setFiltroTipoAbbonamento] = useState<TipoAbbonamentoRow | null>(null)
+  const [filtroEta, setFiltroEta] = useState<EtaFilter>('')
+  const [totaleClienti, setTotaleClienti] = useState<number | null>(null)
   const [tipiAbbonamento, setTipiAbbonamento] = useState<TipoAbbonamentoRow[]>([])
   const [activeFilter, setActiveFilter] = useState<ClientiFilters | undefined>(initialFilter)
   const prevInitialFilterRef = useRef<ClientiFilters | undefined>(initialFilter)
@@ -42,6 +45,7 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
       isc?: StatoIscrizioneFilter,
       cert?: StatoCertificatoFilter,
       tipoAbb?: TipoAbbonamentoRow | null,
+      eta?: EtaFilter,
     ): Promise<void> => {
       setIsLoading(true)
       setLoadError(false)
@@ -52,6 +56,7 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
           ...(isc ? { stato_iscrizione: isc as ClientiFilters['stato_iscrizione'] } : {}),
           ...(cert ? { stato_certificato: cert as ClientiFilters['stato_certificato'] } : {}),
           ...(tipoAbb ? { tipo_abbonamento_id: tipoAbb.id } : {}),
+          ...(eta ? { eta } : {}),
         }
         const hasFilters = Object.keys(filters).length > 0
         const data = await window.api.clienti.list(hasFilters ? filters : undefined)
@@ -75,6 +80,16 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
       })
   }, [])
 
+  // Totale clienti attivi (denominatore del rapporto), caricato una sola volta
+  useEffect(() => {
+    window.api.clienti
+      .count()
+      .then(setTotaleClienti)
+      .catch(() => {
+        // Silenzioso: la riga di conteggio non verrà mostrata
+      })
+  }, [])
+
   // Caricamento iniziale o quando arriva un nuovo filtro dalla dashboard
   useEffect(() => {
     if (initialFilter !== prevInitialFilterRef.current) {
@@ -84,36 +99,42 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
       setFiltroIscrizione('')
       setFiltroCertificato('')
       setFiltroTipoAbbonamento(null)
-      void loadClienti('', initialFilter, '', '', null)
+      setFiltroEta('')
+      void loadClienti('', initialFilter, '', '', null, '')
       onFilterConsumed?.()
     }
   }, [initialFilter, loadClienti, onFilterConsumed])
 
   // Caricamento al mount
   useEffect(() => {
-    void loadClienti('', activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
+    void loadClienti('', activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento, filtroEta)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function handleRefresh(search: string): void {
     setCurrentSearch(search)
-    void loadClienti(search, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
+    void loadClienti(search, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento, filtroEta)
   }
 
   function handleFiltroIscrizioneChange(value: StatoIscrizioneFilter): void {
     setFiltroIscrizione(value)
-    void loadClienti(currentSearch, activeFilter, value, filtroCertificato, filtroTipoAbbonamento)
+    void loadClienti(currentSearch, activeFilter, value, filtroCertificato, filtroTipoAbbonamento, filtroEta)
   }
 
   function handleFiltroCertificatoChange(value: StatoCertificatoFilter): void {
     setFiltroCertificato(value)
-    void loadClienti(currentSearch, activeFilter, filtroIscrizione, value, filtroTipoAbbonamento)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, value, filtroTipoAbbonamento, filtroEta)
   }
 
   function handleFiltroTipoAbbonamentoChange(value: string): void {
     const tipo = tipiAbbonamento.find((t) => String(t.id) === value) ?? null
     setFiltroTipoAbbonamento(tipo)
-    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, tipo)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, tipo, filtroEta)
+  }
+
+  function handleFiltroEtaChange(value: EtaFilter): void {
+    setFiltroEta(value)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento, value)
   }
 
   function handleSelectCliente(cliente: ClienteRow): void {
@@ -127,12 +148,12 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
   }
 
   function handleClienteUpdated(): void {
-    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento, filtroEta)
   }
 
   function handleNewSuccess(cliente: ClienteRow): void {
     setShowNewModal(false)
-    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
+    void loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento, filtroEta)
     // Naviga subito al dettaglio del cliente appena creato
     setSelectedClienteId(cliente.id)
     setView('detail')
@@ -261,6 +282,26 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
             ))}
           </select>
         </div>
+
+        {/* Età */}
+        <div>
+          <label
+            htmlFor="filtro-eta"
+            className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+          >
+            {t('clienti.filtri.eta')}
+          </label>
+          <select
+            id="filtro-eta"
+            value={filtroEta}
+            onChange={(e) => handleFiltroEtaChange(e.target.value as EtaFilter)}
+            className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">{t('clienti.filtri.tutti')}</option>
+            <option value="minorenne">{t('clienti.filtri.eta_minorenni')}</option>
+            <option value="maggiorenne">{t('clienti.filtri.eta_maggiorenni')}</option>
+          </select>
+        </div>
       </div>
 
       {/* Stato errore */}
@@ -271,6 +312,17 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
         >
           {t('clienti.errore_caricamento')}
         </div>
+      )}
+
+      {totaleClienti !== null && !isLoading && (
+        <p
+          className="text-sm text-gray-500 dark:text-gray-400"
+          data-testid="clienti-conteggio"
+        >
+          {clienti.length === totaleClienti
+            ? t('clienti.conteggio_totale', { totale: totaleClienti })
+            : t('clienti.conteggio_filtrati', { filtrati: clienti.length, totale: totaleClienti })}
+        </p>
       )}
 
       {/* Lista clienti */}
@@ -300,7 +352,7 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onImported={() =>
-          loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
+          loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento, filtroEta)
         }
       />
     </div>
