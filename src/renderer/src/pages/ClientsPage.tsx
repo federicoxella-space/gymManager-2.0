@@ -61,6 +61,12 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
         const hasFilters = Object.keys(filters).length > 0
         const data = await window.api.clienti.list(hasFilters ? filters : undefined)
         setClienti(data)
+        window.api.clienti
+          .count()
+          .then(setTotaleClienti)
+          .catch(() => {
+            // Silenzioso: la riga di conteggio non verrà aggiornata
+          })
       } catch {
         setLoadError(true)
       } finally {
@@ -77,16 +83,6 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
       .then((tipi) => setTipiAbbonamento(tipi))
       .catch(() => {
         // Silenzioso: il filtro non mostrerà le opzioni
-      })
-  }, [])
-
-  // Totale clienti attivi (denominatore del rapporto), caricato una sola volta
-  useEffect(() => {
-    window.api.clienti
-      .count()
-      .then(setTotaleClienti)
-      .catch(() => {
-        // Silenzioso: la riga di conteggio non verrà mostrata
       })
   }, [])
 
