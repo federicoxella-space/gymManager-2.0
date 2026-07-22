@@ -111,6 +111,36 @@ interface ClientiFilters {
   offset?: number
 }
 
+// ── Import clienti da CSV ───────────────────────────────────────────────────────
+
+interface ImportRowResult {
+  /** Numero di riga 1-based nel file (intestazione = riga 1). */
+  riga: number
+  esito: 'nuovo' | 'duplicato' | 'errore'
+  /** CF normalizzato (maiuscolo, trim); null se la cella era vuota. */
+  cf: string | null
+  /** Popolato solo quando esito === 'nuovo'. */
+  cliente?: CreateClienteInput
+  /** Codice motivo stabile, presente per 'duplicato' ed 'errore'; chiave i18n sotto `clienti.import.motivi`. */
+  motivo?: string
+  /** Parametri di interpolazione per il messaggio i18n associato a `motivo`. */
+  motivoParams?: Record<string, string | number>
+}
+
+interface ImportPreview {
+  totali: number
+  nuovi: number
+  duplicati: number
+  errori: number
+  righe: ImportRowResult[]
+}
+
+interface ImportReport {
+  importati: number
+  saltati: number
+  errori: number
+}
+
 interface CertificatoRow {
   id: number
   cliente_id: number
@@ -387,6 +417,11 @@ interface ElectronAPI {
     create: (data: CreateClienteInput) => Promise<ClienteRow>
     update: (id: number, data: UpdateClienteInput) => Promise<ClienteRow>
     anonimizza: (id: number) => Promise<void>
+    import: {
+      analizza: (path: string) => Promise<ImportPreview>
+      esegui: (path: string) => Promise<ImportReport>
+      template: (destPath: string) => Promise<void>
+    }
   }
   certificati: {
     list: (clienteId: number) => Promise<CertificatoRow[]>
@@ -470,6 +505,11 @@ interface ElectronAPI {
       filters?: { name: string; extensions: string[] }[]
       properties?: Array<'openFile' | 'openDirectory'>
     }) => Promise<{ canceled: boolean; filePaths: string[] }>
+    showSaveDialog: (options?: {
+      title?: string
+      defaultPath?: string
+      filters?: { name: string; extensions: string[] }[]
+    }) => Promise<{ canceled: boolean; filePath: string }>
   }
   updater: {
     check: () => Promise<void>

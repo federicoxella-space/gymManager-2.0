@@ -9,6 +9,9 @@ import type {
   CreateClienteInput,
   UpdateClienteInput,
   ClientiFilters,
+  ImportRowResult,
+  ImportPreview,
+  ImportReport,
   CertificatoRow,
   CreateCertificatoInput,
   TipoIscrizioneRow,
@@ -98,6 +101,17 @@ const api: ElectronAPI = {
     },
     anonimizza(id: number): Promise<void> {
       return ipcRenderer.invoke('clienti:anonimizza', id)
+    },
+    import: {
+      analizza(path: string): Promise<ImportPreview> {
+        return ipcRenderer.invoke('clienti:import:analizza', path)
+      },
+      esegui(path: string): Promise<ImportReport> {
+        return ipcRenderer.invoke('clienti:import:esegui', path)
+      },
+      template(destPath: string): Promise<void> {
+        return ipcRenderer.invoke('clienti:import:template', destPath)
+      }
     }
   },
 
@@ -315,6 +329,13 @@ const api: ElectronAPI = {
       properties?: Array<'openFile' | 'openDirectory'>
     }): Promise<{ canceled: boolean; filePaths: string[] }> {
       return ipcRenderer.invoke('dialog:showOpenDialog', options)
+    },
+    showSaveDialog(options?: {
+      title?: string
+      defaultPath?: string
+      filters?: { name: string; extensions: string[] }[]
+    }): Promise<{ canceled: boolean; filePath: string }> {
+      return ipcRenderer.invoke('dialog:showSaveDialog', options)
     }
   },
 
@@ -381,6 +402,9 @@ export type {
   CreateClienteInput,
   UpdateClienteInput,
   ClientiFilters,
+  ImportRowResult,
+  ImportPreview,
+  ImportReport,
   CertificatoRow,
   CreateCertificatoInput,
   TipoIscrizioneRow,

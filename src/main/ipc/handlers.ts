@@ -1,6 +1,6 @@
 import { ipcMain, app, dialog, BrowserWindow } from 'electron'
 import { join } from 'path'
-import { existsSync, unlinkSync } from 'fs'
+import { existsSync, unlinkSync, readFileSync, writeFileSync } from 'fs'
 import { checkForUpdates, installUpdate, revealDownloadedUpdate } from '../updater/auto-updater'
 import { backupLocale, backupAutomatico, listBackupLocali } from '../backup/backup-service'
 import { initBackupScheduler, restartBackupScheduler } from '../backup/backup-scheduler'
@@ -36,8 +36,12 @@ import {
   getCliente,
   updateCliente,
   listClienti,
-  anonimizzaCliente
+  anonimizzaCliente,
+  getTuttiCodiciFiscali,
+  getTutteTessere,
+  importClienti
 } from '../db/clients-repository'
+import { parseCsvClienti, analizzaImport } from '../domain/import-clienti'
 import { addCertificato, listCertificati } from '../db/certificates-repository'
 import {
   createTipoIscrizione,
@@ -119,7 +123,9 @@ import type {
   IncassiPeriodo,
   NuoviTesseramenti,
   CompleannoDellaSett,
-  DashboardPeriodo
+  DashboardPeriodo,
+  ImportPreview,
+  ImportReport
 } from '../../types/shared'
 
 /**
@@ -353,6 +359,57 @@ export function registerIpcHandlers(): void {
       } catch (err) {
         log.error('[ipc] clienti:anonimizza errore:', err)
         throw err instanceof Error ? err : new Error('Errore durante l\'anonimizzazione del cliente')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'clienti:import:analizza',
+    (_event, path: string): ImportPreview => {
+      try {
+        const content = readFileSync(path, 'utf-8')
+        const righe = parseCsvClienti(content)
+        return analizzaImport(righe, getTuttiCodiciFiscali(), getTutteTessere())
+      } catch (err) {
+        log.error('[ipc] clienti:import:analizza errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'analisi del CSV")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'clienti:import:esegui',
+    (_event, path: string): ImportReport => {
+      try {
+        // Rilegge e rianalizza il file: non ci si fida di dati dal renderer
+        const content = readFileSync(path, 'utf-8')
+        const righe = parseCsvClienti(content)
+        const preview = analizzaImport(righe, getTuttiCodiciFiscali(), getTutteTessere())
+        const nuovi = preview.righe
+          .filter((r) => r.esito === 'nuovo' && r.cliente)
+          .map((r) => r.cliente!)
+        const importati = importClienti(nuovi)
+        return { importati, saltati: preview.duplicati, errori: preview.errori }
+      } catch (err) {
+        log.error('[ipc] clienti:import:esegui errore:', err)
+        throw err instanceof Error ? err : new Error("Errore durante l'import del CSV")
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'clienti:import:template',
+    (_event, destPath: string): void => {
+      try {
+        const intestazione =
+          'codice_fiscale;nome;cognome;numero_tessera;data_nascita;sesso;comune_nascita;via;civico;citta;provincia;cap;email;telefono;note'
+        const esempio =
+          'RSSMRA85M01H501Z;Mario;Rossi;;01/03/1985;M;Roma;Via Roma;10;Roma;RM;00100;mario.rossi@example.it;3331234567;'
+        // BOM iniziale per compatibilità con Excel su Windows
+        writeFileSync(destPath, `\uFEFF${intestazione}\n${esempio}\n`, 'utf-8')
+      } catch (err) {
+        log.error('[ipc] clienti:import:template errore:', err)
+        throw err instanceof Error ? err : new Error('Errore durante la creazione del modello CSV')
       }
     }
   )
@@ -1019,6 +1076,34 @@ export function registerIpcHandlers(): void {
       } catch (err) {
         log.error('[ipc] dialog:showOpenDialog errore:', err)
         throw err instanceof Error ? err : new Error('Errore apertura finestra di selezione file')
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'dialog:showSaveDialog',
+    async (
+      event,
+      options?: {
+        title?: string
+        defaultPath?: string
+        filters?: { name: string; extensions: string[] }[]
+      }
+    ): Promise<{ canceled: boolean; filePath: string }> => {
+      try {
+        const win = BrowserWindow.fromWebContents(event.sender)
+        const dialogOptions: Electron.SaveDialogOptions = {
+          title: options?.title,
+          defaultPath: options?.defaultPath,
+          filters: options?.filters
+        }
+        const result = win
+          ? await dialog.showSaveDialog(win, dialogOptions)
+          : await dialog.showSaveDialog(dialogOptions)
+        return { canceled: result.canceled, filePath: result.filePath ?? '' }
+      } catch (err) {
+        log.error('[ipc] dialog:showSaveDialog errore:', err)
+        throw err instanceof Error ? err : new Error('Errore apertura finestra di salvataggio file')
       }
     }
   )

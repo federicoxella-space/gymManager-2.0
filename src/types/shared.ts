@@ -140,6 +140,39 @@ export interface ClientiFilters {
   offset?: number
 }
 
+// ── Import clienti da CSV ───────────────────────────────────────────────────────
+
+/** Esito della singola riga di un import CSV. */
+export interface ImportRowResult {
+  /** Numero di riga 1-based nel file (intestazione = riga 1). */
+  riga: number
+  esito: 'nuovo' | 'duplicato' | 'errore'
+  /** CF normalizzato (maiuscolo, trim); null se la cella era vuota. */
+  cf: string | null
+  /** Popolato solo quando esito === 'nuovo'. */
+  cliente?: CreateClienteInput
+  /** Codice motivo stabile, presente per 'duplicato' ed 'errore'; chiave i18n sotto `clienti.import.motivi`. */
+  motivo?: string
+  /** Parametri di interpolazione per il messaggio i18n associato a `motivo`. */
+  motivoParams?: Record<string, string | number>
+}
+
+/** Anteprima dell'import: conteggi + esito per riga. Nessuna scrittura effettuata. */
+export interface ImportPreview {
+  totali: number
+  nuovi: number
+  duplicati: number
+  errori: number
+  righe: ImportRowResult[]
+}
+
+/** Report finale dopo la scrittura. */
+export interface ImportReport {
+  importati: number
+  saltati: number
+  errori: number
+}
+
 // ── Certificati medici ────────────────────────────────────────────────────────
 
 /** Riflette la riga della tabella `certificati_medici`. */
@@ -483,6 +516,11 @@ export interface ElectronAPI {
     create: (data: CreateClienteInput) => Promise<ClienteRow>
     update: (id: number, data: UpdateClienteInput) => Promise<ClienteRow>
     anonimizza: (id: number) => Promise<void>
+    import: {
+      analizza: (path: string) => Promise<ImportPreview>
+      esegui: (path: string) => Promise<ImportReport>
+      template: (destPath: string) => Promise<void>
+    }
   }
   certificati: {
     list: (clienteId: number) => Promise<CertificatoRow[]>
@@ -578,6 +616,11 @@ export interface ElectronAPI {
       filters?: { name: string; extensions: string[] }[]
       properties?: Array<'openFile' | 'openDirectory'>
     }) => Promise<{ canceled: boolean; filePaths: string[] }>
+    showSaveDialog: (options?: {
+      title?: string
+      defaultPath?: string
+      filters?: { name: string; extensions: string[] }[]
+    }) => Promise<{ canceled: boolean; filePath: string }>
   }
   updater: {
     check: () => Promise<void>
