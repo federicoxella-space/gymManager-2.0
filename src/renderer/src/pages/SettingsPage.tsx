@@ -144,7 +144,7 @@ export default function SettingsPage(): React.JSX.Element {
   // Versione app e controllo aggiornamenti
   const [appVersion, setAppVersion] = useState('')
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false)
-  const [updateCheckResult, setUpdateCheckResult] = useState<'idle' | 'aggiornato' | 'errore'>('idle')
+  const [updateCheckResult, setUpdateCheckResult] = useState<'idle' | 'errore'>('idle')
   const [updateErrorMsg, setUpdateErrorMsg] = useState<string | null>(null)
 
   // Sync state — il tipo è inferito come SyncStatus (dalla firma del preload) con pollingSec aggiunto
@@ -190,7 +190,6 @@ export default function SettingsPage(): React.JSX.Element {
   useEffect(() => {
     const unsubNotAvailable = window.api.on('update:not-available', () => {
       setIsCheckingUpdate(false)
-      setUpdateCheckResult('aggiornato')
     })
     const unsubAvailable = window.api.on('update:available', () => {
       setIsCheckingUpdate(false)
@@ -1557,13 +1556,6 @@ export default function SettingsPage(): React.JSX.Element {
             {isCheckingUpdate ? t('aggiornamento.controllo') : t('aggiornamento.controlla_pulsante')}
           </button>
         </div>
-
-        {updateCheckResult === 'aggiornato' && (
-          <p className="mt-3 flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
-            <CheckIcon />
-            {t('aggiornamento.nessuno')}
-          </p>
-        )}
 
         {updateCheckResult === 'errore' && (
           <div className="mt-3 flex items-start justify-between gap-2">
