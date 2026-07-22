@@ -2,6 +2,13 @@
 
 Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); versionamento [SemVer](https://semver.org/lang/it/) (pre-1.0).
 
+## [0.1.11] — 2026-07-22
+
+### Aggiunto
+- **Feedback controllo aggiornamenti**: all'apertura dell'app (e al controllo manuale in Impostazioni) compare uno **snackbar** in basso a destra che rende evidente la verifica — "Controllo aggiornamenti in corso…" e poi l'esito: aggiornamento trovato, **nessun aggiornamento** (prima non c'era alcun riscontro se si era già alla versione più recente) o errore. Le azioni di download/installazione restano gestite dal banner esistente.
+- **Pagina Clienti — filtro età**: nuovo filtro per mostrare solo i **minorenni** o solo i **maggiorenni** (i clienti senza data di nascita sono esclusi da entrambe le categorie).
+- **Pagina Clienti — conteggi**: viene mostrato il **numero totale** di clienti e, quando i filtri restringono l'elenco, il **rapporto compatto** tra risultati e totale (es. `250/1333`); il totale si aggiorna dopo creazione, import o anonimizzazione.
+
 ## [0.1.10] — 2026-07-22
 
 ### Aggiunto
