@@ -4,6 +4,7 @@ import type { ClienteRow, ClientiFilters, TipoAbbonamentoRow } from '../../../ty
 import ClientList from '../components/clients/ClientList'
 import ClientDetail from '../components/clients/ClientDetail'
 import ClientForm from '../components/clients/ClientForm'
+import ImportClientiDialog from '../components/clients/ImportClientiDialog'
 import Modal from '../components/ui/Modal'
 
 type View = 'list' | 'detail'
@@ -25,6 +26,7 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
   const [loadError, setLoadError] = useState(false)
   const [selectedClienteId, setSelectedClienteId] = useState<number | null>(null)
   const [showNewModal, setShowNewModal] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
   const [currentSearch, setCurrentSearch] = useState('')
   const [filtroIscrizione, setFiltroIscrizione] = useState<StatoIscrizioneFilter>('')
   const [filtroCertificato, setFiltroCertificato] = useState<StatoCertificatoFilter>('')
@@ -157,27 +159,37 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {t('clienti.titolo')}
         </h2>
-        <button
-          type="button"
-          data-testid="btn-nuovo-cliente"
-          onClick={() => setShowNewModal(true)}
-          className={[
-            'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg',
-            'bg-primary-600 hover:bg-primary-700 text-white transition-colors',
-          ].join(' ')}
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-            aria-hidden="true"
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            data-testid="btn-importa-csv"
+            onClick={() => setShowImportModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
-          {t('clienti.nuovo')}
-        </button>
+            {t('clienti.import.pulsante')}
+          </button>
+          <button
+            type="button"
+            data-testid="btn-nuovo-cliente"
+            onClick={() => setShowNewModal(true)}
+            className={[
+              'inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg',
+              'bg-primary-600 hover:bg-primary-700 text-white transition-colors',
+            ].join(' ')}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            {t('clienti.nuovo')}
+          </button>
+        </div>
       </div>
 
       {/* Filtri */}
@@ -282,6 +294,15 @@ export default function ClientsPage({ initialFilter, onFilterConsumed }: Clients
           onCancel={() => setShowNewModal(false)}
         />
       </Modal>
+
+      {/* Modal import CSV */}
+      <ImportClientiDialog
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={() =>
+          loadClienti(currentSearch, activeFilter, filtroIscrizione, filtroCertificato, filtroTipoAbbonamento)
+        }
+      />
     </div>
   )
 }
