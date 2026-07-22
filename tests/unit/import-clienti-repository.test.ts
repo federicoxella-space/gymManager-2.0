@@ -42,10 +42,17 @@ afterEach(() => {
 })
 
 describe('getTuttiCodiciFiscali', () => {
-  it('restituisce i CF esistenti in maiuscolo', () => {
-    createCliente({ codice_fiscale: 'RSSMRA85M01H501Q', nome: 'Mario', cognome: 'Rossi' })
+  it('restituisce i CF esistenti in maiuscolo anche se salvati in minuscolo', () => {
+    // Inserimento diretto (bypassa createCliente/validazioni) per simulare un CF
+    // salvato in minuscolo/misto: la funzione deve comunque normalizzarlo in maiuscolo.
+    if (!_testDb) throw new Error('Test DB non inizializzato')
+    _testDb
+      .prepare(`INSERT INTO clienti (nome, cognome, codice_fiscale) VALUES ('Mario', 'Rossi', ?)`)
+      .run('rssmra85m01h501q')
+
     const set = getTuttiCodiciFiscali()
     expect(set.has('RSSMRA85M01H501Q')).toBe(true)
+    expect(set.has('rssmra85m01h501q')).toBe(false)
   })
 })
 
@@ -68,10 +75,19 @@ describe('importClienti', () => {
     expect(t.size).toBe(2)
   })
 
-  it('è atomico: se una riga viola UNIQUE, nessun cliente viene inserito', () => {
-    createCliente({ codice_fiscale: 'RSSMRA85M01H501Q', nome: 'Mario', cognome: 'Rossi' })
-    expect(() => importClienti(nuovi)).toThrow()
-    // Solo il cliente pre-esistente resta; "Luigi Verdi" non è stato inserito
-    expect(getClienteByCodiceFiscale('VRDLGI90A41H501K')).toBeNull()
+  it('è atomico: se una riga successiva viola UNIQUE, anche le righe precedenti valide vengono annullate', () => {
+    // CF_B è già presente in anagrafica: collide con la SECONDA riga del batch.
+    // La PRIMA riga (CF_A) è nuova e valida: se la transazione fosse assente,
+    // verrebbe inserita comunque. Il rollback deve rimuoverla.
+    createCliente({ codice_fiscale: 'VRDLGI90A41H501K', nome: 'Luigi', cognome: 'Verdi' })
+
+    const batch: CreateClienteInput[] = [
+      { codice_fiscale: 'RSSMRA85M01H501Q', nome: 'Mario', cognome: 'Rossi' },
+      { codice_fiscale: 'VRDLGI90A41H501K', nome: 'Luigi', cognome: 'Verdi' },
+    ]
+
+    expect(() => importClienti(batch)).toThrow()
+    // La prima riga (valida) NON deve essere rimasta persistita: prova il rollback.
+    expect(getClienteByCodiceFiscale('RSSMRA85M01H501Q')).toBeNull()
   })
 })
