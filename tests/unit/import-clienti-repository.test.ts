@@ -92,22 +92,28 @@ describe('importClienti', () => {
   })
 
   it('evita la collisione tra tessera esplicita e tessera auto-assegnata nello stesso batch', () => {
-    // DB vuoto: getNextNumeroTessera() partirebbe da '1'. Se la riga con
-    // tessera esplicita '2' precede quella senza tessera, l'auto-assegnazione
-    // ingenua (MAX+1 calcolato PRIMA dell'insert) potrebbe produrre '2' e
-    // collidere con la tessera esplicita già presente nello stesso batch.
+    // DB vuoto: getNextNumeroTessera() calcolato PRIMA dell'insert vale '1'.
+    // La riga AUTO è la PRIMA del batch: con la vecchia logica ingenua
+    // (getNextNumeroTessera() richiamato al momento dell'insert, che a DB
+    // ancora vuoto restituisce sempre '1') avrebbe ricevuto '1'; la riga
+    // successiva con tessera ESPLICITA '1' avrebbe poi violato UNIQUE.
+    // La nuova logica riserva '1' come occupata (esplicita nel batch) fin
+    // dall'inizio, quindi la riga auto salta a '2' e l'import riesce.
     const batch: CreateClienteInput[] = [
-      { codice_fiscale: 'RSSMRA85M01H501Q', nome: 'Mario', cognome: 'Rossi', numero_tessera: '2' },
-      { codice_fiscale: 'VRDLGI90A41H501K', nome: 'Luigi', cognome: 'Verdi' },
+      { codice_fiscale: 'RSSMRA85M01H501Q', nome: 'Mario', cognome: 'Rossi' },
+      { codice_fiscale: 'VRDLGI90A41H501K', nome: 'Luigi', cognome: 'Verdi', numero_tessera: '1' },
     ]
 
-    const n = importClienti(batch)
-    expect(n).toBe(2)
+    expect(() => importClienti(batch)).not.toThrow()
 
     const mario = getClienteByCodiceFiscale('RSSMRA85M01H501Q')
     const luigi = getClienteByCodiceFiscale('VRDLGI90A41H501K')
     expect(mario?.numero_tessera).toBe('2')
-    expect(luigi?.numero_tessera).not.toBe('2')
-    expect(luigi?.numero_tessera).not.toBeNull()
+    expect(luigi?.numero_tessera).toBe('1')
+
+    const tessere = getTutteTessere()
+    expect(tessere.size).toBe(2)
+    expect(tessere.has('1')).toBe(true)
+    expect(tessere.has('2')).toBe(true)
   })
 })
