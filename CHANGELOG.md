@@ -2,6 +2,11 @@
 
 Tutte le modifiche rilevanti di GymManager 2.0. Formato ispirato a [Keep a Changelog](https://keepachangelog.com/it/1.1.0/); versionamento [SemVer](https://semver.org/lang/it/) (pre-1.0).
 
+## [0.1.10] — 2026-07-22
+
+### Aggiunto
+- **Import clienti da CSV** (pagina Clienti → "Importa CSV"): caricamento massivo di un elenco di clienti da file CSV. L'import è **puramente additivo** — inserisce solo i clienti nuovi e **non modifica né cancella** quelli esistenti. Il controllo dei duplicati avviene per **codice fiscale**: i CF già presenti in anagrafica vengono **saltati e segnalati**. Flusso **anteprima → conferma**: l'app analizza il file e mostra un riepilogo (nuovi / già presenti / errori) con la tabella delle righe scartate e il relativo motivo **prima** di scrivere; alla conferma vengono importate solo le righe valide. È disponibile un **modello CSV scaricabile** (intestazioni fisse; colonne obbligatorie `codice_fiscale`, `nome`, `cognome`, più campi anagrafici opzionali). Delimitatore `;`/`,` rilevato automaticamente, date in formato `gg/mm/aaaa`, `numero_tessera` assegnata automaticamente se assente (senza collisioni all'interno dello stesso file).
+
 ## [0.1.9] — 2026-07-14
 
 ### Modificato
