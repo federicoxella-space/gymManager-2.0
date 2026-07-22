@@ -503,6 +503,7 @@
   },
   "aggiornamento": {
     "disponibile": "Aggiornamento {{version}} disponibile. Download in corso...",
+    "trovato": "Aggiornamento {{version}} disponibile",
     "scaricamento": "Download aggiornamento: {{percent}}%",
     "pronto": "Aggiornamento {{version}} pronto. Riavvia per installare.",
     "pronto_mac": "Aggiornamento {{version}} scaricato. Aprilo e trascina GymManager nella cartella Applicazioni.",

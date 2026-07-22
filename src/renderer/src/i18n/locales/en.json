@@ -503,6 +503,7 @@
   },
   "aggiornamento": {
     "disponibile": "Update {{version}} available. Downloading...",
+    "trovato": "Update {{version}} available",
     "scaricamento": "Downloading update: {{percent}}%",
     "pronto": "Update {{version}} ready. Restart to install.",
     "pronto_mac": "Update {{version}} downloaded. Open it and drag GymManager into the Applications folder.",

@@ -45,7 +45,7 @@ export default function Snackbar({
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-0 right-0 z-50 pointer-events-none"
+      className="fixed bottom-24 right-0 z-50 pointer-events-none"
     >
       <div
         className={[

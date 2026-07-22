@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Snackbar from '../ui/Snackbar'
 
@@ -42,9 +42,10 @@ export default function UpdateCheckSnackbar(): React.JSX.Element | null {
     }
   }, [])
 
+  const close = useCallback((): void => setStato({ fase: 'nascosto' }), [])
+
   if (stato.fase === 'nascosto') return null
 
-  const close = (): void => setStato({ fase: 'nascosto' })
   const closeLabel = t('common.close')
 
   switch (stato.fase) {
@@ -60,7 +61,7 @@ export default function UpdateCheckSnackbar(): React.JSX.Element | null {
     case 'trovato':
       return (
         <Snackbar
-          message={t('aggiornamento.disponibile', { version: stato.version })}
+          message={t('aggiornamento.trovato', { version: stato.version })}
           variant="success"
           onClose={close}
           closeLabel={closeLabel}
